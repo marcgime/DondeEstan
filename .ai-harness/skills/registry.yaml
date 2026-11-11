@@ -1,0 +1,49 @@
+version: 1
+skills:
+  - name: bootstrap-harness
+    status: active
+    command: python .ai-harness/skills/bootstrap-harness/runner.py
+    doc: .agents/skills/bootstrap-harness/SKILL.md
+    description: Inicializa y personaliza todo el arnés de desarrollo asistido por IA para un nuevo proyecto.
+
+  - name: harness-validator
+    status: active
+    command: python .ai-harness/skills/harness-validator/runner.py
+    doc: .agents/skills/harness-validator/SKILL.md
+    description: Valida la estructura y coherencia del arnés normativo.
+
+  - name: preflight
+    status: active
+    command: python .ai-harness/skills/preflight/runner.py
+    doc: .agents/skills/preflight/SKILL.md
+    description: Valida código (TypeScript), arquitectura, contratos y tokens.
+
+  - name: sync-sdd
+    status: active
+    command: python .ai-harness/skills/sync-sdd/runner.py
+    doc: .agents/skills/sync-sdd/SKILL.md
+    description: Audita la sincronización entre módulos OpenSpec, tareas activas y código en disco.
+
+  - name: propose-change
+    status: active
+    command: python .ai-harness/skills/propose-change/runner.py
+    doc: .agents/skills/propose-change/SKILL.md
+    description: Crea una propuesta de cambio aislada (delta OpenSpec) en changes/ para su revisión rápida.
+
+  - name: consolidate-change
+    status: active
+    command: python .ai-harness/skills/consolidate-change/runner.py
+    doc: .agents/skills/consolidate-change/SKILL.md
+    description: Aplica una propuesta aprobada sobre el módulo maestro y la archiva en archive/.
+
+  - name: launch-app
+    status: active
+    command: python .ai-harness/skills/launch-app/runner.py
+    doc: .agents/skills/launch-app/SKILL.md
+    description: Arranca la aplicación (npm run dev).
+
+  - name: git-publish
+    status: active
+    command: python .ai-harness/skills/git-publish/runner.py
+    doc: .agents/skills/git-publish/SKILL.md
+    description: Publica en Git (NONE) bajo demanda explícita.

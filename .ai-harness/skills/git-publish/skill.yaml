@@ -1,0 +1,29 @@
+name: git-publish
+version: 1.0.0
+description: >-
+  Automatización de Git con puerta de enlace determinista (Harness Validator + Preflight)
+  para publicar cambios de forma segura en el remoto configurado.
+inputs:
+  action:
+    type: string
+    description: "Acción de Git a realizar: push, pull, sync, status"
+    required: false
+    default: push
+  message:
+    type: string
+    description: Mensaje del commit para operaciones push o sync.
+    required: false
+  branch:
+    type: string
+    description: Rama remota de destino.
+    required: false
+  no_verify:
+    type: boolean
+    description: Desactiva las comprobaciones preflight antes del push.
+    required: false
+    default: false
+outputs:
+  exit_code:
+    type: integer
+    description: 0 si la operación de git finaliza exitosamente, 1 si falla o preflight rechaza la subida.
+command: python -m .ai-harness.skills.git-publish.runner

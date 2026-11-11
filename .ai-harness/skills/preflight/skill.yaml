@@ -1,0 +1,29 @@
+name: preflight
+version: 2.0.0
+description: >-
+  Valida Flutter/Dart: formato, analyze, tests, fronteras de features, contratos,
+  invariantes P2P, tokens de diseño y dependencias prohibidas.
+cli_dependencies:
+  - flutter
+  - dart
+inputs:
+  target:
+    type: string
+    description: Archivo o directorio a validar. Por defecto, el workspace.
+    required: false
+  strict:
+    type: boolean
+    description: Convierte warnings en fallos.
+    required: false
+  json:
+    type: boolean
+    description: Emite el resumen en JSON.
+    required: false
+outputs:
+  exit_code:
+    type: integer
+    description: 0 si no hay fallos; 1 si hay violaciones.
+  summary:
+    type: json
+    description: PreflightSummary con checks y violaciones.
+command: python .ai-harness/skills/preflight/runner.py

@@ -1,0 +1,105 @@
+version: 1
+
+project:
+  name: "DondeEstan"
+  slug: "donde-estan"
+  stack: node
+  launch_command: "npm run dev"
+  test_command: "npm test"
+  git_provider: "github"
+  remote_url: "https://github.com/marcgime/DondeEstan.git"
+
+context:
+  required:
+    - system_identity.md
+    - harness_governance.md
+    - project_overview.md
+    - architecture_rules.md
+    - project_structure.md
+    - coding_standards.md
+    - testing_guidelines.md
+    - security_privacy.md
+    - platform_matrix.md
+    - glossary.md
+    - sdd_framework.md
+    - ui-design-system.md
+  agents_must_reference:
+    - system_identity.md
+    - harness_governance.md
+
+scopes:
+  required:
+    - block_core.md
+    - block_auth.md
+    - block_admin.md
+    - block_location.md
+    - block_chat.md
+    - block_profile.md
+    - block_ui.md
+  path_roots:
+    - src/core/
+    - src/auth/
+    - src/admin/
+    - src/location/
+    - src/chat/
+    - src/profile/
+    - src/ui/
+  forbidden_paths: []
+
+sdd:
+  engine: openspec
+  paths:
+    modules: ".ai-harness/sdd/modules"
+    changes: ".ai-harness/sdd/changes"
+    archive: ".ai-harness/sdd/archive"
+    templates: ".ai-harness/sdd/templates"
+  blocks:
+    - modules
+    - changes
+    - archive
+    - templates
+  implementation_map_heading: "Mapa de implementación"
+  tiers:
+    fast_path:
+      enabled: true
+      max_files_changed: 3
+      require_tests: true
+    standard:
+      require_proposal: true
+      require_tasks_complete: true
+    core:
+      require_proposal: true
+      require_adr: true
+
+memory:
+  failure_prefix: "FM"
+  min_failure_modes: 5
+
+legacy_terms: []
+
+skills:
+  docs_root: ".agents/skills"
+
+architecture:
+  features:
+    - core
+    - auth
+    - admin
+    - location
+    - chat
+    - profile
+    - ui
+  forbidden_by_feature: {}
+  exclusive_import_paths: {}
+  framework_import_prefix: "@/"
+  framework_free_features: ["domain"]
+  persistence_feature: "core"
+  persistence_imports: []
+  forbidden_packages:
+    []
+
+ui:
+  token_feature: "ui"
+
+invariants:
+  profile: none

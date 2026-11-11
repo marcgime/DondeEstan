@@ -1,0 +1,25 @@
+name: harness-validator
+version: 2.0.0
+description: >-
+  Valida contexto, scopes, memoria, SDD y skills del arnés.
+inputs:
+  scope:
+    type: string
+    description: Ruta raíz a validar. Por defecto, el workspace.
+    required: false
+  strict:
+    type: boolean
+    description: Convierte warnings en fallos.
+    required: false
+  fix:
+    type: boolean
+    description: Reservado para reparaciones seguras.
+    required: false
+outputs:
+  exit_code:
+    type: integer
+    description: 0 si el arnés es válido; 1 si hay violaciones.
+  report:
+    type: json
+    description: HarnessValidationReport consolidado.
+command: python .ai-harness/skills/harness-validator/runner.py

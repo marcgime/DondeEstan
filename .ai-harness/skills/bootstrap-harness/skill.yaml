@@ -1,0 +1,29 @@
+name: bootstrap-harness
+version: 1.0.0
+description: Inicialización interactiva del arnés a partir de documentación en .ai-harness/input/ o entrevista guiada por fases.
+inputs:
+  interactive:
+    type: boolean
+    description: Inicia el asistente de preguntas guiadas paso a paso.
+    required: false
+    default: true
+  input_dir:
+    type: string
+    description: Directorio con documentación previa del producto.
+    required: false
+    default: .ai-harness/input
+  manifest:
+    type: string
+    description: Ruta a un fichero YAML con la especificación completa del producto.
+    required: false
+  dry_run:
+    type: boolean
+    description: Simula la generación sin modificar archivos en el disco.
+    required: false
+    default: false
+outputs:
+  exit_code:
+    type: integer
+    description: 0 si la inicialización y validación concluyen con éxito, 1 si ocurre algún error.
+command: python .ai-harness/skills/bootstrap-harness/runner.py
+

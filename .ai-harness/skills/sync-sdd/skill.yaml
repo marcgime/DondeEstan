@@ -1,0 +1,24 @@
+name: sync-sdd
+version: 2.1.0
+description: >-
+  Deriva el estado de implementación de cada spec .spec.md desde su target y una línea base de hashes.
+cli_dependencies:
+  - python
+inputs:
+  spec:
+    type: string
+    description: ID de spec, ruta o 'all'.
+    required: false
+  json:
+    type: boolean
+    description: Emite el informe en JSON.
+    required: false
+  baseline:
+    type: boolean
+    description: Registra la spec y el target actuales como nueva línea base.
+    required: false
+outputs:
+  exit_code:
+    type: integer
+    description: 0 si ninguna spec está en DIVERGED.
+command: python .ai-harness/skills/sync-sdd/runner.py

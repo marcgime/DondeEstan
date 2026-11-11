@@ -1,0 +1,22 @@
+# Normalización automática de saltos de línea para determinismo criptográfico
+# Evita divergencias de hash en sync-sdd entre Windows (CRLF) y CI Linux (LF).
+
+* text=auto eol=lf
+
+# Código y especificaciones siempre con salto de línea LF
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+
+# Binarios intactos
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+

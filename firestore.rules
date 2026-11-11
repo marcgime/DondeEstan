@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Funciones auxiliares de seguridad
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isActiveMember() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Configuración global del sistema
+    match /config/system {
+      allow read: if true; // Necesario para verificar si el registro está abierto antes de registrarse
+      allow write: if isAdmin();
+    }
+
+    // Colección de Lista Blanca (emails autorizados)
+    match /whitelist/{email} {
+      allow read: if true; // Comprobación previa de elegibilidad en formulario de registro
+      allow write: if isAdmin();
+    }
+
+    // Colección de Perfiles de Usuario
+    match /users/{userId} {
+      // Solo miembros aprobados o el administrador pueden leer perfiles y ubicaciones
+      allow read: if isActiveMember() || isAdmin();
+      
+      // Creación: Solo si el registro está abierto y el nuevo usuario se auto-asigna pending_approval
+      allow create: if isAuthenticated() &&
+        request.auth.uid == userId &&
+        request.resource.data.status == 'pending_approval' &&
+        get(/databases/$(database)/documents/config/system).data.registration_open == true;
+
+      // Actualización de ubicación y perfil propio (sin poder auto-aprobarse a status: active)
+      allow update: if (isActiveMember() && request.auth.uid == userId && request.resource.data.status == resource.data.status) || isAdmin();
+
+      // Baja y purga total: Exclusivo del administrador
+      allow delete: if isAdmin();
+    }
+
+    // Chat Grupal Familiar (Fase 3)
+    match /group_chat/{messageId} {
+      allow read, create: if isActiveMember();
+      allow update: if false; // Mensajes inmutables
+      allow delete: if isAdmin();
+    }
+  }
+}
+

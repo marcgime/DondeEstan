@@ -1,0 +1,21 @@
+# =============================================================================
+# .aiignore — Exclusiones de contexto para agentes de IA
+# =============================================================================
+.git/
+.tools/
+node_modules/
+.venv/
+venv/
+build/
+dist/
+.next/
+.expo/
+.dart_tool/
+target/
+__pycache__/
+*.log
+*.lock
+*.sqlite
+*.db
+coverage/
+*.map

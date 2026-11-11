@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surface Layers (Kinetic Bloom) */
+  --color-surface-canvas: #fff7ff;
+  --color-surface-base: #faf1fc;
+  --color-surface-elevated: #f4ebf7;
+  --color-surface-inset: #eee5f1;
+  --color-surface-highest: #e8e0eb;
+  --color-surface-overlay: rgba(30, 26, 34, 0.72);
+  --color-surface-glass: rgba(255, 255, 255, 0.78);
+  --color-surface-glass-border: rgba(255, 255, 255, 0.6);
+
+  /* Borders */
+  --color-border-subtle: #cac3d9;
+  --color-border-strong: #797488;
+  --color-border-focus: #5200e3;
+
+  /* Typography */
+  --color-text-primary: #1e1a22;
+  --color-text-secondary: #484456;
+  --color-text-disabled: #797488;
+  --color-text-on-accent: #ffffff;
+  --color-text-accent: #5200e3;
+  --color-text-inverse: #fff7ff;
+
+  /* Brand Accents (Material 3 Expressive) */
+  --color-accent-primary: #5200e3;
+  --color-accent-primary-container: #6b38fb;
+  --color-accent-on-primary: #ffffff;
+  --color-accent-on-primary-container: #e7deff;
+
+  --color-accent-secondary: #994537;
+  --color-accent-secondary-container: #fd9482;
+  --color-accent-on-secondary: #ffffff;
+  --color-accent-on-secondary-container: #762b1f;
+
+  --color-accent-tertiary: #31553d;
+  --color-accent-tertiary-container: #496d54;
+  --color-accent-on-tertiary: #ffffff;
+  --color-accent-on-tertiary-container: #c5edce;
+
+  /* Status */
+  --color-status-online: #31553d;
+  --color-status-offline: #797488;
+  --color-status-warning: #fd9482;
+  --color-status-error: #ba1a1a;
+  --color-status-info: #6b38fb;
+
+  /* Shadows & Elevations */
+  --shadow-card: 0 8px 24px -4px rgba(30, 26, 34, 0.06), 0 2px 6px -1px rgba(30, 26, 34, 0.04);
+  --shadow-dock: 0 16px 36px -6px rgba(40, 25, 68, 0.16);
+  --shadow-alert: 0 12px 32px 0 rgba(107, 56, 251, 0.28);
+}
+
+/* iOS Safe Areas & Gesture Collision Prevention */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-h-screen {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Prevent elastic bounce on iOS Safari */
+html, body {
+  overscroll-behavior-y: none;
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+

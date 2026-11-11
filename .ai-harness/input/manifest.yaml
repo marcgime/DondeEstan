@@ -1,0 +1,330 @@
+identity:
+  name: "DondeEstan"
+  slug: "donde-estan"
+  description: "PWA familiar privada para visualización de ubicación en directo, chat grupal instantáneo y administración estricta de accesos a coste cero (Firebase Spark + Google Maps Platform)."
+  target_audience: "Núcleo familiar cerrado (8 miembros con dispositivos iPhone) y administrador"
+  archetype: "gui_app"
+
+stack:
+  stack_type: "node"
+  language: "TypeScript"
+  framework: "Vite PWA + Tailwind CSS"
+  package_manager: "npm"
+  min_runtime_version: "Node.js >= 20.0.0"
+  launch_command: "npm run dev"
+  test_command: "npm test"
+
+architecture:
+  style: "Clean Architecture (PWA Modular)"
+  layers:
+    - "domain"
+    - "application"
+    - "infrastructure"
+    - "presentation"
+  persistence: "firebase"
+  forbidden_packages: []
+  forbidden_imports: []
+
+scopes:
+  - name: "core"
+    title: "Infraestructura Base y Configuración Transversal"
+    description: "Inicialización del SDK Firebase (Auth, Firestore, Storage), variables de entorno, utilidades comunes y registro del Service Worker PWA."
+    path_roots:
+      - "src/core/"
+    forbidden_paths: []
+
+  - name: "auth"
+    title: "Autenticación, Whitelist y Control de Acceso"
+    description: "Flujo de registro y login cerrado contra /whitelist/{email}, asignación de estado pending_approval en Firestore y vista fija gatekeeper de bloqueo."
+    path_roots:
+      - "src/auth/"
+    forbidden_paths: []
+
+  - name: "admin"
+    title: "Panel de Administración y Moderación Familiar"
+    description: "Interruptor global registration_open, gestión de emails en whitelist, aprobación manual de accesos pendientes y purga total de datos de usuario."
+    path_roots:
+      - "src/admin/"
+    forbidden_paths: []
+
+  - name: "location"
+    title: "Geolocalización Reactiva y Google Maps"
+    description: "Gestión del ciclo de vida WebKit (visibilitychange), throttling adaptativo (30s/15m o 120s heartbeat), marcadores AdvancedMarkerElement y presencia online/offline."
+    path_roots:
+      - "src/location/"
+    forbidden_paths: []
+
+  - name: "chat"
+    title: "Canal Único de Chat Grupal Familiar"
+    description: "Chat grupal reactivo para los 8 miembros, consulta limitada a los últimos 50 mensajes, desconexión activa del listener onSnapshot al cambiar de vista y prevención de doble envío."
+    path_roots:
+      - "src/chat/"
+    forbidden_paths: []
+
+  - name: "profile"
+    title: "Perfil, Ajustes y Diagnóstico del Dispositivo"
+    description: "Edición de display_name, compresión y recorte de avatar en <canvas> (<300x300, <50KB) hacia Storage, diagnóstico de permisos GPS en Safari y logout."
+    path_roots:
+      - "src/profile/"
+    forbidden_paths: []
+
+  - name: "ui"
+    title: "Sistema de Diseño Kinetic Bloom y Shell PWA"
+    description: "Componentes visuales Material 3 Expressive, dock flotante glassmorphic (blur 24px), tokens de diseño Kinetic Bloom, temas adaptable y adaptación a safe-areas de iOS."
+    path_roots:
+      - "src/ui/"
+    forbidden_paths: []
+
+platform:
+  platforms:
+    - "iOS Safari PWA"
+    - "Mobile Web"
+  privacy_policy: "zero_telemetry"
+  secrets_management: "env_vars"
+
+ui:
+  has_ui: true
+  theme_preference: "adaptive"
+  css_framework: "tailwind"
+  focus_navigation_required: false
+  key_components:
+    - "DS-LAYOUT-SHELL: Shell de la aplicación con soporte para Dynamic Island y safe-areas iOS"
+    - "DS-NAV-DOCK: Dock de navegación flotante glassmorphic (backdrop-filter: blur(24px)) con indicador deslizante"
+    - "DS-MAP-MARKER: Marcador de avatar con halo pulsante (verde online, gris offline)"
+    - "DS-LOCATION-CARD: Bottom sheet táctil con tiempo relativo, estado y acciones de centrado"
+    - "DS-CHAT-MESSAGE: Burbuja de chat reactiva con avatar y timestamp"
+    - "DS-GATE-LOCKED: Vista de espera y bloqueo para usuarios en estado pending_approval"
+    - "DS-ADMIN-SWITCH: Control switch reactivo para abrir o cerrar registros (registration_open)"
+    - "DS-ADMIN-MEMBER-ROW: Fila de administración de miembro con opciones de aprobación, rechazo y purga total"
+  custom_tokens:
+    $schema: "design-tokens/1.0.0"
+    meta:
+      name: "DondeEstan Design Tokens (Kinetic Bloom)"
+      version: "1.0.0"
+      updated: "2026-11-11"
+      authority: "values"
+      notes: "Tokens extraídos directamente del proyecto Stitch Family Expressive PWA (Kinetic Bloom). Cero valores literales en código de producción."
+    color:
+      surface:
+        canvas: "#fff7ff"
+        base: "#faf1fc"
+        elevated: "#f4ebf7"
+        inset: "#eee5f1"
+        highest: "#e8e0eb"
+        overlay: "rgba(30, 26, 34, 0.72)"
+        glass: "rgba(255, 255, 255, 0.78)"
+      border:
+        subtle: "#cac3d9"
+        strong: "#797488"
+        focus: "#5200e3"
+        specular: "rgba(255, 255, 255, 0.6)"
+      text:
+        primary: "#1e1a22"
+        secondary: "#484456"
+        disabled: "#797488"
+        onAccent: "#ffffff"
+        accent: "#5200e3"
+        inverse: "#fff7ff"
+      accent:
+        primary: "#5200e3"
+        primaryContainer: "#6b38fb"
+        onPrimary: "#ffffff"
+        onPrimaryContainer: "#e7deff"
+        secondary: "#994537"
+        secondaryContainer: "#fd9482"
+        onSecondary: "#ffffff"
+        onSecondaryContainer: "#762b1f"
+        tertiary: "#31553d"
+        tertiaryContainer: "#496d54"
+        onTertiary: "#ffffff"
+        onTertiaryContainer: "#c5edce"
+      status:
+        online: "#31553d"
+        offline: "#797488"
+        warning: "#fd9482"
+        error: "#ba1a1a"
+        info: "#6b38fb"
+    type:
+      family:
+        primary: "Plus Jakarta Sans"
+        mono: "JetBrains Mono"
+      display:
+        size: 44
+        lineHeight: 1.18
+        weight: 800
+        letterSpacing: "-0.025em"
+      title:
+        size: 24
+        lineHeight: 1.33
+        weight: 700
+        letterSpacing: "-0.01em"
+      heading:
+        size: 18
+        lineHeight: 1.33
+        weight: 600
+      body:
+        size: 14
+        lineHeight: 1.43
+        weight: 400
+      label:
+        size: 12
+        lineHeight: 1.33
+        weight: 600
+        letterSpacing: "0.02em"
+      caption:
+        size: 11
+        lineHeight: 1.27
+        weight: 700
+        letterSpacing: "0.03em"
+    space:
+      xxs: 2
+      xs: 4
+      sm: 8
+      md: 16
+      lg: 24
+      xl: 32
+      xxl: 48
+    radius:
+      sm: 8
+      md: 16
+      lg: 24
+      xl: 32
+      full: 9999
+    motion:
+      fast: 120
+      base: 200
+      slow: 320
+      curve: "cubic-bezier(0.2, 0.0, 0, 1.0)"
+    elevation:
+      none: "none"
+      card: "0 8px 24px -4px rgba(30, 26, 34, 0.06), 0 2px 6px -1px rgba(30, 26, 34, 0.04)"
+      dock: "0 16px 36px -6px rgba(40, 25, 68, 0.16)"
+      alert: "0 12px 32px 0 rgba(107, 56, 251, 0.28)"
+    layout:
+      unit: 4
+      maxContentWidth: 1200
+      safeAreaTop: "env(safe-area-inset-top)"
+      safeAreaBottom: "env(safe-area-inset-bottom)"
+
+failure_modes:
+  - id: "FM-001"
+    title: "Desbordamiento de Cuota por Omisión de Throttling en Ubicación GPS"
+    symptom: "Firestore supera el límite de 20.000 escrituras/día rápidamente bloqueando el servicio para todos los usuarios familiares."
+    root_cause: "La IA emite una escritura en Firestore en cada evento geolocation.watchPosition sin comprobar intervalo temporal ni distancia mínima ni heartbeat."
+    mitigation: "Encapsular el emisor de coordenadas en un servicio de estrangulamiento adaptativo estricto: emitir solo si (delta_t >= 30s AND delta_d >= 15m) OR (delta_t >= 120s)."
+    bad_code: |
+      navigator.geolocation.watchPosition(async (pos) => {
+        await updateDoc(doc(db, "users", uid), {
+          location: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        });
+      });
+    good_code: |
+      navigator.geolocation.watchPosition((pos) => {
+        locationThrottleService.reportPosition(uid, pos.coords);
+      });
+
+  - id: "FM-002"
+    title: "Fuga de Conexiones Reactivas onSnapshot en Pestañas Inactivas"
+    symptom: "Consumo desmedido de lecturas en Firestore y drenaje acelerado de batería en dispositivos iPhone."
+    root_cause: "No invocar la función unsubscribe devuelta por onSnapshot al cambiar de vista o ante eventos de ocultación en Safari (visibilitychange)."
+    mitigation: "Desuscribir activamente el listener reactivo de chat al salir de la pestaña y cancelar el seguimiento de posición cuando document.visibilityState sea hidden."
+    bad_code: |
+      function initChat() {
+        onSnapshot(query(collection(db, "group_chat"), limitToLast(50)), (snapshot) => {
+          renderMessages(snapshot.docs);
+        });
+      }
+    good_code: |
+      let unsubscribeChat: (() => void) | null = null;
+      function openChat() {
+        unsubscribeChat = onSnapshot(query(collection(db, "group_chat"), orderBy("created_at", "asc"), limitToLast(50)), (snap) => {
+          renderMessages(snap.docs);
+        });
+      }
+      function closeChat() {
+        if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
+      }
+
+  - id: "FM-003"
+    title: "Bypass de Acceso en Estado pending_approval por Reglas Permisivas de Firestore"
+    symptom: "Un familiar recién registrado pero aún no aprobado puede leer las coordenadas y los mensajes privados del grupo familiar."
+    root_cause: "Reglas de Firestore que comprueban únicamente request.auth != null sin verificar que el documento /users/{uid} tenga status == 'active'."
+    mitigation: "Definir e invocar la función de seguridad isActiveMember() en firestore.rules para condicionar todas las lecturas y escrituras de usuarios y chat."
+    bad_code: |
+      match /users/{userId} {
+        allow read: if request.auth != null;
+      }
+    good_code: |
+      function isActiveMember() {
+        return request.auth != null &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      }
+      match /users/{userId} {
+        allow read: if isActiveMember() || isAdmin();
+      }
+
+  - id: "FM-004"
+    title: "Saturación de Storage por Subida de Avatares sin Compresión Canvas"
+    symptom: "Cargas de imágenes pesadas (>5MB) agotan los 5GB de Firebase Storage y causan latencia perceptible en los marcadores del mapa."
+    root_cause: "Subir directamente el objeto File obtenido del input de tipo file a Firebase Storage sin reescalado previo en el navegador."
+    mitigation: "Reescalar y recortar toda foto de perfil en un elemento HTML5 <canvas> a un tamaño máximo de 300x300 px y comprimir a WebP/JPEG calidad 0.8 (<50KB)."
+    bad_code: |
+      async function uploadAvatar(file: File, uid: string) {
+        const storageRef = ref(storage, `avatars/${uid}/photo.jpg`);
+        await uploadBytes(storageRef, file);
+      }
+    good_code: |
+      async function uploadAvatar(file: File, uid: string) {
+        const blob = await resizeAndCompressImage(file, 300, 300, 0.8);
+        const storageRef = ref(storage, `avatars/${uid}/photo.webp`);
+        await uploadBytes(storageRef, blob);
+      }
+
+  - id: "FM-005"
+    title: "Violación de Tokens de Diseño con Estilos Literales o Colores HEX Directos"
+    symptom: "Inconsistencia visual, rotura de la paleta Kinetic Bloom y fallos en la puerta preflight."
+    root_cause: "La IA introduce colores hexadecimales literales (ej. #6b38fb, #ffffff) o medidas fijas en el código de componentes."
+    mitigation: "Consumir exclusivamente tokens declarados en tokens.json mediante variables CSS o clases utilitarias de Tailwind configuradas."
+    bad_code: |
+      <div style={{ backgroundColor: "#6b38fb", padding: "16px" }}>
+        <p style={{ color: "#ffffff" }}>Familia</p>
+      </div>
+    good_code: |
+      <div className="bg-brand-primary p-space-md rounded-full">
+        <p className="text-brand-onPrimary font-bold">Familia</p>
+      </div>
+
+adr_0001:
+  id: "ADR-0001"
+  title: "Arquitectura PWA iOS con Stack TypeScript y Servicios Serverless Firebase Spark (Coste Cero)"
+  status: "Aceptada"
+  context: "Se requiere un entorno privado, seguro y cerrado para 8 familiares con dispositivos iPhone con ubicación en tiempo real y chat. La restricción estratégica inamovible es coste 0,00 €/mes, sin cuotas de Apple Developer Program (99 $/año) y confinado 100% en el plan gratuito permanente de Firebase (Spark) y Google Maps Platform (200 $/mes crédito recurrente)."
+  decision: "Desarrollar una Progressive Web App (PWA) instalable directamente en Safari iOS («Añadir a pantalla de inicio» con display: standalone). Stack frontend con TypeScript, Vite y Tailwind CSS, respaldado por Firebase Auth, Firestore y Storage, y Google Maps JavaScript API con AdvancedMarkerElement."
+  consequences: "Ventajas: Despliegue inmediato sin revisión de App Store ni costes recurrentes. Desafíos: WebKit en iOS suspende JavaScript en segundo plano, lo que requiere un ciclo de vida reactivo con visibilitychange, detección de desconexión abrupta (>90s) y estrangulamiento estricto de coordenadas (30s/15m)."
+
+author:
+  name: "Marc Giménez Liarte"
+  bio: "Software Architect & Lead Engineer"
+  linkedin: ""
+  twitter: ""
+
+git_remote:
+  url: ""
+  provider: "none"
+  auth_protocol: "https"
+  setup_ci: false
+
+referenced_documents:
+  - ".ai-harness/input/PRD.docx"
+  - "Stitch: Family Expressive PWA (projects/11021139816163703439)"
+
+custom_context_overrides:
+  glossary.md: |
+    - **Throttling adaptativo:** Estrategia de emisión de geolocalización que solo escribe en Firestore si delta_t >= 30s y desplazamiento >= 15m, o tras 120s de inactividad (heartbeat).
+    - **Spark Plan:** Nivel gratuito perpetuo de Firebase con límite de 20.000 escrituras y 50.000 lecturas diarias en Cloud Firestore.
+    - **Whitelist:** Colección de correos autorizados con estado preapproved, pending_approval o active gestionada exclusivamente por el administrador.
+    - **Gatekeeper (Pending Approval):** Estado de bloqueo preventivo tras el registro que impide cargar mapas o chats hasta la aprobación manual del administrador.
+    - **AdvancedMarkerElement:** Componente oficial moderno de Google Maps JS API para renderizar marcadores DOM dinámicos con foto de avatar y halo de estado.
+    - **Kinetic Bloom:** Sistema de diseño expresivo (Material 3 Expressive + Glassmorphism iOS) con paleta violeta, coral y menta, y dock flotante con desenfoque de 24px.
+    - **Purga Total:** Acción atómica del administrador que elimina un usuario de Firebase Auth, Firestore (/users y mensajes de /group_chat), Storage y Whitelist.
+

@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "modules": {
+    "MOD-auth": {
+      "mod_hash": "a636620ae87efef1e822322a7b3a2e66ade0c013ae914310344925e5100d7dfa",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:17.210118+00:00"
+    },
+    "MOD-core": {
+      "mod_hash": "fa06bfb29667c803497f92507c133f16b6d5d7dabaee362fe27880154634192d",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:17.211310+00:00"
+    },
+    "MOD-ui": {
+      "mod_hash": "cd13ad08605b48e083a208fbe3eb445b782f9900625df39b77f3efbe2f122f3a",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:17.213191+00:00"
+    },
+    "MOD-admin": {
+      "mod_hash": "47e1ddcf04d05fa3f8a9786a954d3a60ab90ccea711941960b388aa60c14b1df",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:10.236297+00:00"
+    },
+    "MOD-chat": {
+      "mod_hash": "5a2997fed02b6ad8021a5146a5f709d353aab53f160fb618419483d5143c8c9e",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:10.238575+00:00"
+    },
+    "MOD-location": {
+      "mod_hash": "4c0593edeaf7f15ac098ad1de24716f7417f7bad01861dc5de967d0cb7aa77cb",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:10.239971+00:00"
+    },
+    "MOD-profile": {
+      "mod_hash": "9bf0474ee35a9113918a7f315004b5aac5538df398dbd9a5e00ae167505ceed7",
+      "target_hash": "",
+      "version": "1.0.0",
+      "recorded_at": "2026-11-11T15:00:10.240628+00:00"
+    }
+  }
+}

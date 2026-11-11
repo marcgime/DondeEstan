@@ -1,0 +1,9 @@
+name: consolidate-change
+version: 1.0.0
+description: Archiva una propuesta OpenSpec aprobada en archive/ tras aplicar sus deltas sobre el módulo vivo.
+command: python .ai-harness/skills/consolidate-change/runner.py
+arguments:
+  - name: change_id
+    required: false
+    description: Identificador de la carpeta del cambio en changes/
+

@@ -1,0 +1,62 @@
+# =============================================================================
+# GitLab CI/CD Pipeline — AI Harness Deterministic Quality Gates
+# -----------------------------------------------------------------------------
+# Ejecuta las puertas de enlace de calidad en entornos GitLab (Cloud o Self-Hosted).
+# =============================================================================
+
+image: python:3.11-slim
+
+stages:
+  - validate
+  - preflight
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip/
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+# 1. Auditoría de la estructura normativa del arnés
+harness_validator:
+  stage: validate
+  script:
+    - python .ai-harness/skills/harness-validator/runner.py
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# 2. Control estricto de código, arquitectura, tokens e integridad OpenSpec
+preflight_gate:
+  stage: preflight
+  script:
+    - python .ai-harness/skills/preflight/runner.py --strict
+    - python .ai-harness/skills/sync-sdd/runner.py
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# 3. Blindaje contra manipulaciones no autorizadas en Merge Requests
+tamper_resistance_check:
+  stage: validate
+  image: alpine/git:latest
+  before_script: []
+  script:
+    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - CHANGED_PROTECTED=$(git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME HEAD | grep -E '^(\.ai-harness/skills/|\.ai-harness/context/|\.gitlab-ci\.yml|\.github/|harness\.config\.yaml)' || true)
+    - |
+      if [ -n "$CHANGED_PROTECTED" ]; then
+        echo "AVISO: Se han detectado modificaciones en los archivos protegidos del arnés:"
+        echo "$CHANGED_PROTECTED"
+      else
+        echo "OK: Ningún árbitro ni archivo de gobernanza ha sido alterado."
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+

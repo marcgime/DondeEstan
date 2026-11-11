@@ -1,0 +1,15 @@
+name: propose-change
+version: 1.0.0
+description: Crea una propuesta de cambio aislada (delta OpenSpec) en .ai-harness/sdd/changes/ para su revisión rápida.
+command: python .ai-harness/skills/propose-change/runner.py
+arguments:
+  - name: slug
+    required: true
+    description: Identificador en kebab-case del cambio
+  - name: --title
+    required: false
+    description: Título legible
+  - name: --module
+    required: false
+    description: ID del módulo afectado
+
