@@ -67,5 +67,7 @@ sequenceDiagram
 
 | Contrato / Flujo | Símbolo de Código | Ruta en Disco | Pruebas Unitarias |
 |---|---|---|---|
-| CT-01 | `ProfileServiceContract` | `src/profile/contracts/profile_models.ts` | `tests/unit/profile/models_test.ts` |
-| CT-02 | `ProfileService` | `src/profile/services/profile_service.ts` | `tests/unit/profile/service_test.ts` |
+| CT-01 | `UserProfileUpdate` | `src/profile/types.ts` | `tests/unit/profile/profile_service.test.ts` |
+| CT-02 | `compressAndCropAvatar` | `src/profile/image_compressor.ts` | `tests/unit/profile/profile_service.test.ts` |
+| CT-03 | `ProfileService` | `src/profile/profile_service.ts` | `tests/unit/profile/profile_service.test.ts` |
+| UI-01 | `renderProfileView` | `src/profile/views/ProfileView.ts` | Compilación e integración Vite |

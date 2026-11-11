@@ -67,5 +67,6 @@ sequenceDiagram
 
 | Contrato / Flujo | Símbolo de Código | Ruta en Disco | Pruebas Unitarias |
 |---|---|---|---|
-| CT-01 | `AdminServiceContract` | `src/admin/contracts/admin_models.ts` | `tests/unit/admin/models_test.ts` |
-| CT-02 | `AdminService` | `src/admin/services/admin_service.ts` | `tests/unit/admin/service_test.ts` |
+| CT-01 | `WhitelistRecord`, `SystemConfig` | `src/admin/types.ts` | `tests/unit/admin/admin_service.test.ts` |
+| CT-02 | `AdminService` | `src/admin/admin_service.ts` | `tests/unit/admin/admin_service.test.ts` |
+| UI-01 | `renderAdminView` | `src/admin/views/AdminView.ts` | Compilación e integración Vite |
