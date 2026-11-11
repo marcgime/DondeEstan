@@ -37,7 +37,7 @@ export function renderMapView(
     <div class="relative h-full w-full overflow-hidden bg-surface-canvas text-text-primary">
       
       <!-- Top Floating Header Pill -->
-      <div class="absolute top-4 inset-x-4 z-30 flex justify-between items-center pointer-events-none safe-top">
+      <div class="absolute top-4 inset-x-4 z-[1100] flex justify-between items-center pointer-events-none safe-top">
         <div class="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
           <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans">
@@ -69,7 +69,7 @@ export function renderMapView(
       </div>
 
       <!-- Floating Action Controls (Right side) -->
-      <div class="absolute right-4 bottom-28 z-30 flex flex-col gap-3">
+      <div class="absolute right-4 bottom-28 z-[1100] flex flex-col gap-3">
         <!-- Re-center on me -->
         <button 
           id="btn-center-me"
@@ -94,10 +94,10 @@ export function renderMapView(
       </div>
 
       <!-- Bottom Sheet Modal Slot -->
-      <div id="card-modal-slot"></div>
+      <div id="card-modal-slot" class="relative z-[1200]"></div>
 
       <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 bottom-4 z-30 safe-bottom">
+      <nav class="absolute inset-x-4 bottom-4 z-[1100] safe-bottom pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full bg-surface-glass backdrop-blur-2xl border border-surface-glass-border shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab (Active) -->
