@@ -260,6 +260,19 @@ export function renderMapView(
     }
   });
 
+  // Navegación Bottom Dock
+  container.querySelector('#nav-btn-chat')?.addEventListener('click', () => {
+    if (options.onNavigateTab) {
+      options.onNavigateTab('chat');
+    }
+  });
+
+  container.querySelector('#nav-btn-profile')?.addEventListener('click', () => {
+    if (options.onNavigateTab) {
+      options.onNavigateTab('profile');
+    }
+  });
+
   // Retornar función de limpieza (desuscripción)
   return () => {
     tracker.stop();
