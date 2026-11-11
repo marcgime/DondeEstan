@@ -7,6 +7,9 @@ import { isUserApproved } from './auth/gatekeeper';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import type { Unsubscribe } from 'firebase/firestore';
 
+import { GeolocationTracker } from './location/tracker';
+import { renderMapView } from './location/views/MapView';
+
 const appContainer = document.getElementById('app');
 
 if (!appContainer) {
@@ -22,11 +25,16 @@ function init(): void {
   const { auth, db } = getFirebaseServices();
   const authService = new FamilyAuthService(auth, db);
   let profileUnsubscribe: Unsubscribe | null = null;
+  let activeCleanup: (() => void) | null = null;
 
   onAuthStateChanged(auth, async (user: User | null) => {
     if (profileUnsubscribe) {
       profileUnsubscribe();
       profileUnsubscribe = null;
+    }
+    if (activeCleanup) {
+      activeCleanup();
+      activeCleanup = null;
     }
 
     if (!user) {
@@ -44,6 +52,10 @@ function init(): void {
       user.uid,
       (profile) => {
         if (!profile || profile.status === 'pending_approval') {
+          if (activeCleanup) {
+            activeCleanup();
+            activeCleanup = null;
+          }
           renderGatekeeperScreen(appContainer!, {
             user: profile || {
               uid: user.uid,
@@ -60,7 +72,17 @@ function init(): void {
         }
 
         if (isUserApproved(profile)) {
-          renderApprovedMainShell(appContainer!, profile, authService);
+          if (!activeCleanup) {
+            const tracker = new GeolocationTracker({
+              uid: user.uid,
+              db,
+            });
+            activeCleanup = renderMapView(appContainer!, {
+              uid: user.uid,
+              db,
+              tracker,
+            });
+          }
           return;
         }
 
@@ -99,66 +121,6 @@ function renderConfigNotice(container: HTMLElement): void {
       </div>
     </div>
   `;
-}
-
-function renderApprovedMainShell(
-  container: HTMLElement,
-  profile: { display_name: string; role: string; email: string },
-  authService: FamilyAuthService
-): void {
-  container.innerHTML = `
-    <div class="h-full w-full flex flex-col justify-between p-6 safe-top safe-bottom bg-surface-canvas text-text-primary">
-      <header class="flex justify-between items-center py-2 border-b border-border-subtle">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-brand-on-primary font-bold text-sm">
-            ${escapeHtml(profile.display_name.charAt(0).toUpperCase())}
-          </div>
-          <div>
-            <h1 class="text-sm font-bold text-text-primary leading-tight">${escapeHtml(profile.display_name)}</h1>
-            <p class="text-[11px] font-semibold text-brand-tertiary uppercase tracking-wider">${escapeHtml(profile.role)}</p>
-          </div>
-        </div>
-
-        <button 
-          id="btn-shell-logout"
-          class="px-4 py-1.5 rounded-full bg-surface-base border border-border-subtle text-xs font-semibold hover:bg-surface-elevated transition-all"
-        >
-          Salir
-        </button>
-      </header>
-
-      <main class="flex-1 flex flex-col items-center justify-center text-center p-4">
-        <div class="w-16 h-16 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center mb-4">
-          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h2 class="text-xl font-extrabold mb-1">Acceso Aprobado</h2>
-        <p class="text-xs text-text-secondary max-w-xs mb-4">
-          Fase 1 completada con éxito. Listo para la integración de Google Maps en tiempo real y chat grupal (Fase 2).
-        </p>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-elevated border border-border-subtle text-xs font-bold text-brand-tertiary">
-          <span class="w-2 h-2 rounded-full bg-status-online"></span>
-          Núcleo Familiar Activo
-        </span>
-      </main>
-
-      <footer class="text-center py-2 text-[11px] text-text-disabled">
-        DondeEstan PWA &copy; 2026 &bull; Diseño Kinetic Bloom
-      </footer>
-    </div>
-  `;
-
-  const logoutBtn = container.querySelector('#btn-shell-logout');
-  logoutBtn?.addEventListener('click', async () => {
-    await authService.logout();
-  });
-}
-
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 init();

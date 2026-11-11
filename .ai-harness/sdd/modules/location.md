@@ -67,5 +67,8 @@ sequenceDiagram
 
 | Contrato / Flujo | Símbolo de Código | Ruta en Disco | Pruebas Unitarias |
 |---|---|---|---|
-| CT-01 | `LocationEngineContract` | `src/location/contracts/location_models.ts` | `tests/unit/location/models_test.ts` |
-| CT-02 | `LocationService` | `src/location/services/location_service.ts` | `tests/unit/location/service_test.ts` |
+| CT-LOC-01 | `calculateDistanceMeters` | `src/location/geo_utils.ts` | `tests/unit/location/throttle.test.ts` |
+| CT-LOC-02 | `LocationThrottleService` | `src/location/throttle.ts` | `tests/unit/location/throttle.test.ts` |
+| CT-LOC-03 | `isUserLive` | `src/location/presence.ts` | `tests/unit/location/presence.test.ts` |
+| CT-LOC-04 | `GeolocationTracker` | `src/location/tracker.ts` | `tests/unit/location/throttle.test.ts` |
+| CT-LOC-05 | `FamilyMapService` | `src/location/map_service.ts` | `tests/unit/location/presence.test.ts` |

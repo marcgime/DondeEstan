@@ -4,7 +4,8 @@
 change_id: "2026-11-fase2-map-location"
 title: "Fase 2: Mapa Google Maps y Geolocalización Reactiva con Throttling"
 module: "MOD-location"
-status: IMPLEMENTING
+status: CONSOLIDATED
+consolidated_at: "2026-11-11"
 created_at: "2026-11-11"
 author: "Antigravity"
 tier: core
