@@ -32,6 +32,8 @@ function init(): void {
   let activeCleanup: (() => void) | null = null;
   let currentTracker: GeolocationTracker | null = null;
   let currentTab: 'map' | 'chat' | 'profile' = 'map';
+  let isAppInitialized = false;
+  let latestProfile: UserProfile | null = null;
 
   onAuthStateChanged(auth, async (user: User | null) => {
     if (profileUnsubscribe) {
@@ -46,6 +48,8 @@ function init(): void {
       currentTracker.stop();
       currentTracker = null;
     }
+    isAppInitialized = false;
+    latestProfile = null;
 
     if (!user) {
       currentTab = 'map';
@@ -61,6 +65,7 @@ function init(): void {
       user.uid,
       (profile) => {
         if (!profile || profile.status === 'pending_approval') {
+          isAppInitialized = false;
           if (activeCleanup) {
             activeCleanup();
             activeCleanup = null;
@@ -81,8 +86,8 @@ function init(): void {
         }
 
         if (profile && isUserApproved(profile)) {
+          latestProfile = profile;
           const activeUser = user;
-          const approvedProfile: UserProfile = profile;
 
           if (!currentTracker) {
             currentTracker = new GeolocationTracker({
@@ -96,6 +101,8 @@ function init(): void {
               activeCleanup();
               activeCleanup = null;
             }
+
+            const currentProfile: UserProfile = (latestProfile || profile) as UserProfile;
 
             if (currentTab === 'map') {
               activeCleanup = renderMapView(appContainer!, {
@@ -114,8 +121,8 @@ function init(): void {
               activeCleanup = renderChatView(appContainer!, {
                 currentUser: {
                   uid: activeUser.uid,
-                  name: approvedProfile.display_name,
-                  photoUrl: approvedProfile.photo_url,
+                  name: currentProfile.display_name,
+                  photoUrl: currentProfile.photo_url,
                 },
                 chatService,
                 onNavigateTab: (tab) => {
@@ -128,7 +135,7 @@ function init(): void {
               });
             } else {
               activeCleanup = renderProfileView(appContainer!, {
-                profile: approvedProfile,
+                profile: currentProfile,
                 onNavigateTab: (tab) => {
                   currentTab = tab;
                   renderTab();
@@ -140,7 +147,12 @@ function init(): void {
             }
           }
 
-          renderTab();
+          // Solo renderizar la vista al inicio de la sesión aprobada o si no está inicializada.
+          // Evita el bucle de desmontaje y reconstrucción del mapa cada vez que el GPS actualiza el perfil en Firestore.
+          if (!isAppInitialized) {
+            isAppInitialized = true;
+            renderTab();
+          }
           return;
         }
 
