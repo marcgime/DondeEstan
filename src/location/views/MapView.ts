@@ -242,3 +242,4 @@ function renderMapFallback(container: HTMLElement, members: MemberLocationState[
     </div>
   `;
 }
+

@@ -50,3 +50,4 @@ export function formatRelativeTime(timestampMs: number, nowMs: number = Date.now
   const diffDays = Math.floor(diffHours / 24);
   return `hace ${diffDays} d`;
 }
+

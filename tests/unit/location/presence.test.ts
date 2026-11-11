@@ -23,3 +23,4 @@ describe('Presence Logic (Abrupt Disconnect Detection)', () => {
     expect(isUserLive('online', -1, now)).toBe(false);
   });
 });
+

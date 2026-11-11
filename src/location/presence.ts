@@ -15,3 +15,4 @@ export function isUserLive(
 
   return nowMs - updatedAtMs <= ABRUPT_DISCONNECT_THRESHOLD_MS;
 }
+

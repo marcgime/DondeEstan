@@ -34,3 +34,4 @@ export function loadGoogleMaps(apiKey?: string): Promise<void> {
 
   return loadPromise;
 }
+

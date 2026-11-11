@@ -6,3 +6,4 @@ export * from './tracker';
 export * from './map_service';
 export * from './views/MapView';
 export * from './components/LocationCard';
+

@@ -37,3 +37,4 @@ export class LocationThrottleService {
     return distanceMeters >= this.config.minDistanceMeters;
   }
 }
+
