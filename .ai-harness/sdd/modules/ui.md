@@ -52,3 +52,5 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 |---|---|---|---|
 | CT-UI-01 | `KineticBloomTokens` | `src/ui/theme/tokens.css` | `tests/unit/auth/gatekeeper.test.ts` |
 | CT-UI-02 | `renderGatekeeperScreen` | `src/ui/components/GatekeeperScreen.ts` | `tests/unit/auth/gatekeeper.test.ts` |
+| CT-UI-03 | `checkAndRenderIosInstallPrompt` | `src/ui/components/PwaInstallPrompt.ts` | `tests/unit/core/pwa.test.ts` |
+| CT-UI-04 | `PwaUtilities` | `src/core/pwa.ts` | `tests/unit/core/pwa.test.ts` |

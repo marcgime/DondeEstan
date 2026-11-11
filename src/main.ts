@@ -13,6 +13,8 @@ import { renderMapView } from './location/views/MapView';
 import { FamilyChatService, renderChatView } from './chat';
 import { ProfileService, renderProfileView } from './profile';
 import { AdminService, renderAdminView } from './admin';
+import { registerServiceWorker } from './core/pwa';
+import { checkAndRenderIosInstallPrompt } from './ui/components/PwaInstallPrompt';
 
 const appContainer = document.getElementById('app');
 
@@ -21,6 +23,8 @@ if (!appContainer) {
 }
 
 function init(): void {
+  registerServiceWorker();
+
   if (!isFirebaseConfigured()) {
     renderConfigNotice(appContainer!);
     return;
@@ -166,6 +170,9 @@ function init(): void {
                 },
               });
             }
+
+            // Comprobar si se debe mostrar el aviso didáctico de instalación PWA en iOS
+            checkAndRenderIosInstallPrompt(appContainer!);
           }
 
           // Solo renderizar la vista al inicio de la sesión aprobada o si no está inicializada.
