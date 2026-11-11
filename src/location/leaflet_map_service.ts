@@ -28,10 +28,10 @@ export class LeafletFamilyMapService {
       attributionControl: false,
     });
 
-    // CartoDB Voyager tiles (diseño limpio y moderno que encaja con Kinetic Bloom)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // OpenStreetMap standard tiles (completamente libre, sin API key requerida)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap contributors',
     }).addTo(this.map);
 
     return true;
@@ -134,3 +134,4 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
+
