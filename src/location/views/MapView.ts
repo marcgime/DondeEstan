@@ -4,6 +4,7 @@ import { isUserLive } from '../presence';
 import { formatRelativeTime } from '../geo_utils';
 import { loadGoogleMaps } from '../maps_loader';
 import { FamilyMapService } from '../map_service';
+import { LeafletFamilyMapService } from '../leaflet_map_service';
 import { renderLocationCard } from '../components/LocationCard';
 import type { GeolocationTracker } from '../tracker';
 
@@ -12,6 +13,14 @@ export interface MapViewOptions {
   db: Firestore;
   tracker: GeolocationTracker;
   onNavigateTab?: (tab: 'map' | 'chat' | 'profile') => void;
+  onLogout?: () => Promise<void>;
+}
+
+interface IMapEngine {
+  initialize(center?: Coordinates, zoom?: number): boolean;
+  updateMembers(members: MemberLocationState[]): void;
+  centerOn(coords: Coordinates, zoom?: number): void;
+  fitBounds(coordinates: Coordinates[]): void;
 }
 
 export function renderMapView(
@@ -19,7 +28,7 @@ export function renderMapView(
   options: MapViewOptions
 ): () => void {
   const { db, tracker } = options;
-  let mapService: FamilyMapService | null = null;
+  let mapService: IMapEngine | null = null;
   let membersUnsubscribe: Unsubscribe | null = null;
   let currentUserCoords: Coordinates | null = null;
   let currentMembers: MemberLocationState[] = [];
@@ -35,6 +44,16 @@ export function renderMapView(
             Localizando familia...
           </span>
         </div>
+        <button 
+          id="btn-logout"
+          class="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock text-text-secondary hover:text-status-error transition-colors text-xs font-semibold"
+          title="Cerrar sesión"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="hidden sm:inline">Salir</span>
+        </button>
       </div>
 
       <!-- Map Container -->
@@ -118,10 +137,33 @@ export function renderMapView(
   // Iniciar tracker de geolocalización
   tracker.start();
 
-  // Inicializar Google Maps
+  function initLeaflet(): void {
+    const leafletService = new LeafletFamilyMapService(mapContainer, (selectedMember) => {
+      renderLocationCard(modalSlot, {
+        member: selectedMember,
+        onCenter: (coords) => {
+          mapService?.centerOn(coords);
+        },
+        onClose: () => {
+          modalSlot.innerHTML = '';
+        },
+      });
+    });
+    const defaultCenter = currentUserCoords || { lat: 41.5674, lng: 2.0109 };
+    leafletService.initialize(defaultCenter, 15);
+    mapService = leafletService;
+    if (currentMembers.length > 0) {
+      mapService.updateMembers(currentMembers);
+      if (currentUserCoords) {
+        mapService.centerOn(currentUserCoords);
+      }
+    }
+  }
+
+  // Inicializar Google Maps con fallback automático a Leaflet interactivo
   loadGoogleMaps()
     .then(() => {
-      mapService = new FamilyMapService(mapContainer, (selectedMember) => {
+      const gMap = new FamilyMapService(mapContainer, (selectedMember) => {
         renderLocationCard(modalSlot, {
           member: selectedMember,
           onCenter: (coords) => {
@@ -133,14 +175,18 @@ export function renderMapView(
         });
       });
 
-      const initialized = mapService.initialize();
-      if (initialized && currentMembers.length > 0) {
-        mapService.updateMembers(currentMembers);
+      const initialized = gMap.initialize();
+      if (initialized) {
+        mapService = gMap;
+        if (currentMembers.length > 0) {
+          mapService.updateMembers(currentMembers);
+        }
+      } else {
+        initLeaflet();
       }
     })
-    .catch((err) => {
-      console.warn('Google Maps no disponible, modo visual activo:', err.message);
-      renderMapFallback(mapContainer, currentMembers);
+    .catch(() => {
+      initLeaflet();
     });
 
   // Suscribirse a la colección de usuarios en tiempo real
@@ -171,6 +217,16 @@ export function renderMapView(
       };
     });
 
+    // Detectar posición del usuario actual para autocentrado
+    const me = currentMembers.find((m) => m.uid === options.uid);
+    if (me?.location) {
+      const wasFirstFix = !currentUserCoords;
+      currentUserCoords = { lat: me.location.lat, lng: me.location.lng };
+      if (wasFirstFix && mapService) {
+        mapService.centerOn(currentUserCoords);
+      }
+    }
+
     // Actualizar badge de miembros activos
     const liveCount = currentMembers.filter((m) => m.isLive).length;
     if (badgeEl) {
@@ -198,6 +254,12 @@ export function renderMapView(
     }
   });
 
+  container.querySelector('#btn-logout')?.addEventListener('click', async () => {
+    if (options.onLogout) {
+      await options.onLogout();
+    }
+  });
+
   // Retornar función de limpieza (desuscripción)
   return () => {
     tracker.stop();
@@ -206,40 +268,5 @@ export function renderMapView(
       membersUnsubscribe = null;
     }
   };
-}
-
-function renderMapFallback(container: HTMLElement, members: MemberLocationState[]): void {
-  container.innerHTML = `
-    <div class="h-full w-full flex flex-col items-center justify-center p-6 text-center text-text-primary">
-      <div class="w-16 h-16 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center mb-3">
-        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <h2 class="text-base font-bold mb-1">Mapa Familiar Reactivo</h2>
-      <p class="text-xs text-text-secondary max-w-xs mb-4">
-        Google Maps API pendiente de clave en <code class="bg-surface-elevated px-1 py-0.5 rounded text-brand-primary">.env</code>. Posiciones de familiares conectadas en tiempo real:
-      </p>
-      <div class="w-full max-w-xs flex flex-col gap-2">
-        ${
-          members.length > 0
-            ? members
-                .map(
-                  (m) => `
-          <div class="flex items-center justify-between p-2.5 rounded-2xl bg-surface-glass border border-surface-glass-border text-xs">
-            <span class="font-bold">${m.display_name}</span>
-            <span class="${m.isLive ? 'text-brand-tertiary font-semibold' : 'text-text-disabled'}">${
-                    m.isLive ? 'En directo' : m.relativeTimeText
-                  }</span>
-          </div>
-        `
-                )
-                .join('')
-            : '<p class="text-xs text-text-disabled">Esperando reporte de familiares...</p>'
-        }
-      </div>
-    </div>
-  `;
 }
 

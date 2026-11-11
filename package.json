@@ -10,7 +10,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "firebase": "^10.14.1"
+    "@types/leaflet": "^1.9.22",
+    "firebase": "^10.14.1",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
@@ -21,4 +23,3 @@
     "vitest": "^2.1.4"
   }
 }
-

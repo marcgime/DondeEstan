@@ -81,6 +81,9 @@ function init(): void {
               uid: user.uid,
               db,
               tracker,
+              onLogout: async () => {
+                await authService.logout();
+              },
             });
           }
           return;
