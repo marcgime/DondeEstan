@@ -20,7 +20,7 @@ export function renderChatView(
     <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
       <!-- Top Header -->
-      <header class="h-16 shrink-0 px-4 safe-top flex items-center justify-between border-b border-border-subtle bg-surface-glass backdrop-blur-xl z-20">
+      <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -70,10 +70,10 @@ export function renderChatView(
       </div>
 
       <!-- Message Composer Bar (Floating above Bottom Dock) -->
-      <div class="absolute inset-x-4 bottom-20 z-20">
+      <div class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5rem)] z-20">
         <form 
           id="chat-composer-form" 
-          class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock"
+          class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-full glass-panel shadow-dock"
         >
           <input 
             type="text" 
@@ -97,8 +97,8 @@ export function renderChatView(
       </div>
 
       <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 bottom-4 z-30 safe-bottom">
-        <div class="max-w-xs mx-auto h-14 rounded-full bg-surface-glass backdrop-blur-2xl border border-surface-glass-border shadow-dock flex items-center justify-around px-2">
+      <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-30 pointer-events-auto">
+        <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab -->
           <button 
@@ -252,7 +252,7 @@ function renderMessagesList(
           </div>
           <div class="flex flex-col items-start gap-1 max-w-[80%]">
             <span class="text-[11px] font-bold text-text-secondary pl-1">${escapeHtml(msg.sender_name)}</span>
-            <div class="px-4 py-2.5 rounded-2xl rounded-bl-xs bg-surface-glass backdrop-blur-md border border-surface-glass-border text-text-primary text-sm shadow-xs break-words leading-relaxed font-sans">
+            <div class="px-4 py-2.5 rounded-2xl rounded-bl-xs glass-panel text-text-primary text-sm shadow-xs break-words leading-relaxed font-sans">
               ${escapeHtml(msg.text)}
             </div>
             <span class="text-[10px] text-text-disabled pl-1 font-mono">${timeStr}</span>

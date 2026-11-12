@@ -25,7 +25,7 @@ export function renderProfileView(
       <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
         
         <!-- Top Header -->
-        <header class="h-16 shrink-0 px-4 safe-top flex items-center justify-between border-b border-border-subtle bg-surface-glass backdrop-blur-xl z-20">
+        <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20">
           <h1 class="text-sm font-bold text-text-primary">Mi Perfil Familiar</h1>
           <button 
             id="profile-btn-logout"
@@ -123,7 +123,7 @@ export function renderProfileView(
             <div class="w-full max-w-sm mt-1">
               <button 
                 id="btn-open-admin"
-                class="w-full p-4 rounded-2xl bg-surface-glass border border-brand-primary/40 text-brand-primary font-bold text-xs flex items-center justify-between shadow-dock hover:bg-brand-primary/5 active:scale-98 transition-all"
+                class="w-full p-4 rounded-2xl glass-panel text-brand-primary font-bold text-xs flex items-center justify-between shadow-dock hover:bg-brand-primary/5 active:scale-98 transition-all"
               >
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center">
@@ -147,17 +147,17 @@ export function renderProfileView(
 
           <!-- Info Cards -->
           <div class="w-full max-w-sm flex flex-col gap-2.5 mt-1">
-            <div class="p-3.5 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between text-xs">
+            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
               <span class="font-bold text-text-secondary">Estado de cuenta</span>
               <span class="text-status-online font-bold uppercase tracking-wider">Activa y Aprobada</span>
             </div>
 
-            <div class="p-3.5 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between text-xs">
+            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
               <span class="font-bold text-text-secondary">Privacidad</span>
               <span class="text-brand-primary font-bold">Cero Telemetría</span>
             </div>
 
-            <div class="p-3.5 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between text-xs">
+            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
               <span class="font-bold text-text-secondary">Núcleo</span>
               <span class="text-text-primary font-bold">Familiar privado (sin límite)</span>
             </div>
@@ -166,8 +166,8 @@ export function renderProfileView(
         </div>
 
         <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-        <nav class="absolute inset-x-4 bottom-4 z-[1100] safe-bottom">
-          <div class="max-w-xs mx-auto h-14 rounded-full bg-surface-glass backdrop-blur-2xl border border-surface-glass-border shadow-dock flex items-center justify-around px-2">
+        <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-[1100] pointer-events-auto">
+          <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
             
             <!-- Map Tab -->
             <button 

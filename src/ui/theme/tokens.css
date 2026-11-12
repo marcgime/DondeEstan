@@ -64,17 +64,39 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.safe-h-screen {
-  height: 100vh;
-  height: 100dvh;
+/* Glassmorphism con soporte completo para WebKit iOS Safari */
+.glass-panel {
+  background: var(--color-surface-glass);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--color-surface-glass-border);
 }
 
-/* Prevent elastic bounce on iOS Safari */
+.glass-dock {
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--color-surface-glass-border);
+}
+
+/* Prevent elastic bounce on iOS Safari and guarantee full viewport coverage */
 html, body {
-  overscroll-behavior-y: none;
+  height: 100%;
+  height: -webkit-fill-available;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
   touch-action: pan-x pan-y;
   -webkit-tap-highlight-color: transparent;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-surface-canvas);
+}
+
+#app {
+  height: 100%;
+  height: -webkit-fill-available;
+  height: 100dvh;
 }
 
 /* Transiciones fluidas entre pestañas */

@@ -14,7 +14,7 @@ export function renderLocationCard(
 
   container.innerHTML = `
     <div class="fixed inset-x-0 bottom-0 z-[1200] p-4 safe-bottom animate-in slide-in-from-bottom duration-200">
-      <div class="w-full max-w-sm mx-auto bg-surface-glass backdrop-blur-xl border border-surface-glass-border rounded-3xl p-5 shadow-dock text-text-primary">
+      <div class="w-full max-w-sm mx-auto glass-panel rounded-3xl p-5 shadow-dock text-text-primary">
         
         <!-- Header Row -->
         <div class="flex items-center justify-between mb-4">

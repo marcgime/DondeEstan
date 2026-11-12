@@ -13,7 +13,7 @@ export function checkAndRenderIosInstallPrompt(container: HTMLElement): void {
   const banner = document.createElement('div');
   banner.id = 'ios-install-banner';
   banner.className =
-    'fixed inset-x-3 bottom-20 z-[1300] p-4 rounded-3xl bg-surface-glass backdrop-blur-2xl border border-surface-glass-border shadow-alert text-text-primary safe-bottom animate-in slide-in-from-bottom duration-300 max-w-sm mx-auto';
+    'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-[1300] p-4 rounded-3xl glass-dock shadow-alert text-text-primary animate-in slide-in-from-bottom duration-300 max-w-sm mx-auto';
 
   banner.innerHTML = `
     <div class="flex items-start justify-between gap-3">

@@ -28,7 +28,7 @@ export function renderAdminView(
     <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-top safe-bottom">
       
       <!-- Top Bar -->
-      <header class="h-16 shrink-0 px-4 border-b border-border-subtle bg-surface-glass backdrop-blur-xl flex items-center justify-between z-10">
+      <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 border-b border-border-subtle glass-panel flex items-center justify-between z-10">
         <div class="flex items-center gap-2.5">
           <button 
             id="admin-btn-back" 
@@ -50,7 +50,7 @@ export function renderAdminView(
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-lg mx-auto w-full pb-16">
         
         <!-- Section 1: Switch de Registro Familiar -->
-        <div class="p-4 rounded-3xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between">
+        <div class="p-4 rounded-3xl glass-panel shadow-xs flex items-center justify-between">
           <div>
             <h2 class="text-xs font-bold text-text-primary">Registro Familiar</h2>
             <p id="reg-status-text" class="text-[11px] text-text-secondary mt-0.5">
@@ -216,7 +216,7 @@ export function renderAdminView(
     listEl.innerHTML = pendingMembers
       .map(
         (m) => `
-        <div class="p-3.5 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between gap-3">
+        <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 overflow-hidden">
             <div class="w-9 h-9 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-xs font-bold shrink-0">
               ${(m.display_name || 'F')[0].toUpperCase()}
@@ -325,7 +325,7 @@ export function renderAdminView(
     listEl.innerHTML = whitelistRecords
       .map(
         (r) => `
-        <div class="p-3 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between text-xs">
+        <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
           <div class="flex items-center gap-2 truncate">
             <span class="w-2 h-2 rounded-full ${
               r.status === 'active'

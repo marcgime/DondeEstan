@@ -38,8 +38,8 @@ export function renderMapView(
     <div class="relative h-full w-full overflow-hidden bg-surface-canvas text-text-primary">
       
       <!-- Top Floating Header Pill -->
-      <div class="absolute top-4 inset-x-4 z-[1100] flex justify-between items-center pointer-events-none safe-top">
-        <div class="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock">
+      <div class="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] inset-x-4 z-[1100] flex justify-between items-center pointer-events-none">
+        <div class="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-full glass-panel shadow-dock">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
           <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans">
             Localizando familia...
@@ -47,7 +47,7 @@ export function renderMapView(
         </div>
         <button 
           id="btn-logout"
-          class="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock text-text-secondary hover:text-status-error transition-colors text-xs font-semibold"
+          class="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full glass-panel shadow-dock text-text-secondary hover:text-status-error transition-colors text-xs font-semibold"
           title="Cerrar sesión"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -70,11 +70,11 @@ export function renderMapView(
       </div>
 
       <!-- Floating Action Controls (Right side) -->
-      <div class="absolute right-4 bottom-28 z-[1100] flex flex-col gap-3">
+      <div class="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-[1100] flex flex-col gap-3">
         <!-- Re-center on me -->
         <button 
           id="btn-center-me"
-          class="w-12 h-12 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock flex items-center justify-center text-brand-primary hover:scale-105 active:scale-95 transition-all"
+          class="w-12 h-12 rounded-full glass-panel shadow-dock flex items-center justify-center text-brand-primary hover:scale-105 active:scale-95 transition-all"
           title="Centrar en mi posición"
         >
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -85,7 +85,7 @@ export function renderMapView(
         <!-- Fit all family bounds -->
         <button 
           id="btn-fit-bounds"
-          class="w-12 h-12 rounded-full bg-surface-glass backdrop-blur-xl border border-surface-glass-border shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all"
+          class="w-12 h-12 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all"
           title="Ver a todos los familiares"
         >
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -98,8 +98,8 @@ export function renderMapView(
       <div id="card-modal-slot" class="relative z-[1200]"></div>
 
       <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 bottom-4 z-[1100] safe-bottom pointer-events-auto">
-        <div class="max-w-xs mx-auto h-14 rounded-full bg-surface-glass backdrop-blur-2xl border border-surface-glass-border shadow-dock flex items-center justify-around px-2">
+      <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-[1100] pointer-events-auto">
+        <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab (Active) -->
           <button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm">

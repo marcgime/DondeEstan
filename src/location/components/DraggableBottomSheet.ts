@@ -20,7 +20,7 @@ export function renderDraggableBottomSheet(
     <!-- Draggable Sheet Container -->
     <div 
       id="draggable-sheet"
-      class="fixed inset-x-0 bottom-0 z-[1250] bg-surface-glass backdrop-blur-2xl border-t border-surface-glass-border rounded-t-3xl shadow-dock text-text-primary safe-bottom transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
+      class="fixed inset-x-0 bottom-0 z-[1250] glass-dock rounded-t-3xl shadow-dock text-text-primary pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
       style="transform: translateY(0);"
     >
       <!-- Drag Handle -->
