@@ -5,7 +5,8 @@ import { formatRelativeTime } from '../geo_utils';
 import { loadGoogleMaps } from '../maps_loader';
 import { FamilyMapService } from '../map_service';
 import { LeafletFamilyMapService } from '../leaflet_map_service';
-import { renderLocationCard } from '../components/LocationCard';
+import { renderDraggableBottomSheet } from '../components/DraggableBottomSheet';
+import { triggerHaptic } from '../../ui/utils/haptics';
 import type { GeolocationTracker } from '../tracker';
 
 export interface MapViewOptions {
@@ -139,7 +140,7 @@ export function renderMapView(
 
   function initLeaflet(): void {
     const leafletService = new LeafletFamilyMapService(mapContainer, (selectedMember) => {
-      renderLocationCard(modalSlot, {
+      renderDraggableBottomSheet(modalSlot, {
         member: selectedMember,
         onCenter: (coords) => {
           mapService?.centerOn(coords);
@@ -164,7 +165,7 @@ export function renderMapView(
   loadGoogleMaps()
     .then(() => {
       const gMap = new FamilyMapService(mapContainer, (selectedMember) => {
-        renderLocationCard(modalSlot, {
+        renderDraggableBottomSheet(modalSlot, {
           member: selectedMember,
           onCenter: (coords) => {
             mapService?.centerOn(coords);
@@ -240,12 +241,14 @@ export function renderMapView(
 
   // Controles
   container.querySelector('#btn-center-me')?.addEventListener('click', () => {
+    triggerHaptic('medium');
     if (currentUserCoords && mapService) {
       mapService.centerOn(currentUserCoords);
     }
   });
 
   container.querySelector('#btn-fit-bounds')?.addEventListener('click', () => {
+    triggerHaptic('light');
     const validCoords = currentMembers
       .map((m) => m.location)
       .filter((loc): loc is Coordinates & { updated_at: number } => Boolean(loc));
@@ -255,6 +258,7 @@ export function renderMapView(
   });
 
   container.querySelector('#btn-logout')?.addEventListener('click', async () => {
+    triggerHaptic('light');
     if (options.onLogout) {
       await options.onLogout();
     }
@@ -262,12 +266,14 @@ export function renderMapView(
 
   // Navegación Bottom Dock
   container.querySelector('#nav-btn-chat')?.addEventListener('click', () => {
+    triggerHaptic('light');
     if (options.onNavigateTab) {
       options.onNavigateTab('chat');
     }
   });
 
   container.querySelector('#nav-btn-profile')?.addEventListener('click', () => {
+    triggerHaptic('light');
     if (options.onNavigateTab) {
       options.onNavigateTab('profile');
     }

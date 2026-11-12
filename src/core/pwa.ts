@@ -41,6 +41,33 @@ export function dismissIosInstallPrompt(): void {
   }
 }
 
+/**
+ * Actualiza el contador de mensajes o eventos no leídos en el icono de la aplicación (PWA Badging).
+ */
+export async function updateAppBadge(count: number): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !('setAppBadge' in navigator)) {
+    return false;
+  }
+  try {
+    if (count > 0) {
+      await (navigator as unknown as { setAppBadge: (n: number) => Promise<void> }).setAppBadge(count);
+    } else {
+      await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
+    }
+    return true;
+  } catch (err) {
+    console.warn('No se pudo actualizar el badging de la PWA:', err);
+    return false;
+  }
+}
+
+/**
+ * Limpia el badge del icono de la PWA.
+ */
+export async function clearAppBadge(): Promise<boolean> {
+  return updateAppBadge(0);
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return null;

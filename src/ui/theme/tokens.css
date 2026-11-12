@@ -77,3 +77,20 @@ html, body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* Transiciones fluidas entre pestañas */
+.view-enter {
+  animation: viewSlideIn 0.25s cubic-bezier(0.2, 0.0, 0, 1.0) forwards;
+}
+
+@keyframes viewSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+

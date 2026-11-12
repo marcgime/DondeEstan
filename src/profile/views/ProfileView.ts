@@ -1,6 +1,7 @@
 import type { ProfileService } from '../profile_service';
 import { compressAndCropAvatar } from '../image_compressor';
 import type { UserProfile } from '../../auth/types';
+import { triggerHaptic } from '../../ui/utils/haptics';
 
 export interface ProfileViewOptions {
   profile: UserProfile;
@@ -209,18 +210,22 @@ export function renderProfileView(
 
   function bindEvents(): void {
     container.querySelector('#nav-profile-map')?.addEventListener('click', () => {
+      triggerHaptic('light');
       onNavigateTab('map');
     });
 
     container.querySelector('#nav-profile-chat')?.addEventListener('click', () => {
+      triggerHaptic('light');
       onNavigateTab('chat');
     });
 
     container.querySelector('#profile-btn-logout')?.addEventListener('click', async () => {
+      triggerHaptic('light');
       await onLogout();
     });
 
     container.querySelector('#btn-open-admin')?.addEventListener('click', () => {
+      triggerHaptic('medium');
       if (onOpenAdminPanel) {
         onOpenAdminPanel();
       }

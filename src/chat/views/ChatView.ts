@@ -1,5 +1,6 @@
 import type { FamilyChatService } from '../chat_service';
 import type { ChatMessage, ChatSender } from '../types';
+import { triggerHaptic } from '../../ui/utils/haptics';
 
 export interface ChatViewOptions {
   currentUser: ChatSender;
@@ -167,6 +168,7 @@ export function renderChatView(
 
     try {
       await chatService.sendMessage(currentUser, text);
+      triggerHaptic('success');
       inputEl.value = '';
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al enviar el mensaje');
@@ -179,14 +181,17 @@ export function renderChatView(
 
   // Eventos de navegación
   container.querySelector('#nav-btn-map')?.addEventListener('click', () => {
+    triggerHaptic('light');
     onNavigateTab('map');
   });
 
   container.querySelector('#nav-btn-profile')?.addEventListener('click', () => {
+    triggerHaptic('light');
     onNavigateTab('profile');
   });
 
   container.querySelector('#chat-btn-logout')?.addEventListener('click', async () => {
+    triggerHaptic('light');
     if (onLogout) {
       await onLogout();
     }

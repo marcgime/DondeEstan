@@ -110,6 +110,11 @@ function init(): void {
               activeCleanup = null;
             }
 
+            // Aplicar animación suave de entrada
+            appContainer!.classList.remove('view-enter');
+            void appContainer!.offsetWidth; // Force reflow
+            appContainer!.classList.add('view-enter');
+
             const currentProfile: UserProfile = (latestProfile || profile) as UserProfile;
 
             if (currentTab === 'map') {
