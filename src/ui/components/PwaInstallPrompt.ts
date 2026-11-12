@@ -53,3 +53,4 @@ export function checkAndRenderIosInstallPrompt(container: HTMLElement): void {
 
   container.appendChild(banner);
 }
+

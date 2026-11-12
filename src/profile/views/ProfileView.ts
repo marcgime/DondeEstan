@@ -158,7 +158,7 @@ export function renderProfileView(
 
             <div class="p-3.5 rounded-2xl bg-surface-glass border border-surface-glass-border shadow-xs flex items-center justify-between text-xs">
               <span class="font-bold text-text-secondary">Núcleo</span>
-              <span class="text-text-primary font-bold">Máximo 8 personas</span>
+              <span class="text-text-primary font-bold">Familiar privado (sin límite)</span>
             </div>
           </div>
 

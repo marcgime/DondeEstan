@@ -45,6 +45,12 @@ describe('AdminService', () => {
     it('debe registrar el correo normalizado en la lista blanca', async () => {
       await expect(service.addWhitelistEmail('  Familiar@Correo.COM  ')).resolves.not.toThrow();
     });
+
+    it('permite registrar miembros en la lista blanca sin restricción de cuota fija', async () => {
+      for (let i = 1; i <= 20; i++) {
+        await expect(service.addWhitelistEmail(`miembro${i}@familia.com`)).resolves.not.toThrow();
+      }
+    });
   });
 
   describe('purgeMember', () => {

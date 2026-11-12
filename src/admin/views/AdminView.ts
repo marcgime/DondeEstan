@@ -93,8 +93,13 @@ export function renderAdminView(
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
               Lista Blanca (Preautorizados)
             </h2>
-            <span class="text-[11px] text-text-disabled">Máx 8</span>
+            <span id="whitelist-count-badge" class="text-[11px] font-bold text-text-secondary">
+              0 autorizados
+            </span>
           </div>
+
+          <!-- Quota Alert Banner (>15 members) -->
+          <div id="whitelist-quota-alert" class="hidden"></div>
 
           <!-- Add Email Form -->
           <form id="form-add-whitelist" class="flex gap-2">
@@ -271,9 +276,44 @@ export function renderAdminView(
 
   function renderWhitelist(): void {
     const listEl = container.querySelector('#whitelist-list-container');
+    const countBadge = container.querySelector('#whitelist-count-badge');
+    const alertEl = container.querySelector('#whitelist-quota-alert');
     if (!listEl) return;
 
-    if (whitelistRecords.length === 0) {
+    const totalCount = whitelistRecords.length;
+
+    // Actualizar contador sin límite máximo fijo
+    if (countBadge) {
+      countBadge.textContent = `${totalCount} ${totalCount === 1 ? 'familiar' : 'familiares'}`;
+      countBadge.className =
+        totalCount > 15
+          ? 'text-[11px] font-bold text-status-warning'
+          : 'text-[11px] font-bold text-text-secondary';
+    }
+
+    // Alerta preventiva cuando excede de 15 personas
+    if (alertEl) {
+      if (totalCount > 15) {
+        alertEl.className =
+          'p-3.5 rounded-2xl bg-status-warning/15 border border-status-warning/40 text-text-primary text-xs flex items-start gap-2.5 animate-in fade-in duration-200';
+        alertEl.innerHTML = `
+          <svg class="w-5 h-5 text-status-warning shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p class="font-bold text-text-primary">Aviso: ${totalCount} familiares registrados</p>
+            <p class="text-[11px] text-text-secondary mt-0.5 leading-snug">
+              Al superar 15 miembros se aconseja monitorizar las cuotas diarias del plan gratuito Spark de Firebase para evitar saturar las lecturas en tiempo real.
+            </p>
+          </div>
+        `;
+      } else {
+        alertEl.className = 'hidden';
+        alertEl.innerHTML = '';
+      }
+    }
+
+    if (totalCount === 0) {
       listEl.innerHTML = `
         <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
           La lista blanca está vacía. Añade el primer correo arriba.
