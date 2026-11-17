@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -129,6 +130,14 @@ export class FamilyAuthService {
 
   async logout(): Promise<void> {
     await signOut(this.auth);
+  }
+
+  async sendPasswordReset(rawEmail: string): Promise<void> {
+    const email = normalizeEmail(rawEmail);
+    if (!email) {
+      throw new Error('Por favor, introduce un correo electrónico válido.');
+    }
+    await sendPasswordResetEmail(this.auth, email);
   }
 }
 

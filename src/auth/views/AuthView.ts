@@ -11,8 +11,10 @@ export function renderAuthView(
 ): void {
   const { authService, onAuthenticated } = options;
   let isRegisterMode = false;
+  let isResetMode = false;
   let isLoading = false;
   let errorMessage = '';
+  let successMessage = '';
 
   function render(): void {
     container.innerHTML = `
@@ -34,29 +36,43 @@ export function renderAuthView(
             Localizador Familiar Privado
           </p>
 
-          <!-- Toggle Pills -->
-          <div class="w-full flex p-1 mb-6 rounded-full bg-surface-base border border-border-subtle">
-            <button 
-              id="tab-login"
-              class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
-                !isRegisterMode
-                  ? 'bg-brand-primary text-brand-on-primary shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
-              }"
-            >
-              Iniciar Sesión
-            </button>
-            <button 
-              id="tab-register"
-              class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
-                isRegisterMode
-                  ? 'bg-brand-primary text-brand-on-primary shadow-sm'
-                  : 'text-text-secondary hover:text-text-primary'
-              }"
-            >
-              Solicitar Registro
-            </button>
-          </div>
+          ${
+            !isResetMode
+              ? `
+            <!-- Toggle Pills -->
+            <div class="w-full flex p-1 mb-6 rounded-full bg-surface-base border border-border-subtle">
+              <button 
+                id="tab-login"
+                class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
+                  !isRegisterMode
+                    ? 'bg-brand-primary text-brand-on-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }"
+              >
+                Iniciar Sesión
+              </button>
+              <button 
+                id="tab-register"
+                class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
+                  isRegisterMode
+                    ? 'bg-brand-primary text-brand-on-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }"
+              >
+                Solicitar Registro
+              </button>
+            </div>
+          `
+              : `
+            <!-- Header modo recuperación -->
+            <div class="w-full mb-5 text-center">
+              <h2 class="text-base font-bold text-text-primary">Recuperar Contraseña</h2>
+              <p class="text-xs text-text-secondary mt-1">
+                Introduce tu correo y te enviaremos un enlace para restablecerla.
+              </p>
+            </div>
+          `
+          }
 
           <!-- Error Alert -->
           ${
@@ -72,10 +88,24 @@ export function renderAuthView(
               : ''
           }
 
+          <!-- Success Alert -->
+          ${
+            successMessage
+              ? `
+            <div class="w-full p-3 mb-4 rounded-2xl bg-status-online/10 border border-status-online/30 text-status-online text-xs font-medium flex items-start gap-2">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>${escapeHtml(successMessage)}</span>
+            </div>
+          `
+              : ''
+          }
+
           <!-- Form -->
           <form id="auth-form" class="w-full flex flex-col gap-3.5">
             ${
-              isRegisterMode
+              isRegisterMode && !isResetMode
                 ? `
               <div class="flex flex-col gap-1">
                 <label class="text-xs font-bold text-text-secondary pl-1">Nombre Completo</label>
@@ -102,17 +132,38 @@ export function renderAuthView(
               />
             </div>
 
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-text-secondary pl-1">Contraseña</label>
-              <input 
-                type="password" 
-                id="input-password"
-                placeholder="${isRegisterMode ? 'Mínimo 8 caracteres' : '••••••••'}" 
-                minlength="${isRegisterMode ? 8 : 1}"
-                required
-                class="w-full h-12 px-4 rounded-full bg-surface-base border border-border-subtle text-text-primary placeholder:text-text-disabled text-sm focus:outline-none focus:border-brand-primary transition-all"
-              />
-            </div>
+            ${
+              !isResetMode
+                ? `
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center justify-between pl-1">
+                  <label class="text-xs font-bold text-text-secondary">Contraseña</label>
+                  ${
+                    !isRegisterMode
+                      ? `
+                    <button 
+                      type="button" 
+                      id="btn-forgot-password" 
+                      class="text-[11px] font-semibold text-brand-primary hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  `
+                      : ''
+                  }
+                </div>
+                <input 
+                  type="password" 
+                  id="input-password"
+                  placeholder="${isRegisterMode ? 'Mínimo 8 caracteres' : '••••••••'}" 
+                  minlength="${isRegisterMode ? 8 : 1}"
+                  required
+                  class="w-full h-12 px-4 rounded-full bg-surface-base border border-border-subtle text-text-primary placeholder:text-text-disabled text-sm focus:outline-none focus:border-brand-primary transition-all"
+                />
+              </div>
+            `
+                : ''
+            }
 
             <button 
               type="submit" 
@@ -129,15 +180,31 @@ export function renderAuthView(
                 </svg>
                 <span>Procesando...</span>
               `
+                  : isResetMode
+                  ? 'Enviar enlace de recuperación'
                   : isRegisterMode
                   ? 'Solicitar Acceso'
                   : 'Entrar'
               }
             </button>
+
+            ${
+              isResetMode
+                ? `
+              <button 
+                type="button" 
+                id="btn-cancel-reset" 
+                class="w-full py-2.5 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors text-center"
+              >
+                Volver a Iniciar Sesión
+              </button>
+            `
+                : ''
+            }
           </form>
 
           ${
-            isRegisterMode
+            isRegisterMode && !isResetMode
               ? `
             <p class="text-[11px] text-text-disabled text-center mt-4 leading-normal px-2">
               * El alta requiere que tu email esté preautorizado en la lista blanca del núcleo familiar.
@@ -157,21 +224,41 @@ export function renderAuthView(
     const tabLogin = container.querySelector('#tab-login');
     const tabRegister = container.querySelector('#tab-register');
     const form = container.querySelector('#auth-form') as HTMLFormElement | null;
+    const btnForgotPassword = container.querySelector('#btn-forgot-password');
+    const btnCancelReset = container.querySelector('#btn-cancel-reset');
 
     tabLogin?.addEventListener('click', () => {
-      if (isRegisterMode) {
+      if (isRegisterMode || isResetMode) {
         isRegisterMode = false;
+        isResetMode = false;
         errorMessage = '';
+        successMessage = '';
         render();
       }
     });
 
     tabRegister?.addEventListener('click', () => {
-      if (!isRegisterMode) {
+      if (!isRegisterMode || isResetMode) {
         isRegisterMode = true;
+        isResetMode = false;
         errorMessage = '';
+        successMessage = '';
         render();
       }
+    });
+
+    btnForgotPassword?.addEventListener('click', () => {
+      isResetMode = true;
+      errorMessage = '';
+      successMessage = '';
+      render();
+    });
+
+    btnCancelReset?.addEventListener('click', () => {
+      isResetMode = false;
+      errorMessage = '';
+      successMessage = '';
+      render();
     });
 
     form?.addEventListener('submit', async (e) => {
@@ -186,15 +273,22 @@ export function renderAuthView(
 
       isLoading = true;
       errorMessage = '';
+      successMessage = '';
       render();
 
       try {
-        if (isRegisterMode) {
+        if (isResetMode) {
+          await authService.sendPasswordReset(email);
+          isLoading = false;
+          successMessage = 'Enlace enviado. Revisa tu bandeja de entrada o spam para restablecer la contraseña.';
+          render();
+        } else if (isRegisterMode) {
           await authService.register(email, password, name);
+          onAuthenticated();
         } else {
           await authService.login(email, password);
+          onAuthenticated();
         }
-        onAuthenticated();
       } catch (err) {
         isLoading = false;
         errorMessage = err instanceof Error ? err.message : 'Error al procesar la solicitud.';
@@ -211,4 +305,3 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
-
