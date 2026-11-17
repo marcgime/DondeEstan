@@ -1,5 +1,5 @@
 // Service Worker para DondeEstan PWA
-const CACHE_NAME = 'dondeestan-shell-v2';
+const CACHE_NAME = 'dondeestan-shell-v3';
 
 const STATIC_PRECACHE = [
   '/',
