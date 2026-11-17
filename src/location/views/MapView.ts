@@ -22,6 +22,8 @@ interface IMapEngine {
   updateMembers(members: MemberLocationState[]): void;
   centerOn(coords: Coordinates, zoom?: number): void;
   fitBounds(coordinates: Coordinates[]): void;
+  zoomIn?(): void;
+  zoomOut?(): void;
 }
 
 function escapeHtml(str: string): string {
@@ -84,24 +86,48 @@ export function renderMapView(
             </div>
           </div>
 
-          <!-- Botones flotantes sobre el mapa (Recentrar y Fit) -->
+          <!-- Botones flotantes sobre el mapa (Zoom, Recentrar y Fit) -->
           <div class="absolute right-3 bottom-3 z-[500] flex flex-col gap-2">
+            <!-- Zoom In (+) -->
+            <button 
+              id="btn-zoom-in"
+              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all text-base font-bold select-none"
+              title="Acercar mapa"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+
+            <!-- Zoom Out (-) -->
+            <button 
+              id="btn-zoom-out"
+              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all text-base font-bold select-none"
+              title="Alejar mapa"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+              </svg>
+            </button>
+
+            <!-- Re-center on me -->
             <button 
               id="btn-center-me"
-              class="w-10 h-10 rounded-full glass-panel shadow-dock flex items-center justify-center text-brand-primary hover:scale-105 active:scale-95 transition-all"
+              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-brand-primary hover:scale-105 active:scale-95 transition-all"
               title="Centrar en mi posición"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
 
+            <!-- Fit all bounds -->
             <button 
               id="btn-fit-bounds"
-              class="w-10 h-10 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all"
+              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all"
               title="Ver a todos en mapa"
             >
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
             </button>
@@ -285,6 +311,7 @@ export function renderMapView(
           }
 
           updateMapAndUI();
+          autoFitVisibleMembers();
         });
       });
     }
@@ -315,6 +342,19 @@ export function renderMapView(
 
     // Refrescar lista de contactos
     renderContactsList();
+  }
+
+  function autoFitVisibleMembers(): void {
+    if (!mapService) return;
+    const visibleCoords = getVisibleMembers()
+      .map((m) => m.location)
+      .filter((loc): loc is Coordinates & { updated_at: number } => Boolean(loc));
+
+    if (visibleCoords.length === 1) {
+      mapService.centerOn(visibleCoords[0], 16);
+    } else if (visibleCoords.length > 1) {
+      mapService.fitBounds(visibleCoords);
+    }
   }
 
   function initLeaflet(): void {
@@ -425,6 +465,22 @@ export function renderMapView(
     }
 
     updateMapAndUI();
+    autoFitVisibleMembers();
+  });
+
+  // Controles de Zoom Manual
+  container.querySelector('#btn-zoom-in')?.addEventListener('click', () => {
+    triggerHaptic('light');
+    if (mapService && typeof mapService.zoomIn === 'function') {
+      mapService.zoomIn();
+    }
+  });
+
+  container.querySelector('#btn-zoom-out')?.addEventListener('click', () => {
+    triggerHaptic('light');
+    if (mapService && typeof mapService.zoomOut === 'function') {
+      mapService.zoomOut();
+    }
   });
 
   // Controles

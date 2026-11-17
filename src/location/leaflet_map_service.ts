@@ -26,6 +26,11 @@ export class LeafletFamilyMapService {
       zoom,
       zoomControl: false,
       attributionControl: false,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      dragging: true,
     });
 
     // OpenStreetMap standard tiles (completamente libre, sin API key requerida)
@@ -90,7 +95,19 @@ export class LeafletFamilyMapService {
     }
 
     const bounds = L.latLngBounds(coordinates.map((c) => [c.lat, c.lng]));
-    this.map.fitBounds(bounds, { padding: [50, 50] });
+    this.map.fitBounds(bounds, { padding: [35, 35], maxZoom: 16 });
+  }
+
+  zoomIn(): void {
+    if (this.map) {
+      this.map.zoomIn();
+    }
+  }
+
+  zoomOut(): void {
+    if (this.map) {
+      this.map.zoomOut();
+    }
   }
 
   private createAvatarIcon(member: MemberLocationState): L.DivIcon {

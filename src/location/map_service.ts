@@ -14,6 +14,7 @@ interface GoogleMapsGlobal {
 interface GoogleMapInstance {
   setCenter: (coords: Coordinates) => void;
   setZoom: (zoom: number) => void;
+  getZoom: () => number;
   fitBounds: (bounds: GoogleLatLngBounds, padding?: number | Record<string, unknown>) => void;
 }
 
@@ -114,6 +115,20 @@ export class FamilyMapService {
     }
 
     this.mapInstance.fitBounds(bounds, { top: 60, bottom: 120, left: 40, right: 40 });
+  }
+
+  zoomIn(): void {
+    if (this.mapInstance && typeof this.mapInstance.getZoom === 'function') {
+      const current = this.mapInstance.getZoom() || 14;
+      this.mapInstance.setZoom(current + 1);
+    }
+  }
+
+  zoomOut(): void {
+    if (this.mapInstance && typeof this.mapInstance.getZoom === 'function') {
+      const current = this.mapInstance.getZoom() || 14;
+      this.mapInstance.setZoom(Math.max(1, current - 1));
+    }
   }
 
   private createMarkerElement(member: MemberLocationState): HTMLElement {
