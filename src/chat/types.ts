@@ -11,6 +11,7 @@ export interface ChatMessage {
   sender_photo?: string;
   text: string;
   created_at: number; // timestamp en milisegundos
+  group_id?: string;
 }
 
 export interface SendMessagePayload {

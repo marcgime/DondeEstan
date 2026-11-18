@@ -1,8 +1,11 @@
 import type { AdminService } from '../admin_service';
+import type { GroupService } from '../group_service';
+import type { Group } from '../types';
 import type { UserProfile } from '../../auth/types';
 
 export interface AdminViewOptions {
   adminService: AdminService;
+  groupService: GroupService;
   currentAdminUid: string;
   onClose: () => void;
 }
@@ -11,9 +14,10 @@ export function renderAdminView(
   container: HTMLElement,
   options: AdminViewOptions
 ): () => void {
-  const { adminService, currentAdminUid, onClose } = options;
+  const { adminService, groupService, currentAdminUid, onClose } = options;
   let pendingMembers: UserProfile[] = [];
   let activeMembers: UserProfile[] = [];
+  let groups: Group[] = [];
   let isRegistrationOpen = true;
   let isProcessing = false;
 
@@ -46,7 +50,7 @@ export function renderAdminView(
       </header>
 
       <!-- Scrollable Admin Content -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-lg mx-auto w-full pb-16">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-lg mx-auto w-full pb-20">
         
         <!-- Section 1: Switch de Registro Familiar -->
         <div class="p-4 rounded-3xl glass-panel shadow-xs flex items-center justify-between">
@@ -86,7 +90,44 @@ export function renderAdminView(
           </div>
         </div>
 
-        <!-- Section 3: Usuarios Registrados / Activos -->
+        <!-- Section 3: Grupos (Gestión de Grupos) -->
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between px-1">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
+              Grupos
+            </h2>
+            <span id="groups-count-badge" class="text-[11px] font-bold text-brand-primary">
+              0 grupos
+            </span>
+          </div>
+
+          <!-- Formulario Crear Nuevo Grupo -->
+          <form id="form-create-group" class="flex gap-2">
+            <input 
+              type="text" 
+              id="input-group-name" 
+              placeholder="Nuevo grupo (ej: Hijos, Vacaciones)..." 
+              maxlength="50"
+              class="flex-1 h-10 px-3.5 rounded-2xl bg-surface-base border border-border-subtle text-xs text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand-primary transition-colors"
+            />
+            <button 
+              type="submit" 
+              id="btn-submit-group"
+              class="px-4 h-10 rounded-2xl bg-brand-primary text-brand-on-primary font-bold text-xs hover:opacity-95 active:scale-95 transition-all shadow-xs shrink-0"
+            >
+              Crear Grupo
+            </button>
+          </form>
+
+          <!-- Listado de Grupos -->
+          <div id="groups-list-container" class="flex flex-col gap-2 mt-1">
+            <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
+              Cargando grupos...
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Usuarios Registrados -->
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between px-1">
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
@@ -109,6 +150,9 @@ export function renderAdminView(
         </div>
 
       </div>
+
+      <!-- Modal Slot para Asignación de Grupos -->
+      <div id="admin-modal-slot"></div>
 
     </div>
   `;
@@ -150,16 +194,41 @@ export function renderAdminView(
     onClose();
   });
 
+  // Formulario Crear Grupo
+  const groupForm = container.querySelector('#form-create-group') as HTMLFormElement | null;
+  const groupInput = container.querySelector('#input-group-name') as HTMLInputElement | null;
+  groupForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!groupInput) return;
+    const name = groupInput.value.trim();
+    if (!name) return;
+
+    try {
+      await groupService.createGroup(name, currentAdminUid);
+      groupInput.value = '';
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al crear grupo.');
+    }
+  });
+
   // Suscribirse a solicitudes pendientes
   const unsubPending = adminService.subscribeToPendingMembers((members) => {
     pendingMembers = members;
     renderPendingList();
   });
 
+  // Suscribirse a grupos
+  const unsubGroups = groupService.subscribeToGroups((gList) => {
+    groups = gList;
+    renderGroupsList();
+    renderMembersList(); // Re-renderizar miembros para actualizar etiquetas de grupo
+  });
+
   // Suscribirse a miembros activos registrados
   const unsubMembers = adminService.subscribeToAllMembers((members) => {
     activeMembers = members;
     renderMembersList();
+    renderGroupsList(); // Re-renderizar conteo de miembros en grupos
   });
 
   function renderPendingList(): void {
@@ -237,6 +306,82 @@ export function renderAdminView(
     });
   }
 
+  function renderGroupsList(): void {
+    const listEl = container.querySelector('#groups-list-container');
+    const badgeEl = container.querySelector('#groups-count-badge');
+    if (!listEl || !badgeEl) return;
+
+    badgeEl.textContent = `${groups.length} grupos`;
+
+    if (groups.length === 0) {
+      listEl.innerHTML = `
+        <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
+          No hay grupos creados aún. Crea el primero arriba.
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = groups
+      .map((g) => {
+        const memberCount = activeMembers.filter((m) =>
+          m.role === 'admin' || (Array.isArray(m.groupIds) && m.groupIds.includes(g.id))
+        ).length;
+
+        return `
+          <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2.5 truncate">
+              <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div class="truncate">
+                <p class="font-bold text-text-primary truncate">${escapeHtml(g.name)}</p>
+                <p class="text-[11px] text-text-secondary">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button 
+                data-delete-group-id="${g.id}"
+                data-delete-group-name="${escapeHtml(g.name)}"
+                class="btn-delete-group p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
+                title="Eliminar grupo"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    // Bind eliminación de grupos
+    listEl.querySelectorAll('.btn-delete-group').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const gid = (btn as HTMLElement).dataset.deleteGroupId;
+        const gname = (btn as HTMLElement).dataset.deleteGroupName || 'este grupo';
+        if (!gid) return;
+
+        if (
+          !confirm(
+            `¿Eliminar el grupo "${gname}"?\n\nLos usuarios que solo pertenezcan a este grupo quedarán en estado de espera hasta ser asignados a otro.`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await groupService.deleteGroup(gid);
+        } catch (err) {
+          alert(err instanceof Error ? err.message : 'Error al eliminar grupo.');
+        }
+      });
+    });
+  }
+
   function renderMembersList(): void {
     const listEl = container.querySelector('#members-list-container');
     const badgeEl = container.querySelector('#members-count-badge');
@@ -246,7 +391,7 @@ export function renderAdminView(
     const totalCount = activeMembers.length;
     badgeEl.textContent = `${totalCount} familiares`;
 
-    // Aviso de cuota Firebase Spark si supera 15 usuarios
+    // Quota banner > 15
     if (alertEl) {
       if (totalCount > 15) {
         alertEl.className = 'p-3.5 rounded-2xl bg-status-warning/15 border border-status-warning/40 text-xs flex items-start gap-2.5';
@@ -277,55 +422,106 @@ export function renderAdminView(
     }
 
     listEl.innerHTML = activeMembers
-      .map(
-        (m) => {
-          const isSelf = m.uid === currentAdminUid;
-          const initial = (m.display_name || 'F')[0].toUpperCase();
+      .map((m) => {
+        const isSelf = m.uid === currentAdminUid;
+        const initial = (m.display_name || 'F')[0].toUpperCase();
 
-          return `
-          <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2.5 truncate">
-              <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+        // Obtener nombres de los grupos del usuario
+        let groupBadgesHtml = '';
+        if (m.role === 'admin') {
+          groupBadgesHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">Todos los grupos (Admin)</span>`;
+        } else {
+          const userGroupIds = Array.isArray(m.groupIds) ? m.groupIds : [];
+          if (userGroupIds.length === 0) {
+            groupBadgesHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-warning/15 text-status-warning">⚠️ Sin grupo</span>`;
+          } else {
+            groupBadgesHtml = userGroupIds
+              .map((gid) => {
+                const grp = groups.find((g) => g.id === gid);
+                const name = grp ? grp.name : 'Grupo';
+                return `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-elevated text-text-secondary">${escapeHtml(name)}</span>`;
+              })
+              .join(' ');
+          }
+        }
+
+        return `
+          <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex flex-col gap-2 text-xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5 truncate">
+                <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                  ${
+                    m.photo_url
+                      ? `<img src="${escapeHtml(m.photo_url)}" alt="${escapeHtml(m.display_name)}" class="w-full h-full object-cover" />`
+                      : initial
+                  }
+                </div>
+                <div class="truncate">
+                  <p class="font-bold text-text-primary truncate flex items-center gap-1.5">
+                    ${escapeHtml(m.display_name)}
+                    ${isSelf ? '<span class="text-[10px] text-brand-primary font-normal">(Tú)</span>' : ''}
+                  </p>
+                  <p class="text-[11px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
                 ${
-                  m.photo_url
-                    ? `<img src="${escapeHtml(m.photo_url)}" alt="${escapeHtml(m.display_name)}" class="w-full h-full object-cover" />`
-                    : initial
+                  m.role !== 'admin'
+                    ? `
+                  <button 
+                    data-manage-groups-uid="${m.uid}"
+                    data-manage-groups-name="${escapeHtml(m.display_name)}"
+                    class="btn-manage-groups px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 text-[11px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    title="Asignar grupos"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Grupos
+                  </button>
+                `
+                    : ''
+                }
+                ${
+                  !isSelf
+                    ? `
+                  <button 
+                    data-purge-uid="${m.uid}" 
+                    data-purge-name="${escapeHtml(m.display_name)}"
+                    class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
+                    title="Eliminar usuario familiar"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                `
+                    : ''
                 }
               </div>
-              <div class="truncate">
-                <p class="font-bold text-text-primary truncate flex items-center gap-1.5">
-                  ${escapeHtml(m.display_name)}
-                  ${isSelf ? '<span class="text-[10px] text-brand-primary font-normal">(Tú)</span>' : ''}
-                </p>
-                <p class="text-[11px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
-              </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="text-[10px] uppercase font-bold text-text-secondary px-2 py-0.5 rounded-full bg-surface-base">
-                ${m.role === 'admin' ? 'Admin' : 'Familiar'}
-              </span>
-              ${
-                !isSelf
-                  ? `
-                <button 
-                  data-purge-uid="${m.uid}" 
-                  data-purge-name="${escapeHtml(m.display_name)}"
-                  class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
-                  title="Eliminar usuario familiar"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              `
-                  : ''
-              }
+
+            <!-- Chips de Grupos -->
+            <div class="flex flex-wrap gap-1 items-center pt-1 border-t border-border-subtle/50">
+              <span class="text-[10px] text-text-disabled font-medium mr-1">Grupos:</span>
+              ${groupBadgesHtml}
             </div>
           </div>
         `;
-        }
-      )
+      })
       .join('');
+
+    // Bind modal de asignación de grupos
+    listEl.querySelectorAll('.btn-manage-groups').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const uid = (btn as HTMLElement).dataset.manageGroupsUid;
+        const name = (btn as HTMLElement).dataset.manageGroupsName || 'Usuario';
+        if (!uid) return;
+        const member = activeMembers.find((m) => m.uid === uid);
+        if (!member) return;
+        openGroupAssignmentModal(member, name);
+      });
+    });
 
     // Bind eliminación de usuarios
     listEl.querySelectorAll('.btn-purge-member').forEach((btn) => {
@@ -334,7 +530,11 @@ export function renderAdminView(
         const name = (btn as HTMLElement).dataset.purgeName || 'este usuario';
         if (!uid) return;
 
-        if (!confirm(`¿Eliminar y desvincular a ${name} del núcleo familiar?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`)) {
+        if (
+          !confirm(
+            `¿Eliminar y desvincular a ${name} del núcleo familiar?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`
+          )
+        ) {
           return;
         }
 
@@ -347,8 +547,95 @@ export function renderAdminView(
     });
   }
 
+  function openGroupAssignmentModal(member: UserProfile, name: string): void {
+    const modalSlot = container.querySelector('#admin-modal-slot');
+    if (!modalSlot) return;
+
+    const currentGroupIds = new Set(member.groupIds || []);
+
+    modalSlot.innerHTML = `
+      <div class="fixed inset-0 z-[1600] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-surface-canvas border border-border-subtle rounded-3xl p-5 max-w-sm w-full shadow-dock flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-text-primary">
+              Asignar Grupos a ${escapeHtml(name)}
+            </h3>
+            <button id="btn-close-group-modal" class="text-text-secondary hover:text-text-primary p-1">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <p class="text-xs text-text-secondary">
+            Selecciona a qué grupos pertenecerá este usuario. Podrá interactuar con los miembros de los grupos marcados.
+          </p>
+
+          <div class="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+            ${
+              groups.length === 0
+                ? '<p class="text-xs text-text-disabled">No hay grupos creados.</p>'
+                : groups
+                    .map(
+                      (g) => `
+                <label class="flex items-center justify-between p-2.5 rounded-xl bg-surface-base border border-border-subtle cursor-pointer hover:bg-surface-elevated transition-colors text-xs">
+                  <span class="font-bold text-text-primary">${escapeHtml(g.name)}</span>
+                  <input 
+                    type="checkbox" 
+                    value="${g.id}" 
+                    class="group-checkbox w-4 h-4 text-brand-primary rounded accent-brand-primary" 
+                    ${currentGroupIds.has(g.id) ? 'checked' : ''}
+                  />
+                </label>
+              `
+                    )
+                    .join('')
+            }
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-border-subtle">
+            <button 
+              id="btn-cancel-groups" 
+              class="px-4 py-2 rounded-full text-xs font-semibold text-text-secondary hover:text-text-primary"
+            >
+              Cancelar
+            </button>
+            <button 
+              id="btn-save-groups" 
+              class="px-5 py-2 rounded-full text-xs font-bold bg-brand-primary text-brand-on-primary hover:opacity-95 shadow-xs"
+            >
+              Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    modalSlot.querySelector('#btn-close-group-modal')?.addEventListener('click', () => {
+      modalSlot.innerHTML = '';
+    });
+    modalSlot.querySelector('#btn-cancel-groups')?.addEventListener('click', () => {
+      modalSlot.innerHTML = '';
+    });
+
+    modalSlot.querySelector('#btn-save-groups')?.addEventListener('click', async () => {
+      const selectedIds: string[] = [];
+      modalSlot.querySelectorAll<HTMLInputElement>('.group-checkbox:checked').forEach((box) => {
+        selectedIds.push(box.value);
+      });
+
+      try {
+        await groupService.assignUserGroups(member.uid, selectedIds);
+        modalSlot.innerHTML = '';
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Error al guardar grupos.');
+      }
+    });
+  }
+
   return () => {
     unsubPending();
+    unsubGroups();
     unsubMembers();
   };
 }

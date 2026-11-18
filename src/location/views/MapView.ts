@@ -8,11 +8,16 @@ import { LeafletFamilyMapService } from '../leaflet_map_service';
 import { renderDraggableBottomSheet } from '../components/DraggableBottomSheet';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import type { GeolocationTracker } from '../tracker';
+import type { GroupService } from '../../admin/group_service';
+import type { Group } from '../../admin/types';
+import type { UserProfile } from '../../auth/types';
 
 export interface MapViewOptions {
   uid: string;
   db: Firestore;
   tracker: GeolocationTracker;
+  groupService?: GroupService;
+  currentUser?: UserProfile;
   onNavigateTab?: (tab: 'map' | 'chat' | 'profile') => void;
   onLogout?: () => Promise<void>;
 }
@@ -42,8 +47,11 @@ export function renderMapView(
   const { db, tracker } = options;
   let mapService: IMapEngine | null = null;
   let membersUnsubscribe: Unsubscribe | null = null;
+  let groupsUnsubscribe: Unsubscribe | null = null;
   let currentUserCoords: Coordinates | null = null;
   let currentMembers: MemberLocationState[] = [];
+  let accessibleGroups: Group[] = [];
+  let activeGroupId = 'all';
 
   // Estado del selector de usuarios
   let showAll = true;
@@ -53,16 +61,20 @@ export function renderMapView(
     <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
       <!-- Top Floating Header Pill -->
-      <div class="shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex justify-between items-center z-20">
+      <div class="shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex justify-between items-center z-20 gap-2">
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel shadow-sm">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
-          <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans">
+          <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans truncate">
             Localizando familia...
           </span>
         </div>
+
+        <!-- Group Selector Slot -->
+        <div id="group-selector-slot" class="flex items-center"></div>
+
         <button 
           id="btn-logout"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel shadow-sm text-text-secondary hover:text-status-error transition-colors text-xs font-semibold"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel shadow-sm text-text-secondary hover:text-status-error transition-colors text-xs font-semibold shrink-0"
           title="Cerrar sesión"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -148,22 +160,22 @@ export function renderMapView(
           <span class="text-xs font-semibold text-text-secondary">Mostrar todos</span>
           <div class="relative inline-flex items-center">
             <input type="checkbox" id="toggle-select-all" class="sr-only peer" checked>
-            <div class="w-11 h-6 bg-border-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+            <div class="w-11 h-6 bg-surface-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
           </div>
         </label>
       </div>
 
-      <!-- LISTA DE CONTACTOS INFERIOR CON SCROLL -->
-      <div class="flex-1 overflow-y-auto px-4 pb-24 space-y-2" id="contacts-list-container">
-        <div class="p-6 text-center text-xs text-text-disabled">Cargando familiares...</div>
+      <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
+      <div class="flex-1 overflow-y-auto px-4 pb-28">
+        <div id="contacts-scroll-container" class="flex flex-col gap-2">
+          <div class="p-6 text-center text-xs text-text-disabled">Cargando familiares...</div>
+        </div>
       </div>
 
-      <!-- Bottom Sheet Modal Slot -->
-      <div id="card-modal-slot" class="relative z-[1200]"></div>
-
-      <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-[1100] pointer-events-auto">
+      <!-- Bottom Dock: Floating Glass Navigation -->
+      <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
+          
           <!-- Map Tab (Active) -->
           <button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -173,54 +185,126 @@ export function renderMapView(
           </button>
 
           <!-- Chat Tab -->
-          <button id="nav-btn-chat" class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all">
+          <button 
+            id="nav-btn-chat" 
+            class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all"
+          >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <span>Chat</span>
           </button>
 
-          <!-- Settings Tab -->
-          <button id="nav-btn-profile" class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all">
+          <!-- Profile Tab -->
+          <button 
+            id="nav-btn-profile" 
+            class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all"
+          >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span>Perfil</span>
           </button>
+
         </div>
       </nav>
+
+      <!-- Slot para Bottom Sheet de detalles de usuario -->
+      <div id="modal-slot"></div>
 
     </div>
   `;
 
   const mapContainer = container.querySelector('#google-map-container') as HTMLElement;
-  const modalSlot = container.querySelector('#card-modal-slot') as HTMLElement;
-  const badgeEl = container.querySelector('#live-members-badge') as HTMLElement;
-  const contactsContainer = container.querySelector('#contacts-list-container') as HTMLElement;
+  const contactsContainer = container.querySelector('#contacts-scroll-container') as HTMLElement;
+  const liveBadge = container.querySelector('#live-members-badge') as HTMLElement;
+  const modalSlot = container.querySelector('#modal-slot') as HTMLElement;
   const toggleSelectAll = container.querySelector('#toggle-select-all') as HTMLInputElement;
   const counterBadge = container.querySelector('#selected-counter-badge') as HTMLElement;
 
   // Iniciar tracker de geolocalización
   tracker.start();
 
-  function getVisibleMembers(): MemberLocationState[] {
-    if (showAll) {
-      return currentMembers;
+  /**
+   * Obtiene los miembros que pertenecen al grupo activo (o a cualquier grupo del usuario si 'all').
+   */
+  function getGroupMembers(): MemberLocationState[] {
+    if (activeGroupId === 'all') {
+      if (options.currentUser?.role === 'admin') return currentMembers;
+      const myGroups = new Set(options.currentUser?.groupIds || []);
+      return currentMembers.filter(
+        (m) => m.role === 'admin' || (Array.isArray(m.groupIds) && m.groupIds.some((gid) => myGroups.has(gid)))
+      );
     }
-    return currentMembers.filter((m) => selectedMemberUids.has(m.uid));
+    return currentMembers.filter(
+      (m) => m.role === 'admin' || (Array.isArray(m.groupIds) && m.groupIds.includes(activeGroupId))
+    );
   }
 
-  function renderContactsList(): void {
-    if (!contactsContainer) return;
+  function getVisibleMembers(): MemberLocationState[] {
+    const groupMembers = getGroupMembers();
+    if (showAll) {
+      return groupMembers;
+    }
+    return groupMembers.filter((m) => selectedMemberUids.has(m.uid));
+  }
 
-    if (currentMembers.length === 0) {
-      contactsContainer.innerHTML = `
-        <div class="p-6 text-center text-xs text-text-disabled">No hay familiares registrados</div>
+  function renderGroupSelector(): void {
+    const slot = container.querySelector('#group-selector-slot');
+    if (!slot) return;
+
+    if (accessibleGroups.length <= 1) {
+      const groupName = accessibleGroups[0]?.name || 'Familia';
+      slot.innerHTML = `
+        <span class="px-3 py-1 rounded-full glass-panel shadow-sm text-xs font-bold text-brand-primary whitespace-nowrap">
+          ${escapeHtml(groupName)}
+        </span>
       `;
       return;
     }
 
-    contactsContainer.innerHTML = currentMembers
+    slot.innerHTML = `
+      <select 
+        id="select-active-group" 
+        class="glass-panel text-xs font-bold text-text-primary px-3 py-1.5 rounded-full border border-surface-glass-border shadow-sm focus:outline-none cursor-pointer"
+      >
+        <option value="all" ${activeGroupId === 'all' ? 'selected' : ''}>Todos los grupos</option>
+        ${accessibleGroups
+          .map(
+            (g) => `
+          <option value="${g.id}" ${g.id === activeGroupId ? 'selected' : ''}>
+            ${escapeHtml(g.name)}
+          </option>
+        `
+          )
+          .join('')}
+      </select>
+    `;
+
+    slot.querySelector('#select-active-group')?.addEventListener('change', (e) => {
+      activeGroupId = (e.target as HTMLSelectElement).value;
+      triggerHaptic('light');
+      if (showAll) {
+        selectedMemberUids.clear();
+        getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
+      }
+      updateMapAndUI();
+      autoFitVisibleMembers();
+    });
+  }
+
+  function renderContactsList(): void {
+    if (!contactsContainer) return;
+    const groupMembers = getGroupMembers();
+
+    if (groupMembers.length === 0) {
+      contactsContainer.innerHTML = `
+        <div class="p-6 text-center text-xs text-text-disabled">No hay familiares en este grupo</div>
+      `;
+      return;
+    }
+
+    contactsContainer.innerHTML = groupMembers
       .map((member) => {
         const isSelected = showAll || selectedMemberUids.has(member.uid);
         const isInteractive = !showAll;
@@ -318,29 +402,35 @@ export function renderMapView(
   }
 
   function updateMapAndUI(): void {
-    const visible = getVisibleMembers();
+    const visibleMembers = getVisibleMembers();
+    const groupMembers = getGroupMembers();
 
-    // Actualizar contador
+    // Actualizar marcadores en el mapa
+    if (mapService) {
+      mapService.updateMembers(visibleMembers);
+    }
+
+    // Actualizar badges
+    const liveCount = visibleMembers.filter((m) => m.isLive).length;
+    if (liveBadge) {
+      liveBadge.textContent =
+        liveCount > 0 ? `${liveCount} en línea` : `${visibleMembers.length} familiares`;
+    }
+
     if (counterBadge) {
       if (showAll) {
         counterBadge.textContent = 'Todos visibles';
         counterBadge.className = 'px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold';
       } else {
         const count = selectedMemberUids.size;
-        counterBadge.textContent = `${count} seleccionado${count === 1 ? '' : 's'}`;
-        counterBadge.className =
-          count > 0
-            ? 'px-2 py-0.5 rounded-full bg-brand-primary text-brand-on-primary text-[10px] font-bold'
-            : 'px-2 py-0.5 rounded-full bg-surface-highest text-text-secondary text-[10px] font-bold';
+        counterBadge.textContent = `${count} de ${groupMembers.length} seleccionados`;
+        counterBadge.className = count > 0 
+          ? 'px-2 py-0.5 rounded-full bg-status-online/15 text-status-online text-[10px] font-bold'
+          : 'px-2 py-0.5 rounded-full bg-surface-elevated text-text-disabled text-[10px] font-bold';
       }
     }
 
-    // Actualizar marcadores en el mapa
-    if (mapService) {
-      mapService.updateMembers(visible);
-    }
-
-    // Refrescar lista de contactos
+    // Re-renderizar lista
     renderContactsList();
   }
 
@@ -402,6 +492,28 @@ export function renderMapView(
       initLeaflet();
     });
 
+  // Suscribirse a grupos si está provisto el servicio
+  if (options.groupService) {
+    groupsUnsubscribe = options.groupService.subscribeToGroups((groupsList) => {
+      accessibleGroups = options.groupService!.getUserGroups(
+        options.currentUser || {
+          uid: options.uid,
+          email: '',
+          display_name: '',
+          role: 'member',
+          status: 'active',
+          groupIds: [],
+        },
+        groupsList
+      );
+      renderGroupSelector();
+      if (showAll) {
+        getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
+      }
+      updateMapAndUI();
+    });
+  }
+
   // Suscribirse a la colección de usuarios en tiempo real
   const usersCollection = collection(db, 'users');
   membersUnsubscribe = onSnapshot(usersCollection, (snapshot) => {
@@ -418,6 +530,7 @@ export function renderMapView(
         photo_url: data.photo_url,
         role: data.role || 'member',
         status: data.status || 'offline',
+        groupIds: Array.isArray(data.groupIds) ? data.groupIds : [],
         isLive: live,
         location: data.location
           ? {
@@ -430,38 +543,29 @@ export function renderMapView(
       };
     });
 
-    // Inicializar selectedMemberUids con todos los miembros si está vacío
-    if (selectedMemberUids.size === 0) {
-      currentMembers.forEach((m) => selectedMemberUids.add(m.uid));
-    }
-
-    // Detectar posición del usuario actual para autocentrado
+    // Guardar posición del usuario actual
     const me = currentMembers.find((m) => m.uid === options.uid);
     if (me?.location) {
-      const wasFirstFix = !currentUserCoords;
       currentUserCoords = { lat: me.location.lat, lng: me.location.lng };
-      if (wasFirstFix && mapService) {
-        mapService.centerOn(currentUserCoords);
-      }
     }
 
-    // Actualizar badge superior
-    const liveCount = currentMembers.filter((m) => m.isLive).length;
-    if (badgeEl) {
-      badgeEl.textContent = `${liveCount} de ${currentMembers.length} familiares activos`;
+    // Inicializar seleccionados si está en "Mostrar todos"
+    if (showAll) {
+      selectedMemberUids.clear();
+      getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
     }
 
     updateMapAndUI();
   });
 
-  // Toggle Switch Event
-  toggleSelectAll?.addEventListener('change', () => {
+  // Interacción: Toggle Switch
+  toggleSelectAll.addEventListener('change', () => {
     triggerHaptic('medium');
     showAll = toggleSelectAll.checked;
 
     if (showAll) {
-      // Re-añadir todos al conjunto
-      currentMembers.forEach((m) => selectedMemberUids.add(m.uid));
+      selectedMemberUids.clear();
+      getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
     }
 
     updateMapAndUI();
@@ -529,6 +633,10 @@ export function renderMapView(
     if (membersUnsubscribe) {
       membersUnsubscribe();
       membersUnsubscribe = null;
+    }
+    if (groupsUnsubscribe) {
+      groupsUnsubscribe();
+      groupsUnsubscribe = null;
     }
   };
 }

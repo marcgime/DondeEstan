@@ -35,19 +35,19 @@ Es la autoridad funcional responsable de **Chat grupal reactivo para los 8 miemb
 - **Símbolo / Archivo:** `src/chat/types.ts::ChatMessage, ChatSender`
 - **Invariantes:** Estructuras inmutables con validación estricta de esquema y tipado.
 
-### CT-CHAT-02: Servicio de Mensajería Familiar
+### CT-CHAT-02: Servicio de Mensajería Familiar y por Grupo
 - **Símbolo / Archivo:** `src/chat/chat_service.ts::FamilyChatService`
-- **Invariantes:** Consulta limitada a 50 mensajes, validación de 500 caracteres máx y rechazo de mensajes vacíos.
+- **Invariantes:** Consulta limitada a 50 mensajes, validación de 500 caracteres máx, aislamiento por `groupId` y rechazo de mensajes vacíos.
 
 ### CT-CHAT-03: Vista Reactiva de Conversación
 - **Símbolo / Archivo:** `src/chat/views/ChatView.ts::renderChatView`
-- **Invariantes:** Scroll automático a la base, input bloqueado durante envío y desconexión de listener al desmontar.
+- **Invariantes:** Scroll automático a la base, input bloqueado durante envío, selector dinámico de grupo en cabecera y desconexión de listener al desmontar.
 
 ---
 
 ## 3. Reglas de Negocio e Invariantes (BR-*)
 
-- **BR-CHAT-01:** Consulta acotada estrictamente a un máximo de 50 mensajes en `group_chat`.
+- **BR-CHAT-01:** Consulta acotada estrictamente a un máximo de 50 mensajes en `group_chat` o `/groups/{groupId}/messages`.
 - **BR-CHAT-02:** Desconexión activa obligatoria del listener `onSnapshot` al conmutar a otra pestaña.
 - **BR-CHAT-03:** Mensajes inmutables (append-only) protegidos por reglas de seguridad.
 

@@ -17,10 +17,10 @@ export class FamilyChatService {
   constructor(private readonly db: Firestore) {}
 
   /**
-   * Envía un mensaje al canal familiar grupal.
+   * Envía un mensaje al canal familiar grupal o a un grupo específico.
    * Valida longitud máxima de 500 caracteres e impide envíos vacíos.
    */
-  async sendMessage(sender: ChatSender, rawText: string): Promise<string> {
+  async sendMessage(sender: ChatSender, rawText: string, groupId?: string): Promise<string> {
     const text = rawText.trim();
     if (!text) {
       throw new Error('El mensaje no puede estar vacío.');
@@ -30,28 +30,35 @@ export class FamilyChatService {
       throw new Error(`El mensaje supera el límite de ${MAX_MESSAGE_LENGTH} caracteres.`);
     }
 
-    const chatCol = collection(this.db, 'group_chat');
+    const chatCol = groupId && groupId !== 'general'
+      ? collection(this.db, 'groups', groupId, 'messages')
+      : collection(this.db, 'group_chat');
+
     const docRef = await addDoc(chatCol, {
       sender_id: sender.uid,
       sender_name: sender.name,
       sender_photo: sender.photoUrl || null,
       text,
       created_at: Date.now(),
+      group_id: groupId || 'general',
     });
 
     return docRef.id;
   }
 
   /**
-   * Suscribe a los mensajes más recientes del canal grupal (por defecto máx 50).
+   * Suscribe a los mensajes más recientes del canal grupal o grupo específico (por defecto máx 50).
    * Devuelve los mensajes en orden cronológico ascendente (antiguos primero).
    */
   subscribeToRecentMessages(
     onMessages: (messages: ChatMessage[]) => void,
     limitCount = DEFAULT_MESSAGE_LIMIT,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    groupId?: string
   ): Unsubscribe {
-    const chatCol = collection(this.db, 'group_chat');
+    const chatCol = groupId && groupId !== 'general'
+      ? collection(this.db, 'groups', groupId, 'messages')
+      : collection(this.db, 'group_chat');
     const q = query(chatCol, orderBy('created_at', 'desc'), limit(limitCount));
 
     return onSnapshot(

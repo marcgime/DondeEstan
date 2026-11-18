@@ -3,7 +3,7 @@ import { getFirebaseServices, isFirebaseConfigured } from './core/firebase';
 import { FamilyAuthService } from './auth/auth_service';
 import { renderAuthView } from './auth/views/AuthView';
 import { renderGatekeeperScreen } from './ui/components/GatekeeperScreen';
-import { isUserApproved } from './auth/gatekeeper';
+import { isUserApproved, shouldShowGatekeeper } from './auth/gatekeeper';
 import type { UserProfile } from './auth/types';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import type { Unsubscribe } from 'firebase/firestore';
@@ -12,7 +12,7 @@ import { GeolocationTracker } from './location/tracker';
 import { renderMapView } from './location/views/MapView';
 import { FamilyChatService, renderChatView } from './chat';
 import { ProfileService, renderProfileView } from './profile';
-import { AdminService, renderAdminView } from './admin';
+import { AdminService, GroupService, renderAdminView } from './admin';
 import { registerServiceWorker } from './core/pwa';
 import { checkAndRenderIosInstallPrompt } from './ui/components/PwaInstallPrompt';
 
@@ -33,6 +33,7 @@ function init(): void {
   const { auth, db } = getFirebaseServices();
   const authService = new FamilyAuthService(auth, db);
   const chatService = new FamilyChatService(db);
+  const groupService = new GroupService(db);
   const profileService = new ProfileService(db);
   const adminService = new AdminService(db);
 
@@ -72,7 +73,7 @@ function init(): void {
     profileUnsubscribe = authService.subscribeToUserProfile(
       user.uid,
       (profile) => {
-        if (!profile || profile.status === 'pending_approval' || profile.status === 'unverified_email') {
+        if (!profile || shouldShowGatekeeper(profile) || !isUserApproved(profile)) {
           isAppInitialized = false;
           if (activeCleanup) {
             activeCleanup();
@@ -103,6 +104,13 @@ function init(): void {
           latestProfile = profile;
           const activeUser = user;
 
+          // Asegurar que existe el grupo por defecto si entra el administrador
+          if (profile.role === 'admin') {
+            groupService.ensureDefaultGroup(profile.uid).catch((err) => {
+              console.error('Error asegurando grupo por defecto:', err);
+            });
+          }
+
           if (!currentTracker) {
             currentTracker = new GeolocationTracker({
               uid: activeUser.uid,
@@ -128,6 +136,8 @@ function init(): void {
                 uid: activeUser.uid,
                 db,
                 tracker: currentTracker!,
+                groupService,
+                currentUser: currentProfile,
                 onNavigateTab: (tab) => {
                   currentTab = tab;
                   renderTab();
@@ -144,6 +154,8 @@ function init(): void {
                   photoUrl: currentProfile.photo_url,
                 },
                 chatService,
+                groupService,
+                userProfile: currentProfile,
                 onNavigateTab: (tab) => {
                   currentTab = tab;
                   renderTab();
@@ -169,6 +181,7 @@ function init(): void {
                         }
                         activeCleanup = renderAdminView(appContainer!, {
                           adminService,
+                          groupService,
                           currentAdminUid: activeUser.uid,
                           onClose: () => {
                             renderTab();
@@ -186,25 +199,14 @@ function init(): void {
             checkAndRenderIosInstallPrompt(appContainer!);
           }
 
-          // Solo renderizar la vista al inicio de la sesión aprobada o si no está inicializada.
-          // Evita el bucle de desmontaje y reconstrucción del mapa cada vez que el GPS actualiza el perfil en Firestore.
           if (!isAppInitialized) {
             isAppInitialized = true;
             renderTab();
           }
-          return;
         }
-
-        // Estado rechazado o no contemplado
-        renderGatekeeperScreen(appContainer!, {
-          user: profile,
-          onLogout: async () => {
-            await authService.logout();
-          },
-        });
       },
       (error) => {
-        console.error('Error suscribiendo al perfil:', error);
+        console.error('Error al escuchar el perfil del usuario:', error);
       }
     );
   });
@@ -212,19 +214,21 @@ function init(): void {
 
 function renderConfigNotice(container: HTMLElement): void {
   container.innerHTML = `
-    <div class="h-full w-full flex flex-col justify-center items-center p-6 bg-surface-canvas text-text-primary text-center">
-      <div class="w-16 h-16 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center mb-4">
-        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <div class="h-full w-full flex flex-col items-center justify-center p-6 text-center bg-surface-canvas text-text-primary safe-top safe-bottom">
+      <div class="w-16 h-16 mb-4 rounded-full bg-status-warning/10 text-status-warning flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       </div>
-      <h1 class="text-xl font-bold mb-2">Configuración Inicial Requerida</h1>
-      <p class="text-xs text-text-secondary max-w-sm mb-6 leading-relaxed">
-        Configura las credenciales de tu proyecto Firebase Spark en el archivo <code class="bg-surface-base px-2 py-1 rounded-md font-mono text-brand-primary">.env</code> para habilitar la autenticación familiar.
+      <h1 class="text-xl font-bold mb-2 font-sans">Firebase No Configurado</h1>
+      <p class="text-sm text-text-secondary max-w-sm mb-6 leading-relaxed">
+        Las variables de entorno de Firebase no están disponibles. Revisa la configuración de Cloudflare Workers o el archivo .env.local.
       </p>
+      <div class="p-3 rounded-2xl bg-surface-base border border-border-subtle text-xs font-mono text-text-disabled">
+        VITE_FIREBASE_API_KEY no detectada
+      </div>
     </div>
   `;
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);

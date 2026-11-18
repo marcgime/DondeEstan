@@ -1,10 +1,15 @@
 import type { FamilyChatService } from '../chat_service';
 import type { ChatMessage, ChatSender } from '../types';
+import type { GroupService } from '../../admin/group_service';
+import type { Group } from '../../admin/types';
+import type { UserProfile } from '../../auth/types';
 import { triggerHaptic } from '../../ui/utils/haptics';
 
 export interface ChatViewOptions {
   currentUser: ChatSender;
   chatService: FamilyChatService;
+  groupService?: GroupService;
+  userProfile?: UserProfile;
   onNavigateTab: (tab: 'map' | 'chat' | 'profile') => void;
   onLogout?: () => Promise<void>;
 }
@@ -13,21 +18,25 @@ export function renderChatView(
   container: HTMLElement,
   options: ChatViewOptions
 ): () => void {
-  const { currentUser, chatService, onNavigateTab, onLogout } = options;
+  const { currentUser, chatService, groupService, userProfile, onNavigateTab, onLogout } = options;
   let isSending = false;
+  let chatUnsubscribe: (() => void) | null = null;
+  let groupsUnsubscribe: (() => void) | null = null;
+  let accessibleGroups: Group[] = [];
+  let activeGroupId: string = '';
 
   container.innerHTML = `
     <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
       <!-- Top Header -->
-      <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
+      <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20 gap-2">
+        <div class="flex items-center gap-3 truncate">
+          <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shrink-0">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <div>
+          <div id="chat-header-group-slot" class="truncate">
             <h1 class="text-sm font-bold text-text-primary flex items-center gap-2">
               Canal Familiar
               <span class="w-2 h-2 rounded-full bg-status-online"></span>
@@ -41,7 +50,7 @@ export function renderChatView(
             ? `
           <button 
             id="chat-btn-logout"
-            class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-text-secondary hover:text-status-error text-xs font-semibold transition-colors"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-text-secondary hover:text-status-error text-xs font-semibold transition-colors shrink-0"
             title="Cerrar sesión"
           >
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -141,21 +150,115 @@ export function renderChatView(
   const inputEl = container.querySelector('#chat-input-text') as HTMLInputElement;
   const sendBtn = container.querySelector('#chat-btn-send') as HTMLButtonElement;
 
-  // Suscribirse a mensajes
-  const unsubscribe = chatService.subscribeToRecentMessages(
-    (messages) => {
-      renderMessagesList(messagesContainer, messages, currentUser.uid);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    },
-    50,
-    (err) => {
-      messagesContainer.innerHTML = `
-        <div class="my-auto text-center p-6 text-status-error text-xs">
-          No se pudieron cargar los mensajes: ${escapeHtml(err.message)}
-        </div>
+  function renderChatHeader(): void {
+    const slot = container.querySelector('#chat-header-group-slot');
+    if (!slot) return;
+
+    if (accessibleGroups.length <= 1) {
+      const gname = accessibleGroups[0]?.name || 'Familia';
+      slot.innerHTML = `
+        <h1 class="text-sm font-bold text-text-primary flex items-center gap-2">
+          Chat: ${escapeHtml(gname)}
+          <span class="w-2 h-2 rounded-full bg-status-online"></span>
+        </h1>
+        <p class="text-[11px] text-text-secondary">Mensajería instantánea de grupo</p>
       `;
+      return;
     }
-  );
+
+    slot.innerHTML = `
+      <div class="flex flex-col">
+        <div class="flex items-center gap-1.5">
+          <label for="chat-group-select" class="text-[10px] uppercase font-bold text-text-secondary">Grupo:</label>
+          <select 
+            id="chat-group-select" 
+            class="glass-panel text-xs font-bold text-text-primary px-2.5 py-1 rounded-full border border-surface-glass-border shadow-xs focus:outline-none cursor-pointer"
+          >
+            ${accessibleGroups
+              .map(
+                (g) => `
+              <option value="${g.id}" ${g.id === activeGroupId ? 'selected' : ''}>
+                ${escapeHtml(g.name)}
+              </option>
+            `
+              )
+              .join('')}
+          </select>
+          <span class="w-2 h-2 rounded-full bg-status-online"></span>
+        </div>
+        <p class="text-[10px] text-text-secondary mt-0.5">Mensajería instantánea de grupo</p>
+      </div>
+    `;
+
+    slot.querySelector('#chat-group-select')?.addEventListener('change', (e) => {
+      const newGroupId = (e.target as HTMLSelectElement).value;
+      if (newGroupId !== activeGroupId) {
+        activeGroupId = newGroupId;
+        triggerHaptic('light');
+        subscribeToCurrentChatGroup();
+      }
+    });
+  }
+
+  function subscribeToCurrentChatGroup(): void {
+    if (chatUnsubscribe) {
+      chatUnsubscribe();
+      chatUnsubscribe = null;
+    }
+
+    messagesContainer.innerHTML = `
+      <div class="my-auto text-center p-6 text-text-disabled text-xs">
+        <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-pulse">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </div>
+        Cargando mensajes del canal...
+      </div>
+    `;
+
+    chatUnsubscribe = chatService.subscribeToRecentMessages(
+      (messages) => {
+        renderMessagesList(messagesContainer, messages, currentUser.uid);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      },
+      50,
+      (err) => {
+        messagesContainer.innerHTML = `
+          <div class="my-auto text-center p-6 text-status-error text-xs">
+            No se pudieron cargar los mensajes: ${escapeHtml(err.message)}
+          </div>
+        `;
+      },
+      activeGroupId || undefined
+    );
+  }
+
+  // Suscribirse a grupos si está provisto el servicio
+  if (groupService) {
+    groupsUnsubscribe = groupService.subscribeToGroups((groupsList) => {
+      const effectiveProfile: UserProfile = userProfile || {
+        uid: currentUser.uid,
+        email: '',
+        display_name: currentUser.name,
+        role: 'member',
+        status: 'active',
+        groupIds: [],
+      };
+      accessibleGroups = groupService.getUserGroups(
+        effectiveProfile,
+        groupsList
+      );
+
+      if (!activeGroupId && accessibleGroups.length > 0) {
+        activeGroupId = accessibleGroups[0].id;
+      }
+      renderChatHeader();
+      subscribeToCurrentChatGroup();
+    });
+  } else {
+    subscribeToCurrentChatGroup();
+  }
 
   // Manejar envío de mensaje
   form?.addEventListener('submit', async (e) => {
@@ -167,7 +270,7 @@ export function renderChatView(
     sendBtn.disabled = true;
 
     try {
-      await chatService.sendMessage(currentUser, text);
+      await chatService.sendMessage(currentUser, text, activeGroupId || undefined);
       triggerHaptic('success');
       inputEl.value = '';
     } catch (err) {
@@ -197,9 +300,16 @@ export function renderChatView(
     }
   });
 
-  // Retornar función de limpieza que desconecta el listener de Firestore
+  // Retornar función de limpieza
   return () => {
-    unsubscribe();
+    if (chatUnsubscribe) {
+      chatUnsubscribe();
+      chatUnsubscribe = null;
+    }
+    if (groupsUnsubscribe) {
+      groupsUnsubscribe();
+      groupsUnsubscribe = null;
+    }
   };
 }
 
@@ -217,7 +327,7 @@ function renderMessagesList(
           </svg>
         </div>
         <p class="font-bold text-text-primary">El canal está en silencio</p>
-        <p class="text-[11px] text-text-disabled mt-1">Escribe el primer mensaje para la familia.</p>
+        <p class="text-[11px] text-text-disabled mt-1">Escribe el primer mensaje para este grupo.</p>
       </div>
     `;
     return;
@@ -276,4 +386,3 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
-

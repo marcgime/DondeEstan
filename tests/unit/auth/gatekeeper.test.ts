@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isUserApproved, shouldShowGatekeeper, isUserRejected } from '@/auth/gatekeeper';
+import { isUserApproved, shouldShowGatekeeper, isUserRejected, isUserWaitingGroup } from '@/auth/gatekeeper';
 import type { UserProfile } from '@/auth/types';
 
 describe('Gatekeeper Guard Logic', () => {
@@ -9,6 +9,7 @@ describe('Gatekeeper Guard Logic', () => {
     display_name: 'Familiar',
     role: 'member',
     status: 'pending_approval',
+    groupIds: ['group-1'],
   };
 
   it('blocks pending_approval members from entering main app', () => {
@@ -23,24 +24,38 @@ describe('Gatekeeper Guard Logic', () => {
     expect(shouldShowGatekeeper(unverifiedProfile)).toBe(true);
   });
 
-  it('allows active members to pass the gatekeeper', () => {
-    const activeProfile: UserProfile = { ...baseProfile, status: 'active' };
+  it('allows active members with groups to pass the gatekeeper', () => {
+    const activeProfile: UserProfile = { ...baseProfile, status: 'active', groupIds: ['grp-1'] };
     expect(isUserApproved(activeProfile)).toBe(true);
     expect(shouldShowGatekeeper(activeProfile)).toBe(false);
   });
 
-  it('allows online and offline status for approved members', () => {
-    expect(isUserApproved({ ...baseProfile, status: 'online' })).toBe(true);
-    expect(isUserApproved({ ...baseProfile, status: 'offline' })).toBe(true);
+  it('blocks active members without groups and shows gatekeeper waiting group assignment', () => {
+    const noGroupProfile: UserProfile = { ...baseProfile, status: 'active', groupIds: [] };
+    expect(isUserApproved(noGroupProfile)).toBe(false);
+    expect(isUserWaitingGroup(noGroupProfile)).toBe(true);
+    expect(shouldShowGatekeeper(noGroupProfile)).toBe(true);
+
+    const undefinedGroupProfile: UserProfile = { ...baseProfile, status: 'active', groupIds: undefined };
+    expect(isUserApproved(undefinedGroupProfile)).toBe(false);
+    expect(isUserWaitingGroup(undefinedGroupProfile)).toBe(true);
+    expect(shouldShowGatekeeper(undefinedGroupProfile)).toBe(true);
   });
 
-  it('always allows admin role regardless of explicit status string', () => {
+  it('allows online and offline status for approved members with groups', () => {
+    expect(isUserApproved({ ...baseProfile, status: 'online', groupIds: ['grp-1'] })).toBe(true);
+    expect(isUserApproved({ ...baseProfile, status: 'offline', groupIds: ['grp-1'] })).toBe(true);
+  });
+
+  it('always allows admin role regardless of explicit status or groups', () => {
     const adminProfile: UserProfile = {
       ...baseProfile,
       role: 'admin',
       status: 'pending_approval',
+      groupIds: [],
     };
     expect(isUserApproved(adminProfile)).toBe(true);
+    expect(isUserWaitingGroup(adminProfile)).toBe(false);
   });
 
   it('correctly flags rejected members', () => {
@@ -54,6 +69,6 @@ describe('Gatekeeper Guard Logic', () => {
     expect(isUserApproved(null)).toBe(false);
     expect(shouldShowGatekeeper(null)).toBe(false);
     expect(isUserRejected(null)).toBe(false);
+    expect(isUserWaitingGroup(null)).toBe(false);
   });
 });
-

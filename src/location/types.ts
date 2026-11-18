@@ -22,6 +22,7 @@ export interface MemberLocationState {
   photo_url?: string;
   role: 'admin' | 'member';
   status: 'online' | 'offline';
+  groupIds?: string[];
   isLive: boolean; // true si status == 'online' y updated_at <= 90 s
   location?: {
     lat: number;

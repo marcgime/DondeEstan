@@ -15,6 +15,7 @@ export interface UserProfile {
   photo_url?: string;
   role: UserRole;
   status: UserStatus;
+  groupIds?: string[];
   location?: UserLocation;
   created_at?: unknown;
   updated_at?: unknown;

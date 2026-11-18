@@ -1,4 +1,5 @@
 import type { UserProfile } from '@/auth/types';
+import { isUserWaitingGroup } from '@/auth/gatekeeper';
 
 export interface GatekeeperScreenOptions {
   user: UserProfile;
@@ -21,11 +22,38 @@ export function renderGatekeeperScreen(
   } = options;
 
   const isEmailUnverified = user.status === 'unverified_email';
+  const isWaitingGroup = isUserWaitingGroup(user);
   let isChecking = false;
   let isResending = false;
   let noticeMessage = '';
 
   function render(): void {
+    let screenTitle = 'Acceso en Espera';
+    let screenSubtitle = '';
+    let stepTitle = 'Paso 2 de 2: Autorización';
+    let stepDescription = '';
+    let pulseText = 'Esperando aprobación del administrador...';
+
+    if (isEmailUnverified) {
+      screenTitle = 'Verifica tu Correo';
+      screenSubtitle = 'Hemos enviado un enlace de confirmación a tu correo electrónico para verificar tu identidad.';
+      stepTitle = 'Paso 1 de 2: Confirmar Email';
+      stepDescription = `Abre tu buzón en <span class="font-bold">${escapeHtml(user.email)}</span> y haz clic en el enlace. Una vez confirmado, tu solicitud llegará al administrador.`;
+      pulseText = 'Esperando confirmación de enlace...';
+    } else if (isWaitingGroup) {
+      screenTitle = 'Esperando asignación a un grupo';
+      screenSubtitle = 'Tu cuenta está activa, pero aún no has sido asignado a ningún grupo. El administrador te asignará pronto.';
+      stepTitle = 'Asignación de Grupo Pendiente';
+      stepDescription = 'Para acceder al mapa y al chat de la familia, el administrador debe incluirte en uno o más grupos familiares.';
+      pulseText = 'Esperando asignación de grupo...';
+    } else {
+      screenTitle = 'Acceso en Espera';
+      screenSubtitle = 'Tu correo ha sido verificado con éxito y tu solicitud está lista.';
+      stepTitle = 'Paso 2 de 2: Autorización';
+      stepDescription = 'Por privacidad y seguridad del núcleo familiar, el administrador debe autorizar tu acceso para desbloquear el mapa en directo.';
+      pulseText = 'Esperando aprobación del administrador...';
+    }
+
     container.innerHTML = `
       <div class="h-full w-full flex flex-col justify-between items-center p-6 safe-top safe-bottom bg-surface-canvas text-text-primary">
         <div class="w-full max-w-sm flex flex-col items-center pt-8 text-center">
@@ -39,6 +67,12 @@ export function renderGatekeeperScreen(
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             `
+                : isWaitingGroup
+                ? `
+              <svg class="w-12 h-12 text-status-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            `
                 : `
               <svg class="w-12 h-12 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -48,16 +82,13 @@ export function renderGatekeeperScreen(
           </div>
 
           <h1 class="text-2xl font-extrabold tracking-tight mb-2 text-text-primary font-sans">
-            ${isEmailUnverified ? 'Verifica tu Correo' : 'Acceso en Espera'}
+            ${screenTitle}
           </h1>
           
           <p class="text-sm font-medium text-text-secondary mb-6 leading-relaxed">
             Hola, <span class="font-bold text-text-primary">${escapeHtml(user.display_name || user.email)}</span>.
-            ${
-              isEmailUnverified
-                ? 'Hemos enviado un enlace de confirmación a tu correo electrónico para verificar tu identidad.'
-                : 'Tu correo ha sido verificado con éxito y tu solicitud está lista.'
-            }
+            <br />
+            ${screenSubtitle}
           </p>
 
           <!-- Information Card -->
@@ -70,16 +101,10 @@ export function renderGatekeeperScreen(
               </div>
               <div>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">
-                  ${isEmailUnverified ? 'Paso 1 de 2: Confirmar Email' : 'Paso 2 de 2: Autorización'}
+                  ${stepTitle}
                 </h2>
                 <p class="text-xs text-text-primary leading-normal">
-                  ${
-                    isEmailUnverified
-                      ? `Abre tu buzón en <span class="font-bold">${escapeHtml(
-                          user.email
-                        )}</span> y haz clic en el enlace. Una vez confirmado, tu solicitud llegará al administrador.`
-                      : 'Por privacidad y seguridad del núcleo familiar, el administrador debe autorizar tu acceso para desbloquear el mapa en directo.'
-                  }
+                  ${stepDescription}
                 </p>
               </div>
             </div>
@@ -98,7 +123,7 @@ export function renderGatekeeperScreen(
           <!-- Real-time pulse indicator -->
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-elevated border border-border-subtle text-xs font-semibold text-text-secondary mb-4">
             <span class="w-2.5 h-2.5 rounded-full ${isEmailUnverified ? 'bg-status-info animate-pulse' : 'bg-status-warning animate-pulse'}"></span>
-            <span>${isEmailUnverified ? 'Esperando confirmación de enlace...' : 'Esperando aprobación del administrador...'}</span>
+            <span>${pulseText}</span>
           </div>
         </div>
 
@@ -121,6 +146,16 @@ export function renderGatekeeperScreen(
               class="w-full py-2.5 text-xs font-bold text-brand-primary hover:underline text-center"
             >
               ${isResending ? 'Reenviando...' : 'Reenviar correo de verificación'}
+            </button>
+          `
+              : isWaitingGroup
+              ? `
+            <button 
+              id="btn-check-verified"
+              ${isChecking ? 'disabled' : ''}
+              class="w-full h-12 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-sm tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all disabled:opacity-60"
+            >
+              ${isChecking ? 'Comprobando...' : 'Comprobar de nuevo'}
             </button>
           `
               : `
@@ -163,7 +198,16 @@ export function renderGatekeeperScreen(
 
     const checkBtn = container.querySelector('#btn-check-verified');
     checkBtn?.addEventListener('click', async () => {
-      if (!onCheckVerification) return;
+      if (!onCheckVerification) {
+        // En caso de no tener callback específico, dar feedback visual y recargar
+        isChecking = true;
+        render();
+        setTimeout(() => {
+          isChecking = false;
+          window.location.reload();
+        }, 600);
+        return;
+      }
       isChecking = true;
       noticeMessage = '';
       render();
@@ -172,7 +216,9 @@ export function renderGatekeeperScreen(
         const verified = await onCheckVerification();
         isChecking = false;
         if (!verified) {
-          noticeMessage = 'Aún no detectamos la verificación. Asegúrate de hacer clic en el enlace del correo y pulsa de nuevo.';
+          noticeMessage = isWaitingGroup 
+            ? 'Aún no se ha asignado ningún grupo a tu cuenta. Consulta con el administrador.'
+            : 'Aún no detectamos la verificación. Asegúrate de hacer clic en el enlace del correo y pulsa de nuevo.';
           render();
         }
       } catch (err) {
@@ -186,26 +232,30 @@ export function renderGatekeeperScreen(
     resendBtn?.addEventListener('click', async () => {
       if (!onResendVerification) return;
       isResending = true;
+      noticeMessage = '';
       render();
 
       try {
         await onResendVerification();
         isResending = false;
-        noticeMessage = 'Nuevo correo de verificación enviado. Revisa tu bandeja de entrada o spam.';
+        noticeMessage = 'Correo de verificación reenviado con éxito. Revisa tu bandeja de entrada o spam.';
         render();
       } catch (err) {
         isResending = false;
-        noticeMessage = err instanceof Error ? err.message : 'Error al reenviar.';
+        noticeMessage = err instanceof Error ? err.message : 'Error reenviando correo de verificación.';
         render();
       }
     });
   }
 
-  render();
-}
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  render();
 }

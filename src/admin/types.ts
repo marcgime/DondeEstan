@@ -11,3 +11,11 @@ export interface WhitelistRecord {
   added_by?: string | null;
 }
 
+export interface Group {
+  id: string;
+  name: string;
+  created_at: number;
+  created_by: string;
+}
+
+
