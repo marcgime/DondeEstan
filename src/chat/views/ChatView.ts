@@ -189,29 +189,44 @@ export function renderChatView(
       chatUnsubscribe = null;
     }
 
-    messagesContainer.innerHTML = `
-      <div class="my-auto text-center p-6 text-text-disabled text-xs">
-        <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-pulse">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+    const currentSubGroupId = activeGroupId;
+    const cached = chatService.getCachedMessages(activeGroupId);
+
+    // Stale-While-Revalidate: Si ya tenemos mensajes en caché para este grupo,
+    // renderizamos instantáneamente (0ms) sin parpadeo ni pantalla de carga
+    if (cached && cached.length > 0) {
+      renderMessagesList(messagesContainer, cached, currentUser.uid);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } else {
+      messagesContainer.innerHTML = `
+        <div class="my-auto text-center p-6 text-text-disabled text-xs">
+          <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-pulse">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          Cargando mensajes del canal...
         </div>
-        Cargando mensajes del canal...
-      </div>
-    `;
+      `;
+    }
 
     chatUnsubscribe = chatService.subscribeToRecentMessages(
       (messages) => {
+        if (activeGroupId !== currentSubGroupId) return;
         renderMessagesList(messagesContainer, messages, currentUser.uid);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       },
       50,
       (err) => {
-        messagesContainer.innerHTML = `
-          <div class="my-auto text-center p-6 text-status-error text-xs">
-            No se pudieron cargar los mensajes: ${escapeHtml(err.message)}
-          </div>
-        `;
+        if (activeGroupId !== currentSubGroupId) return;
+        // Solo mostrar error visual si no hay mensajes en caché renderizados
+        if (!chatService.getCachedMessages(activeGroupId)?.length) {
+          messagesContainer.innerHTML = `
+            <div class="my-auto text-center p-6 text-status-error text-xs">
+              No se pudieron cargar los mensajes: ${escapeHtml(err.message)}
+            </div>
+          `;
+        }
       },
       activeGroupId || undefined
     );
@@ -238,6 +253,13 @@ export function renderChatView(
       }
       renderChatHeader();
       subscribeToCurrentChatGroup();
+
+      // Precarga en segundo plano de los demás grupos para cambio instantáneo
+      accessibleGroups.forEach((g) => {
+        if (g.id !== activeGroupId) {
+          chatService.preloadGroupMessages(g.id).catch(() => {});
+        }
+      });
     });
   } else {
     subscribeToCurrentChatGroup();

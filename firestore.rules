@@ -46,11 +46,23 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Chat Grupal Familiar (Fase 3)
+    // Chat Grupal (Fase 3)
     match /group_chat/{messageId} {
-      allow read, create: if isActiveMember();
+      allow read, create: if isActiveMember() || isAdmin();
       allow update: if false; // Mensajes inmutables
       allow delete: if isAdmin();
+    }
+
+    // Colección de Grupos y Mensajes de Grupo
+    match /groups/{groupId} {
+      allow read: if isActiveMember() || isAdmin();
+      allow write: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read, create: if isActiveMember() || isAdmin();
+        allow update: if false; // Mensajes inmutables
+        allow delete: if isAdmin();
+      }
     }
   }
 }
