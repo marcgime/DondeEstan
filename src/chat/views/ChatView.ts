@@ -18,7 +18,7 @@ export function renderChatView(
   container: HTMLElement,
   options: ChatViewOptions
 ): () => void {
-  const { currentUser, chatService, groupService, userProfile, onNavigateTab, onLogout } = options;
+  const { currentUser, chatService, groupService, userProfile, onNavigateTab } = options;
   let isSending = false;
   let chatUnsubscribe: (() => void) | null = null;
   let groupsUnsubscribe: (() => void) | null = null;
@@ -38,29 +38,12 @@ export function renderChatView(
           </div>
           <div id="chat-header-group-slot" class="truncate">
             <h1 class="text-sm font-bold text-text-primary flex items-center gap-2">
-              Canal Familiar
+              Chat
               <span class="w-2 h-2 rounded-full bg-status-online"></span>
             </h1>
             <p class="text-[11px] text-text-secondary">Mensajería instantánea segura</p>
           </div>
         </div>
-
-        ${
-          onLogout
-            ? `
-          <button 
-            id="chat-btn-logout"
-            class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-text-secondary hover:text-status-error text-xs font-semibold transition-colors shrink-0"
-            title="Cerrar sesión"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span class="hidden sm:inline">Salir</span>
-          </button>
-        `
-            : ''
-        }
       </header>
 
       <!-- Messages Stream List -->
@@ -89,7 +72,7 @@ export function renderChatView(
             id="chat-input-text"
             maxlength="500"
             autocomplete="off"
-            placeholder="Mensaje familiar..."
+            placeholder="Mensaje..."
             class="flex-1 h-10 px-4 rounded-full bg-transparent text-text-primary placeholder:text-text-disabled text-sm focus:outline-none"
           />
           <button 
@@ -293,13 +276,6 @@ export function renderChatView(
     onNavigateTab('profile');
   });
 
-  container.querySelector('#chat-btn-logout')?.addEventListener('click', async () => {
-    triggerHaptic('light');
-    if (onLogout) {
-      await onLogout();
-    }
-  });
-
   // Retornar función de limpieza
   return () => {
     if (chatUnsubscribe) {
@@ -326,7 +302,7 @@ function renderMessagesList(
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
           </svg>
         </div>
-        <p class="font-bold text-text-primary">El canal está en silencio</p>
+        <p class="font-bold text-text-primary">El chat está en silencio</p>
         <p class="text-[11px] text-text-disabled mt-1">Escribe el primer mensaje para este grupo.</p>
       </div>
     `;

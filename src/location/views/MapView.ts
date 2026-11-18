@@ -65,23 +65,12 @@ export function renderMapView(
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel shadow-sm">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
           <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans truncate">
-            Localizando familia...
+            Localizando usuarios...
           </span>
         </div>
 
         <!-- Group Selector Slot -->
         <div id="group-selector-slot" class="flex items-center"></div>
-
-        <button 
-          id="btn-logout"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-panel shadow-sm text-text-secondary hover:text-status-error transition-colors text-xs font-semibold shrink-0"
-          title="Cerrar sesión"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span class="hidden sm:inline">Salir</span>
-        </button>
       </div>
 
       <!-- MAP FRAME: Cuadrado que ocupa el ancho de la pantalla -->
@@ -94,7 +83,7 @@ export function renderMapView(
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              Cargando mapa familiar...
+              Cargando mapa...
             </div>
           </div>
 
@@ -150,7 +139,6 @@ export function renderMapView(
       <!-- BARRA DE CONTROL INTERMEDIA: Toggle Switch -->
       <div class="px-5 py-2.5 shrink-0 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-text-primary">Familiares</span>
           <span id="selected-counter-badge" class="px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold">
             Todos visibles
           </span>
@@ -168,7 +156,7 @@ export function renderMapView(
       <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
       <div class="flex-1 overflow-y-auto px-4 pb-28">
         <div id="contacts-scroll-container" class="flex flex-col gap-2">
-          <div class="p-6 text-center text-xs text-text-disabled">Cargando familiares...</div>
+          <div class="p-6 text-center text-xs text-text-disabled">Cargando usuarios...</div>
         </div>
       </div>
 
@@ -299,7 +287,7 @@ export function renderMapView(
 
     if (groupMembers.length === 0) {
       contactsContainer.innerHTML = `
-        <div class="p-6 text-center text-xs text-text-disabled">No hay familiares en este grupo</div>
+        <div class="p-6 text-center text-xs text-text-disabled">No hay usuarios en este grupo</div>
       `;
       return;
     }
@@ -414,7 +402,7 @@ export function renderMapView(
     const liveCount = visibleMembers.filter((m) => m.isLive).length;
     if (liveBadge) {
       liveBadge.textContent =
-        liveCount > 0 ? `${liveCount} en línea` : `${visibleMembers.length} familiares`;
+        liveCount > 0 ? `${liveCount} en línea` : `${visibleMembers.length} usuarios`;
     }
 
     if (counterBadge) {
@@ -602,13 +590,6 @@ export function renderMapView(
       .filter((loc): loc is Coordinates & { updated_at: number } => Boolean(loc));
     if (mapService && visibleCoords.length > 0) {
       mapService.fitBounds(visibleCoords);
-    }
-  });
-
-  container.querySelector('#btn-logout')?.addEventListener('click', async () => {
-    triggerHaptic('light');
-    if (options.onLogout) {
-      await options.onLogout();
     }
   });
 

@@ -42,7 +42,7 @@ export function renderAdminView(
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 class="text-sm font-extrabold tracking-tight text-text-primary">Administración Familiar</h1>
+          <h1 class="text-sm font-extrabold tracking-tight text-text-primary">Administración</h1>
         </div>
         <span class="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-bold">
           Modo Admin
@@ -52,10 +52,10 @@ export function renderAdminView(
       <!-- Scrollable Admin Content -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-lg mx-auto w-full pb-20">
         
-        <!-- Section 1: Switch de Registro Familiar -->
+        <!-- Section 1: Switch de Registro -->
         <div class="p-4 rounded-3xl glass-panel shadow-xs flex items-center justify-between">
           <div>
-            <h2 class="text-xs font-bold text-text-primary">Registro Familiar</h2>
+            <h2 class="text-xs font-bold text-text-primary">Registro</h2>
             <p id="reg-status-text" class="text-[11px] text-text-secondary mt-0.5">
               ${isRegistrationOpen ? 'Permitiendo solicitudes de alta' : 'Registro cerrado a nuevas altas'}
             </p>
@@ -134,7 +134,7 @@ export function renderAdminView(
               Usuarios Registrados
             </h2>
             <span id="members-count-badge" class="text-[11px] font-bold text-text-secondary">
-              0 familiares
+              0 usuarios
             </span>
           </div>
 
@@ -386,7 +386,7 @@ export function renderAdminView(
     if (!listEl || !badgeEl) return;
 
     const totalCount = activeMembers.length;
-    badgeEl.textContent = `${totalCount} familiares`;
+    badgeEl.textContent = `${totalCount} usuarios`;
 
     // Quota banner > 15
     if (alertEl) {
@@ -397,7 +397,7 @@ export function renderAdminView(
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <div>
-            <p class="font-bold text-text-primary">Aviso: ${totalCount} familiares registrados</p>
+            <p class="font-bold text-text-primary">Aviso: ${totalCount} usuarios registrados</p>
             <p class="text-[11px] text-text-secondary mt-0.5 leading-snug">
               Al superar 15 miembros se aconseja monitorizar las cuotas diarias del plan gratuito Spark de Firebase para evitar saturar las lecturas en tiempo real.
             </p>
@@ -492,7 +492,7 @@ export function renderAdminView(
                     data-purge-uid="${m.uid}" 
                     data-purge-name="${escapeHtml(m.display_name)}"
                     class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
-                    title="Eliminar usuario familiar"
+                    title="Eliminar usuario"
                   >
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -559,7 +559,7 @@ export function renderAdminView(
 
         if (
           !confirm(
-            `¿Eliminar y desvincular a ${name} del núcleo familiar?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`
+            `¿Eliminar y desvincular a ${name} de la aplicación?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`
           )
         ) {
           return;

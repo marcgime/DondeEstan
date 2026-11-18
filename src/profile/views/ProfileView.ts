@@ -26,7 +26,7 @@ export function renderProfileView(
         
         <!-- Top Header -->
         <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20">
-          <h1 class="text-sm font-bold text-text-primary">Mi Perfil Familiar</h1>
+          <h1 class="text-sm font-bold text-text-primary">Mi Perfil</h1>
           <button 
             id="profile-btn-logout"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-status-error text-xs font-semibold hover:bg-status-error/10 transition-colors"
@@ -112,7 +112,7 @@ export function renderProfileView(
                 ? 'bg-brand-primary text-brand-on-primary'
                 : 'bg-surface-elevated text-text-secondary'
             }">
-              ${profile.role === 'admin' ? 'Administrador Familiar' : 'Miembro Familiar'}
+              ${profile.role === 'admin' ? 'Administrador' : 'Miembro'}
             </span>
           </div>
 
@@ -133,7 +133,7 @@ export function renderProfileView(
                   </div>
                   <div class="text-left">
                     <p class="text-text-primary text-xs font-bold">Panel de Administración</p>
-                    <p class="text-[11px] text-text-secondary font-normal">Aprobar familiares y lista blanca</p>
+                    <p class="text-[11px] text-text-secondary font-normal">Gestionar usuarios y grupos</p>
                   </div>
                 </div>
                 <svg class="w-4 h-4 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
