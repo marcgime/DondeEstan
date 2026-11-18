@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   renderFloatingTabBar,
-  resetFloatingTabBarState,
   DEFAULT_TAB_INACTIVITY_MS,
-  DEFAULT_WATER_ANIMATION_MS,
   type FloatingTabId,
 } from '../../../src/ui/components/FloatingTabBar';
 
@@ -121,7 +119,6 @@ class MockContainer {
 describe('FloatingTabBar (DS-NAV-DOCK)', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    resetFloatingTabBarState();
   });
 
   afterEach(() => {
@@ -158,73 +155,25 @@ describe('FloatingTabBar (DS-NAV-DOCK)', () => {
     cleanup();
   });
 
-  it('ejecuta la onda rápida efecto agua durante 0,5 segundos (500ms) al seleccionar Chat antes de quedarse fijo', () => {
+  it('navega a la pestaña seleccionada y gestiona el clic en la pestaña activa', () => {
     const container = new MockContainer();
     let navigatedTo: FloatingTabId | null = null;
+    const onActiveClick = vi.fn();
 
-    const cleanupMap = renderFloatingTabBar(container as unknown as HTMLElement, {
+    const cleanup = renderFloatingTabBar(container as unknown as HTMLElement, {
       activeTab: 'map',
       onNavigateTab: (tab) => {
         navigatedTo = tab;
       },
-    });
-
-    expect(DEFAULT_WATER_ANIMATION_MS).toBe(500);
-
-    // El usuario pulsa Chat
-    const chatBtn = container.buttons.get('chat')!;
-    chatBtn.dispatch('click');
-
-    expect(navigatedTo).toBe('chat');
-    expect(chatBtn.classList.contains('dock-tab-btn--active')).toBe(true);
-    expect(chatBtn.classList.contains('dock-btn-water-animating')).toBe(true);
-
-    cleanupMap();
-
-    // Al montarse la vista de Chat, el botón activo de Chat arranca con la onda de agua durante 0,5s
-    const chatViewContainer = new MockContainer();
-    const cleanupChat = renderFloatingTabBar(
-      chatViewContainer as unknown as HTMLElement,
-      {
-        activeTab: 'chat',
-      }
-    );
-
-    const mountedChatBtn = chatViewContainer.buttons.get('chat')!;
-    expect(mountedChatBtn.classList.contains('dock-tab-btn--active')).toBe(true);
-    expect(mountedChatBtn.classList.contains('dock-btn-water-animating')).toBe(true);
-
-    // A los 499ms sigue haciendo la onda de agua
-    vi.advanceTimersByTime(499);
-    expect(mountedChatBtn.classList.contains('dock-btn-water-animating')).toBe(true);
-
-    // A los 500ms (0,5s) la onda termina y el recuadro azul queda completamente fijo
-    vi.advanceTimersByTime(1);
-    expect(mountedChatBtn.classList.contains('dock-btn-water-animating')).toBe(false);
-    expect(mountedChatBtn.classList.contains('dock-tab-btn--active')).toBe(true);
-
-    cleanupChat();
-  });
-
-  it('al pulsar la pestaña ya activa reproduce de nuevo la onda de agua de 0,5s e invoca onActiveTabClick', () => {
-    const container = new MockContainer();
-    const onActiveClick = vi.fn();
-
-    const cleanup = renderFloatingTabBar(container as unknown as HTMLElement, {
-      activeTab: 'profile',
       onActiveTabClick: onActiveClick,
     });
 
-    const profileBtn = container.buttons.get('profile')!;
-    expect(profileBtn.classList.contains('dock-btn-water-animating')).toBe(false);
-
-    profileBtn.dispatch('click');
+    container.buttons.get('map')!.dispatch('click');
     expect(onActiveClick).toHaveBeenCalledTimes(1);
-    expect(profileBtn.classList.contains('dock-btn-water-animating')).toBe(true);
+    expect(navigatedTo).toBeNull();
 
-    vi.advanceTimersByTime(500);
-    expect(profileBtn.classList.contains('dock-btn-water-animating')).toBe(false);
-    expect(profileBtn.classList.contains('dock-tab-btn--active')).toBe(true);
+    container.buttons.get('chat')!.dispatch('click');
+    expect(navigatedTo).toBe('chat');
 
     cleanup();
   });

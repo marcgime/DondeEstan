@@ -37,9 +37,9 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 - **Símbolo / Archivo:** `src/ui/components/base.ts`
 - **Invariantes:** Todo componente interactivo expone estados `default`, `hover`, `focus`, `disabled`.
 
-### CT-UI-06: Dock de Navegación Flotante Auto-Compacto y Efecto Agua (`FloatingTabBar`)
+### CT-UI-06: Dock de Navegación Flotante Auto-Compacto (`FloatingTabBar`)
 - **Símbolo / Archivo:** `src/ui/components/FloatingTabBar.ts::renderFloatingTabBar`
-- **Invariantes:** Se compacta a solo iconos tras `4000ms` de inactividad; al seleccionar un tab reproduce una onda líquida efecto agua de `500ms` antes de fijar el fondo de marca primario; libera todos sus timers al desmontarse.
+- **Invariantes:** Se compacta a solo iconos tras `4000ms` de inactividad; al tocarlo se reexpande; libera su timer al desmontarse.
 
 ---
 
@@ -48,7 +48,7 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 - **BR-UI-01:** Prohibido el uso de estilos HEX o tamaños en píxeles no declarados en `tokens.json`.
 - **BR-UI-02:** Los componentes deben ser 100% accesibles con contraste AA verificado.
 - **BR-UI-03:** Escalado proporcional en `rem` desde `html` (`108%` por defecto, configurable en Perfil) y respeto estricto de `safe-area-inset-top` sin difuminado superior en iOS PWA.
-- **BR-UI-04:** `DS-NAV-DOCK` oculta las etiquetas textuales tras 4 segundos sin interacción dejando solo los 3 logotipos, y acompaña la activación de cualquier pestaña con una animación tipo onda de agua de `0.5s` (`500ms`) hasta quedar fijo.
+- **BR-UI-04:** `DS-NAV-DOCK` oculta las etiquetas textuales tras 4 segundos sin interacción dejando solo los 3 logotipos.
 
 ---
 
