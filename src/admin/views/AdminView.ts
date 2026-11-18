@@ -491,6 +491,7 @@ export function renderAdminView(
                     ? `
                   <button 
                     data-purge-uid="${m.uid}" 
+                    data-purge-email="${escapeHtml(m.email)}"
                     data-purge-name="${escapeHtml(m.display_name)}"
                     class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
                     title="Eliminar usuario"
@@ -555,19 +556,20 @@ export function renderAdminView(
     listEl.querySelectorAll('.btn-purge-member').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const uid = (btn as HTMLElement).dataset.purgeUid;
+        const email = (btn as HTMLElement).dataset.purgeEmail;
         const name = (btn as HTMLElement).dataset.purgeName || 'este usuario';
         if (!uid) return;
 
         if (
           !confirm(
-            `¿Eliminar y desvincular a ${name} de la aplicación?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`
+            `¿Eliminar y desvincular a ${name} de la aplicación?\n\nSe eliminará de la base de datos y de Authentication, perdiendo el acceso de inmediato.`
           )
         ) {
           return;
         }
 
         try {
-          await adminService.purgeMember(uid, currentAdminUid);
+          await adminService.purgeMember(uid, currentAdminUid, email);
         } catch (err) {
           alert(err instanceof Error ? err.message : 'Error al eliminar usuario.');
         }

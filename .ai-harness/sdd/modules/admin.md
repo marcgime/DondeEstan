@@ -50,6 +50,7 @@ Es la autoridad funcional responsable de **Interruptor global registration_open,
 - **BR-ADMIN-02:** Las operaciones externas que puedan fallar devuelven un Result tipado.
 - **BR-GRP-01:** El administrador tiene acceso y pertenencia automática a todos los grupos creados.
 - **BR-GRP-02:** Al eliminar un grupo se desvincula de todos los usuarios; aquellos sin grupos quedan en espera de asignación.
+- **BR-ADM-03:** Al eliminar un usuario (`purgeMember`), se eliminan sus datos de Firestore (`/users/{uid}` y `/whitelist/{email}`) y se purga su cuenta de Firebase Authentication (`BR-AUTH-03`).
 
 ---
 

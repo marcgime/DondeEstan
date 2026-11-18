@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -23,10 +24,29 @@ import { normalizeEmail } from './whitelist';
 import { isUserApproved } from './gatekeeper';
 
 export class FamilyAuthService {
+  private registeringInProgress = false;
+
   constructor(
     private readonly auth: Auth,
     private readonly db: Firestore
   ) {}
+
+  isRegisteringInProgress(): boolean {
+    return this.registeringInProgress;
+  }
+
+  /**
+   * Elimina el registro del usuario actual en Firebase Authentication (BR-AUTH-03).
+   * Si el token requiere reautenticación reciente, cierra la sesión inmediatamente
+   * para que el borrado definitivo en Authentication ocurra en su próximo login/registro.
+   */
+  async purgeCurrentUserAuth(user: User): Promise<void> {
+    try {
+      await deleteUser(user);
+    } catch {
+      await signOut(this.auth);
+    }
+  }
 
   async register(
     rawEmail: string,
@@ -43,33 +63,57 @@ export class FamilyAuthService {
       throw new Error('Por favor, introduce tu nombre completo.');
     }
 
-    // 1. Crear credencial en Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(this.auth, email, pass);
-    const user = userCredential.user;
+    this.registeringInProgress = true;
+    try {
+      // 1. Crear credencial en Firebase Auth (si existía una credencial huérfana purgada en Firestore, limpiarla primero)
+      let userCredential;
+      try {
+        userCredential = await createUserWithEmailAndPassword(this.auth, email, pass);
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        if (code === 'auth/email-already-in-use') {
+          const existingCred = await signInWithEmailAndPassword(this.auth, email, pass);
+          const existingProfile = await this.fetchUserProfile(existingCred.user.uid);
+          if (!existingProfile) {
+            await deleteUser(existingCred.user);
+            userCredential = await createUserWithEmailAndPassword(this.auth, email, pass);
+          } else {
+            await signOut(this.auth);
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
 
-    // Actualizar nombre visible en el objeto Auth
-    await updateProfile(user, { displayName: name });
+      const user = userCredential.user;
 
-    // 2. Enviar correo de verificación nativo
-    await sendEmailVerification(user);
+      // Actualizar nombre visible en el objeto Auth
+      await updateProfile(user, { displayName: name });
 
-    // 3. Crear documento de usuario con status 'unverified_email'
-    const userDocRef = doc(this.db, 'users', user.uid);
-    const profile: UserProfile = {
-      uid: user.uid,
-      email,
-      display_name: name,
-      role: 'member',
-      status: 'unverified_email',
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp(),
-    };
-    await setDoc(userDocRef, profile);
+      // 2. Enviar correo de verificación nativo
+      await sendEmailVerification(user);
 
-    return {
-      user: profile,
-      isApproved: false,
-    };
+      // 3. Crear documento de usuario con status 'unverified_email'
+      const userDocRef = doc(this.db, 'users', user.uid);
+      const profile: UserProfile = {
+        uid: user.uid,
+        email,
+        display_name: name,
+        role: 'member',
+        status: 'unverified_email',
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      };
+      await setDoc(userDocRef, profile);
+
+      return {
+        user: profile,
+        isApproved: false,
+      };
+    } finally {
+      this.registeringInProgress = false;
+    }
   }
 
   async checkEmailVerifiedAndPromote(user: User): Promise<boolean> {
@@ -96,7 +140,8 @@ export class FamilyAuthService {
 
     const profile = await this.fetchUserProfile(uid);
     if (!profile) {
-      throw new Error('El perfil de usuario familiar no fue encontrado en el sistema.');
+      await this.purgeCurrentUserAuth(userCredential.user);
+      throw new Error('Tu cuenta ha sido eliminada por el administrador.');
     }
 
     return {

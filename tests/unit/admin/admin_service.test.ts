@@ -73,8 +73,15 @@ describe('AdminService', () => {
       );
     });
 
-    it('debe permitir purgar a un miembro que no sea el admin actual', async () => {
-      await expect(service.purgeMember('member-2', 'admin-1')).resolves.not.toThrow();
+    it('debe permitir purgar a un miembro que no sea el admin actual y eliminar su whitelist (BR-ADM-03)', async () => {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      await expect(
+        service.purgeMember('member-2', 'admin-1', 'Familiar@Correo.es')
+      ).resolves.not.toThrow();
+
+      expect(doc).toHaveBeenCalledWith(mockDb, 'users', 'member-2');
+      expect(doc).toHaveBeenCalledWith(mockDb, 'whitelist', 'familiar@correo.es');
+      expect(deleteDoc).toHaveBeenCalledTimes(2);
     });
   });
 

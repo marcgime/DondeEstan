@@ -75,20 +75,31 @@ function init(): void {
     profileUnsubscribe = authService.subscribeToUserProfile(
       user.uid,
       (profile) => {
-        if (!profile || shouldShowGatekeeper(profile) || !isUserApproved(profile)) {
+        if (!profile) {
+          if (authService.isRegisteringInProgress()) {
+            return;
+          }
+          isAppInitialized = false;
+          if (activeCleanup) {
+            activeCleanup();
+            activeCleanup = null;
+          }
+          if (currentTracker) {
+            currentTracker.stop();
+            currentTracker = null;
+          }
+          void authService.purgeCurrentUserAuth(user);
+          return;
+        }
+
+        if (shouldShowGatekeeper(profile) || !isUserApproved(profile)) {
           isAppInitialized = false;
           if (activeCleanup) {
             activeCleanup();
             activeCleanup = null;
           }
           renderGatekeeperScreen(appContainer!, {
-            user: profile || {
-              uid: user.uid,
-              email: user.email || '',
-              display_name: user.displayName || user.email || 'Familiar',
-              role: 'member',
-              status: user.emailVerified ? 'pending_approval' : 'unverified_email',
-            },
+            user: profile,
             onLogout: async () => {
               await authService.logout();
             },

@@ -5,10 +5,24 @@ import type { Firestore } from 'firebase/firestore';
 
 vi.mock('firebase/auth', () => ({
   createUserWithEmailAndPassword: vi.fn(),
+  deleteUser: vi.fn().mockResolvedValue(undefined),
+  sendEmailVerification: vi.fn().mockResolvedValue(undefined),
   signInWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
-  updateProfile: vi.fn(),
+  signOut: vi.fn().mockResolvedValue(undefined),
+  updateProfile: vi.fn().mockResolvedValue(undefined),
   sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('firebase/firestore', () => ({
+  doc: vi.fn((_db, col, id) => ({ col, id })),
+  getDoc: vi.fn(async () => ({
+    exists: () => false,
+    data: () => undefined,
+  })),
+  setDoc: vi.fn().mockResolvedValue(undefined),
+  updateDoc: vi.fn().mockResolvedValue(undefined),
+  onSnapshot: vi.fn(),
+  serverTimestamp: vi.fn(() => 123456),
 }));
 
 describe('FamilyAuthService - Password Reset', () => {
@@ -30,5 +44,20 @@ describe('FamilyAuthService - Password Reset', () => {
     await expect(authService.sendPasswordReset('   ')).rejects.toThrow(
       'Por favor, introduce un correo electrónico válido.'
     );
+  });
+
+  it('elimina el usuario de Firebase Authentication si fue purgado de Firestore al intentar iniciar sesión (BR-AUTH-03)', async () => {
+    const authService = new FamilyAuthService(mockAuth, mockDb);
+    const { signInWithEmailAndPassword, deleteUser } = await import('firebase/auth');
+    const mockPurgedUser = { uid: 'purged-uid', email: 'ex@familia.es' };
+    vi.mocked(signInWithEmailAndPassword).mockResolvedValueOnce({
+      user: mockPurgedUser,
+    } as never);
+
+    await expect(authService.login('ex@familia.es', 'password123')).rejects.toThrow(
+      'Tu cuenta ha sido eliminada por el administrador.'
+    );
+
+    expect(deleteUser).toHaveBeenCalledWith(mockPurgedUser);
   });
 });

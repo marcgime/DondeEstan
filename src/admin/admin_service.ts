@@ -164,16 +164,42 @@ export class AdminService {
   }
 
   /**
-   * Purga y elimina completamente los datos de un familiar en Firestore.
+   * Purga y elimina completamente los datos de un familiar en Firestore y Whitelist.
    * BR-ADM-02: El administrador no puede auto-eliminarse.
+   * BR-ADM-03: Elimina documento de usuario y entrada de whitelist; el cliente del usuario purga su credencial en Firebase Auth.
    */
-  async purgeMember(targetUid: string, currentAdminUid: string): Promise<void> {
+  async purgeMember(
+    targetUid: string,
+    currentAdminUid: string,
+    targetEmail?: string
+  ): Promise<void> {
     if (targetUid === currentAdminUid) {
       throw new Error('No puedes purgar tu propia cuenta de administrador.');
     }
 
     const userRef = doc(this.db, 'users', targetUid);
+    let emailToClean = targetEmail ? targetEmail.trim().toLowerCase() : '';
+
+    if (!emailToClean) {
+      try {
+        const snap = await getDoc(userRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (typeof data?.email === 'string') {
+            emailToClean = data.email.trim().toLowerCase();
+          }
+        }
+      } catch {
+        // Continuar con el borrado del documento principal aunque falle la lectura previa
+      }
+    }
+
     await deleteDoc(userRef);
+
+    if (emailToClean && emailToClean.includes('@')) {
+      const whitelistRef = doc(this.db, 'whitelist', emailToClean);
+      await deleteDoc(whitelistRef);
+    }
   }
 }
 

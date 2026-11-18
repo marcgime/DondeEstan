@@ -44,6 +44,7 @@ Es la autoridad funcional responsable de **Flujo de registro y login cerrado con
 
 - **BR-AUTH-01:** Toda entidad de Autenticación, Whitelist y Control de Acceso valida sus invariantes en el constructor.
 - **BR-AUTH-02:** Las operaciones externas que puedan fallar devuelven un Result tipado.
+- **BR-AUTH-03:** Si un usuario autenticado en Firebase Authentication carece de documento `/users/{uid}` en Firestore por haber sido eliminado por el administrador, se ejecuta `deleteUser(user)` para eliminar su credencial del módulo Authentication (en vivo, al iniciar sesión o al re-registrarse).
 
 ---
 
