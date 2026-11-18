@@ -117,13 +117,8 @@ export class LeafletFamilyMapService {
 
     const html = `
       <div class="relative cursor-pointer group transform transition-transform hover:scale-110">
-        ${
-          isLive
-            ? '<span class="absolute -inset-1 rounded-full bg-status-online opacity-75 animate-ping"></span>'
-            : ''
-        }
         <div class="relative w-11 h-11 rounded-full border-2 ${
-          isLive ? 'border-status-online shadow-glow-online' : 'border-surface-card shadow-sm'
+          isLive ? 'border-status-online shadow-sm' : 'border-surface-card shadow-sm'
         } bg-surface-card overflow-hidden flex items-center justify-center font-bold text-sm text-text-primary">
           ${
             photoUrl
@@ -131,7 +126,11 @@ export class LeafletFamilyMapService {
               : `<div class="w-full h-full bg-brand-primary/10 text-brand-primary flex items-center justify-center">${initial}</div>`
           }
         </div>
-        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-surface-canvas/90 backdrop-blur-sm border border-border-subtle text-[9px] font-bold text-text-primary whitespace-nowrap shadow-xs pointer-events-none">
+        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full border text-[9px] font-bold whitespace-nowrap shadow-xs pointer-events-none transition-colors ${
+          isLive
+            ? 'bg-status-online text-text-on-accent border-status-online'
+            : 'bg-surface-canvas/90 backdrop-blur-sm border-border-subtle text-text-primary'
+        }">
           ${escapeHtml(member.display_name.split(' ')[0])}
         </div>
       </div>

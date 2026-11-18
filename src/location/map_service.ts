@@ -151,13 +151,6 @@ export class FamilyMapService {
 
     el.innerHTML = `
       <div class="relative flex items-center justify-center">
-        <!-- Pulsing Halo for Live Users -->
-        ${
-          isLive
-            ? '<span class="absolute w-12 h-12 rounded-full bg-status-online/25 animate-ping"></span>'
-            : ''
-        }
-        
         <!-- Outer Avatar Squircle / Circle -->
         <div class="relative w-11 h-11 rounded-full p-0.5 bg-surface-canvas shadow-card border-2 ${
           isLive ? 'border-status-online' : 'border-status-offline'
@@ -174,7 +167,11 @@ export class FamilyMapService {
         </div>
 
         <!-- Name Label Pin -->
-        <div class="absolute -bottom-5 whitespace-nowrap px-2 py-0.5 rounded-full bg-surface-canvas/90 backdrop-blur-sm border border-border-subtle shadow-sm text-[10px] font-bold text-text-primary">
+        <div class="absolute -bottom-5 whitespace-nowrap px-2 py-0.5 rounded-full border shadow-sm text-[10px] font-bold transition-colors ${
+          isLive
+            ? 'bg-status-online text-text-on-accent border-status-online'
+            : 'bg-surface-canvas/90 backdrop-blur-sm border-border-subtle text-text-primary'
+        }">
           ${escapeHtml(member.display_name.split(' ')[0])}
         </div>
       </div>
