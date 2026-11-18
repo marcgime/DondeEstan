@@ -68,7 +68,7 @@
 }
 
 .safe-header-top {
-  padding-top: 0.5rem;
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 2.25rem);
 }
 
 .safe-dock-bottom {
