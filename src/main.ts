@@ -104,13 +104,6 @@ function init(): void {
           latestProfile = profile;
           const activeUser = user;
 
-          // Asegurar que existe el grupo por defecto si entra el administrador
-          if (profile.role === 'admin') {
-            groupService.ensureDefaultGroup(profile.uid).catch((err) => {
-              console.error('Error asegurando grupo por defecto:', err);
-            });
-          }
-
           if (!currentTracker) {
             currentTracker = new GeolocationTracker({
               uid: activeUser.uid,

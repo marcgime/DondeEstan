@@ -16,7 +16,20 @@ vi.mock('firebase/firestore', () => {
     query: vi.fn((...args) => ({ type: 'query', args })),
     where: vi.fn((f, op, v) => ({ type: 'where', f, op, v })),
     onSnapshot: vi.fn((_q, cb) => {
-      cb({ docs: [] });
+      cb({
+        docs: [
+          {
+            id: 'u1',
+            data: () => ({
+              email: 'test@familia.es',
+              display_name: 'Test',
+              role: 'member',
+              status: 'active',
+              groupIds: ['grp-1'],
+            }),
+          },
+        ],
+      });
       return vi.fn();
     }),
   };
@@ -76,10 +89,18 @@ describe('AdminService', () => {
   });
 
   describe('subscribeToAllMembers', () => {
-    it('debe suscribir y filtrar miembros que no estén en pending_approval', () => {
+    it('debe suscribir, filtrar miembros que no estén en pending_approval y mapear groupIds', () => {
       const cb = vi.fn();
       const unsub = service.subscribeToAllMembers(cb);
       expect(unsub).toBeDefined();
+      expect(cb).toHaveBeenCalledWith([
+        expect.objectContaining({
+          uid: 'u1',
+          email: 'test@familia.es',
+          display_name: 'Test',
+          groupIds: ['grp-1'],
+        }),
+      ]);
     });
   });
 });

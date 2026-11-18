@@ -618,16 +618,28 @@ export function renderAdminView(
       modalSlot.innerHTML = '';
     });
 
-    modalSlot.querySelector('#btn-save-groups')?.addEventListener('click', async () => {
+    const saveBtn = modalSlot.querySelector('#btn-save-groups') as HTMLButtonElement | null;
+    saveBtn?.addEventListener('click', async () => {
       const selectedIds: string[] = [];
       modalSlot.querySelectorAll<HTMLInputElement>('.group-checkbox:checked').forEach((box) => {
         selectedIds.push(box.value);
       });
 
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Guardando...';
+      }
+
       try {
         await groupService.assignUserGroups(member.uid, selectedIds);
+        member.groupIds = selectedIds;
+        renderMembersList();
         modalSlot.innerHTML = '';
       } catch (err) {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Guardar Cambios';
+        }
         alert(err instanceof Error ? err.message : 'Error al guardar grupos.');
       }
     });

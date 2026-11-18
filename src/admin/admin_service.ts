@@ -147,6 +147,7 @@ export class AdminService {
               display_name: data.display_name || 'Familiar',
               role: data.role || 'member',
               status: data.status || 'active',
+              groupIds: Array.isArray(data.groupIds) ? data.groupIds : [],
               photo_url: data.photo_url,
               created_at: data.created_at,
               updated_at: data.updated_at,
