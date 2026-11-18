@@ -56,6 +56,11 @@ export function renderProfileView(
   }
 
   function render(): void {
+    const prevScrollEl = container.querySelector(
+      '#profile-scroll-container'
+    ) as HTMLElement | null;
+    const prevScrollTop = prevScrollEl ? prevScrollEl.scrollTop : 0;
+
     if (cleanupTabBar) {
       cleanupTabBar();
       cleanupTabBar = null;
@@ -81,10 +86,10 @@ export function renderProfileView(
         </header>
 
         <!-- Profile Content -->
-        <div id="profile-scroll-container" class="flex-1 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-36">
+        <div id="profile-scroll-container" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-40">
           
           <!-- Avatar Big with Upload Badge -->
-          <div class="relative mt-1">
+          <div class="relative mt-1 shrink-0">
             <div class="w-20 h-20 rounded-full border-4 border-brand-primary/20 bg-surface-card overflow-hidden flex items-center justify-center text-2xl font-extrabold text-brand-primary shadow-card">
               ${
                 isUploadingPhoto
@@ -116,7 +121,7 @@ export function renderProfileView(
           </div>
 
           <!-- User Name and Edit Option -->
-          <div class="text-center w-full max-w-xs">
+          <div class="text-center w-full max-w-xs shrink-0">
             ${
               isEditingName
                 ? `
@@ -161,7 +166,7 @@ export function renderProfileView(
           ${
             profile.role === 'admin' && onOpenAdminPanel
               ? `
-            <div class="w-full max-w-sm mt-1">
+            <div class="w-full max-w-sm mt-1 shrink-0">
               <button 
                 id="btn-open-admin"
                 class="w-full p-4 rounded-2xl glass-panel text-brand-primary font-bold text-xs flex items-center justify-between shadow-dock hover:bg-brand-primary/5 active:scale-98 transition-all"
@@ -187,14 +192,14 @@ export function renderProfileView(
           }
 
           <!-- Selector de Zoom / Tamaño de Interfaz (Menú Plegable) -->
-          <div class="w-full max-w-sm rounded-2xl glass-panel shadow-xs overflow-hidden">
+          <div id="zoom-menu-card" class="w-full max-w-sm rounded-2xl glass-panel shadow-xs shrink-0">
             <button
               type="button"
               id="btn-toggle-zoom-menu"
               aria-expanded="${isZoomMenuOpen ? 'true' : 'false'}"
-              class="w-full p-3.5 flex items-center justify-between gap-3 text-left hover:bg-brand-primary/5 transition-colors cursor-pointer"
+              class="w-full p-3.5 rounded-2xl flex items-center justify-between gap-3 text-left hover:bg-brand-primary/5 transition-colors cursor-pointer"
             >
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-bold text-text-primary">Tamaño de Letra y Zoom</p>
                 <p class="text-[0.75rem] text-text-secondary">
                   ${isZoomMenuOpen ? 'Selecciona un tamaño para toda la aplicación' : `Actual: ${activeScaleOpt.label}`}
@@ -219,22 +224,22 @@ export function renderProfileView(
             ${
               isZoomMenuOpen
                 ? `
-              <div id="zoom-menu-options" class="px-3.5 pb-3.5 pt-1 border-t border-border-subtle">
-                <div class="grid grid-cols-4 gap-1.5 mt-2">
+              <div id="zoom-menu-options" class="px-3.5 pb-3.5 pt-2 border-t border-border-subtle">
+                <div class="grid grid-cols-2 gap-2">
                   ${UI_SCALE_OPTIONS.map((opt) => {
                     const isActive = opt.id === currentScale;
                     return `
                       <button
                         type="button"
                         data-ui-scale="${opt.id}"
-                        class="btn-ui-scale py-2 px-1.5 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                        class="btn-ui-scale py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-between gap-2 border cursor-pointer ${
                           isActive
                             ? 'bg-brand-primary text-brand-on-primary border-brand-primary shadow-xs font-bold'
                             : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary font-semibold'
                         }"
                       >
                         <span class="text-xs">${opt.label}</span>
-                        <span class="text-[0.6875rem] opacity-80">${opt.percentage}</span>
+                        <span class="text-[0.6875rem] opacity-85">${opt.percentage}</span>
                       </button>
                     `;
                   }).join('')}
@@ -246,7 +251,7 @@ export function renderProfileView(
           </div>
 
           <!-- Info Cards -->
-          <div class="w-full max-w-sm flex flex-col gap-2.5 mt-1">
+          <div class="w-full max-w-sm flex flex-col gap-2.5 mt-1 shrink-0">
             <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
               <span class="font-bold text-text-secondary">Estado de cuenta</span>
               <span class="text-status-online font-bold uppercase tracking-wider">Activa y Aprobada</span>
@@ -272,6 +277,13 @@ export function renderProfileView(
 
       </div>
     `;
+
+    const nextScrollEl = container.querySelector(
+      '#profile-scroll-container'
+    ) as HTMLElement | null;
+    if (nextScrollEl && prevScrollTop > 0) {
+      nextScrollEl.scrollTop = prevScrollTop;
+    }
 
     bindEvents();
   }
@@ -306,6 +318,10 @@ export function renderProfileView(
       triggerHaptic('light');
       isZoomMenuOpen = !isZoomMenuOpen;
       render();
+      if (isZoomMenuOpen) {
+        const zoomOptionsEl = container.querySelector('#zoom-menu-options') as HTMLElement | null;
+        zoomOptionsEl?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+      }
     });
 
     // Selector de escala visual (Zoom de interfaz)
