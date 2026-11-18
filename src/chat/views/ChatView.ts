@@ -26,13 +26,13 @@ export function renderChatView(
   let activeGroupId: string = '';
 
   container.innerHTML = `
-    <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+    <div id="chat-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
       <!-- Top Header -->
-      <header class="shrink-0 px-4 safe-header-top pb-3 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20 gap-2">
+      <header class="shrink-0 px-4 safe-header-top pb-2 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20 gap-2">
         <div class="flex items-center gap-3 truncate">
-          <div class="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shrink-0">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="w-9 h-9 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
@@ -49,7 +49,7 @@ export function renderChatView(
       <!-- Messages Stream List -->
       <div 
         id="chat-messages-container" 
-        class="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 pb-36"
+        class="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 pb-44"
       >
         <div class="my-auto text-center p-6 text-text-disabled text-xs">
           <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-pulse">
@@ -128,10 +128,50 @@ export function renderChatView(
     </div>
   `;
 
+  const chatRoot = container.querySelector('#chat-view-root') as HTMLElement;
   const messagesContainer = container.querySelector('#chat-messages-container') as HTMLElement;
   const form = container.querySelector('#chat-composer-form') as HTMLFormElement;
   const inputEl = container.querySelector('#chat-input-text') as HTMLInputElement;
   const sendBtn = container.querySelector('#chat-btn-send') as HTMLButtonElement;
+
+  let blurTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  function setKeyboardOpenState(isOpen: boolean): void {
+    if (!chatRoot) return;
+    if (isOpen) {
+      chatRoot.classList.add('chat-keyboard-open');
+      messagesContainer.classList.remove('pb-44');
+      messagesContainer.classList.add('pb-20');
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 60);
+    } else {
+      chatRoot.classList.remove('chat-keyboard-open');
+      messagesContainer.classList.remove('pb-20');
+      messagesContainer.classList.add('pb-44');
+    }
+  }
+
+  inputEl?.addEventListener('focus', () => {
+    if (blurTimeoutId) {
+      clearTimeout(blurTimeoutId);
+      blurTimeoutId = null;
+    }
+    setKeyboardOpenState(true);
+  });
+
+  inputEl?.addEventListener('blur', () => {
+    blurTimeoutId = setTimeout(() => {
+      if (document.activeElement !== inputEl) {
+        setKeyboardOpenState(false);
+      }
+    }, 120);
+  });
+
+  // Evitar que pulsar el botón de enviar cierre el teclado en iOS
+  sendBtn?.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
 
   function renderChatHeader(): void {
     const slot = container.querySelector('#chat-header-group-slot');
@@ -300,6 +340,10 @@ export function renderChatView(
 
   // Retornar función de limpieza
   return () => {
+    if (blurTimeoutId) {
+      clearTimeout(blurTimeoutId);
+      blurTimeoutId = null;
+    }
     if (chatUnsubscribe) {
       chatUnsubscribe();
       chatUnsubscribe = null;

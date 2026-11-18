@@ -31,7 +31,7 @@ export function renderAdminView(
     <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
       
       <!-- Top Bar -->
-      <header class="shrink-0 px-4 safe-header-top pb-3 border-b border-border-subtle bg-surface-canvas flex items-center justify-between z-10">
+      <header class="shrink-0 px-4 safe-header-top pb-2 border-b border-border-subtle bg-surface-canvas flex items-center justify-between z-10">
         <div class="flex items-center gap-2.5">
           <button 
             id="admin-btn-back" 

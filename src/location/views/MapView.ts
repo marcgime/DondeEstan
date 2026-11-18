@@ -61,7 +61,7 @@ export function renderMapView(
     <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
       <!-- Top Header Pill Bar -->
-      <div class="shrink-0 px-4 safe-header-top pb-2.5 flex justify-between items-center z-20 gap-2 bg-surface-canvas">
+      <div class="shrink-0 px-4 safe-header-top pb-2 flex justify-between items-center z-20 gap-2 bg-surface-canvas">
         <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-elevated border border-border-subtle shadow-sm">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
           <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans truncate">
@@ -154,7 +154,7 @@ export function renderMapView(
       </div>
 
       <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
-      <div class="flex-1 overflow-y-auto px-4 pb-28">
+      <div class="flex-1 overflow-y-auto px-4 pb-36">
         <div id="contacts-scroll-container" class="flex flex-col gap-2">
           <div class="p-6 text-center text-xs text-text-disabled">Cargando usuarios...</div>
         </div>

@@ -35,7 +35,7 @@ export function renderProfileView(
       <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
         
         <!-- Top Header -->
-        <header class="shrink-0 px-4 safe-header-top pb-3 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20">
+        <header class="shrink-0 px-4 safe-header-top pb-2 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20">
           <h1 class="text-base font-bold text-text-primary">Mi Perfil</h1>
           <button 
             id="profile-btn-logout"
@@ -50,11 +50,11 @@ export function renderProfileView(
         </header>
 
         <!-- Profile Content -->
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col items-center gap-5 pb-32">
+        <div class="flex-1 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-36">
           
           <!-- Avatar Big with Upload Badge -->
-          <div class="relative mt-2">
-            <div class="w-24 h-24 rounded-full border-4 border-brand-primary/20 bg-surface-card overflow-hidden flex items-center justify-center text-3xl font-extrabold text-brand-primary shadow-card">
+          <div class="relative mt-1">
+            <div class="w-20 h-20 rounded-full border-4 border-brand-primary/20 bg-surface-card overflow-hidden flex items-center justify-center text-2xl font-extrabold text-brand-primary shadow-card">
               ${
                 isUploadingPhoto
                   ? `
