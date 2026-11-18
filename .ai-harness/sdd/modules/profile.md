@@ -44,6 +44,7 @@ Es la autoridad funcional responsable de **Edición de display_name, compresión
 
 - **BR-PROFILE-01:** Toda entidad de Perfil, Ajustes y Diagnóstico del Dispositivo valida sus invariantes en el constructor.
 - **BR-PROFILE-02:** Las operaciones externas que puedan fallar devuelven un Result tipado.
+- **BR-PROFILE-03:** La sección "Núcleo" de la vista de perfil muestra en tiempo real los grupos a los que pertenece el usuario (mediante `GroupService`), desuscribiendo el listener al desmontar la vista (FM-002).
 
 ---
 

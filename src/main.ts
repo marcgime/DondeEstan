@@ -166,6 +166,7 @@ function init(): void {
               activeCleanup = renderProfileView(appContainer!, {
                 profile: currentProfile,
                 profileService,
+                groupService,
                 onNavigateTab: (tab) => {
                   currentTab = tab;
                   renderTab();

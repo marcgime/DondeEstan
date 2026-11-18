@@ -1,6 +1,7 @@
 import type { ProfileService } from '../profile_service';
 import { compressAndCropAvatar } from '../image_compressor';
 import type { UserProfile } from '../../auth/types';
+import type { Group, GroupService } from '../../admin';
 import { renderFloatingTabBar } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import {
@@ -14,6 +15,7 @@ import {
 export interface ProfileViewOptions {
   profile: UserProfile;
   profileService: ProfileService;
+  groupService?: GroupService;
   onNavigateTab: (tab: 'map' | 'chat' | 'profile') => void;
   onOpenAdminPanel?: () => void;
   onLogout: () => Promise<void>;
@@ -23,7 +25,7 @@ export function renderProfileView(
   container: HTMLElement,
   options: ProfileViewOptions
 ): () => void {
-  const { profile, profileService, onNavigateTab, onOpenAdminPanel, onLogout } = options;
+  const { profile, profileService, groupService, onNavigateTab, onOpenAdminPanel, onLogout } = options;
   const initial = (profile.display_name || 'F')[0].toUpperCase();
   let isEditingName = false;
   let isUploadingPhoto = false;
@@ -31,6 +33,26 @@ export function renderProfileView(
     ? profile.ui_scale
     : getStoredUiScale();
   let cleanupTabBar: (() => void) | null = null;
+  let groupsUnsubscribe: (() => void) | null = null;
+  let userGroups: Group[] = [];
+  let groupsLoaded = !groupService;
+
+  function renderUserGroupsContent(): string {
+    if (!groupsLoaded) {
+      return '<span class="text-text-secondary font-bold">Cargando...</span>';
+    }
+    if (userGroups.length === 0) {
+      return '<span class="text-text-disabled font-bold">Sin grupos asignados</span>';
+    }
+    return userGroups
+      .map(
+        (g) =>
+          `<span class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary font-bold">${escapeHtml(
+            g.name
+          )}</span>`
+      )
+      .join('');
+  }
 
   function render(): void {
     if (cleanupTabBar) {
@@ -206,9 +228,11 @@ export function renderProfileView(
               <span class="text-brand-primary font-bold">Cero Telemetría</span>
             </div>
 
-            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-              <span class="font-bold text-text-secondary">Núcleo</span>
-              <span class="text-text-primary font-bold">Familiar privado (sin límite)</span>
+            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3 text-xs">
+              <span class="font-bold text-text-secondary shrink-0">Núcleo</span>
+              <div id="profile-user-groups" class="flex flex-wrap items-center justify-end gap-1.5 text-right">
+                ${renderUserGroupsContent()}
+              </div>
             </div>
           </div>
 
@@ -319,7 +343,23 @@ export function renderProfileView(
   }
 
   render();
+
+  if (groupService) {
+    groupsUnsubscribe = groupService.subscribeToGroups((allGroups) => {
+      userGroups = groupService.getUserGroups(profile, allGroups);
+      groupsLoaded = true;
+      const groupsEl = container.querySelector('#profile-user-groups');
+      if (groupsEl) {
+        groupsEl.innerHTML = renderUserGroupsContent();
+      }
+    });
+  }
+
   return () => {
+    if (groupsUnsubscribe) {
+      groupsUnsubscribe();
+      groupsUnsubscribe = null;
+    }
     if (cleanupTabBar) {
       cleanupTabBar();
       cleanupTabBar = null;
@@ -328,8 +368,11 @@ export function renderProfileView(
 }
 
 function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
