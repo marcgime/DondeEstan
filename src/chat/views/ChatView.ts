@@ -3,6 +3,7 @@ import type { ChatMessage, ChatSender } from '../types';
 import type { GroupService } from '../../admin/group_service';
 import type { Group } from '../../admin/types';
 import type { UserProfile } from '../../auth/types';
+import { renderFloatingTabBar } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 
 export interface ChatViewOptions {
@@ -83,42 +84,8 @@ export function renderChatView(
         </form>
       </div>
 
-      <!-- DS-NAV-DOCK: Bottom Floating Navigation -->
-      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
-        <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
-          
-          <!-- Map Tab -->
-          <button 
-            id="nav-btn-map" 
-            class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            <span>Mapa</span>
-          </button>
-
-          <!-- Chat Tab (Active) -->
-          <button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span>Chat</span>
-          </button>
-
-          <!-- Settings Tab -->
-          <button 
-            id="nav-btn-profile" 
-            class="flex items-center gap-1.5 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary text-xs font-bold transition-all"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span>Perfil</span>
-          </button>
-
-        </div>
-      </nav>
+      <!-- DS-NAV-DOCK: Bottom Floating Navigation Slot -->
+      <div id="chat-dock-slot"></div>
 
     </div>
   `;
@@ -313,19 +280,28 @@ export function renderChatView(
     }
   });
 
-  // Eventos de navegación
-  container.querySelector('#nav-btn-map')?.addEventListener('click', () => {
-    triggerHaptic('light');
-    onNavigateTab('map');
-  });
-
-  container.querySelector('#nav-btn-profile')?.addEventListener('click', () => {
-    triggerHaptic('light');
-    onNavigateTab('profile');
-  });
+  // Navegación Bottom Dock (auto-compacto a los 4s + onda efecto agua 0.5s)
+  const dockSlot = container.querySelector('#chat-dock-slot') as HTMLElement | null;
+  const cleanupTabBar = dockSlot
+    ? renderFloatingTabBar(dockSlot, {
+        activeTab: 'chat',
+        onNavigateTab,
+        onActiveTabClick: () => {
+          if (messagesContainer) {
+            messagesContainer.scrollTo({
+              top: messagesContainer.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        },
+      })
+    : null;
 
   // Retornar función de limpieza
   return () => {
+    if (cleanupTabBar) {
+      cleanupTabBar();
+    }
     if (blurTimeoutId) {
       clearTimeout(blurTimeoutId);
       blurTimeoutId = null;

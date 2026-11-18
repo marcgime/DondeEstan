@@ -21,7 +21,7 @@ DS-<ÁMBITO>-<NOMBRE>
 | ID | Nombre / Propósito | Ámbito | Estados |
 |---|---|---|---|
 | `DS-LAYOUT-SHELL` | Shell de la aplicación con soporte para Dynamic Island y safe-areas iOS | Interfaz interactiva adaptada | `default`, `active` |
-| `DS-NAV-DOCK` | Dock de navegación flotante glassmorphic (backdrop-filter: blur(24px)) con indicador deslizante | Interfaz interactiva adaptada | `default`, `active` |
+| `DS-NAV-DOCK` | Dock de navegación flotante con auto-compactación a solo iconos tras 4s de inactividad y animación de onda efecto agua (0.5s) al activar pestaña | Interfaz interactiva adaptada | `default`, `active`, `compact`, `water-wave` |
 | `DS-MAP-MARKER` | Marcador de avatar con halo pulsante (verde online, gris offline) | Interfaz interactiva adaptada | `default`, `active` |
 | `DS-LOCATION-CARD` | Bottom sheet táctil con tiempo relativo, estado y acciones de centrado | Interfaz interactiva adaptada | `default`, `active` |
 | `DS-CHAT-MESSAGE` | Burbuja de chat reactiva con avatar y timestamp | Interfaz interactiva adaptada | `default`, `active` |
