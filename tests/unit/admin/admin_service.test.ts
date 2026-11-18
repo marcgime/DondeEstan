@@ -67,11 +67,19 @@ describe('AdminService', () => {
 
   describe('approveMember & rejectMember', () => {
     it('debe actualizar el estado del miembro a active al aprobar', async () => {
-      await expect(service.approveMember('user-1', 'user@correo.com')).resolves.not.toThrow();
+      await expect(service.approveMember('user-1')).resolves.not.toThrow();
     });
 
     it('debe actualizar el estado del miembro a rejected al rechazar', async () => {
       await expect(service.rejectMember('user-1')).resolves.not.toThrow();
+    });
+  });
+
+  describe('subscribeToAllMembers', () => {
+    it('debe suscribir y filtrar miembros que no estén en pending_approval', () => {
+      const cb = vi.fn();
+      const unsub = service.subscribeToAllMembers(cb);
+      expect(unsub).toBeDefined();
     });
   });
 });

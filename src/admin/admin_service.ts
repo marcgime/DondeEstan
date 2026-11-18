@@ -11,7 +11,7 @@ import {
   type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
-import type { SystemConfig, WhitelistRecord } from './types';
+import type { SystemConfig } from './types';
 import type { UserProfile } from '../auth/types';
 
 export class AdminService {
@@ -80,26 +80,12 @@ export class AdminService {
   /**
    * Aprueba a un miembro familiar, otorgándole acceso al mapa y chat.
    */
-  async approveMember(uid: string, email?: string): Promise<void> {
+  async approveMember(uid: string): Promise<void> {
     const userRef = doc(this.db, 'users', uid);
     await updateDoc(userRef, {
       status: 'active',
       approved_at: Date.now(),
     });
-
-    if (email) {
-      const normEmail = email.trim().toLowerCase();
-      const whitelistRef = doc(this.db, 'whitelist', normEmail);
-      await setDoc(
-        whitelistRef,
-        {
-          status: 'active',
-          uid,
-          updated_at: Date.now(),
-        },
-        { merge: true }
-      );
-    }
   }
 
   /**
@@ -142,30 +128,36 @@ export class AdminService {
   }
 
   /**
-   * Suscribe en tiempo real a los registros de la lista blanca.
+   * Suscribe en tiempo real a todos los miembros familiares registrados (activos, online, offline).
    */
-  subscribeToWhitelist(
-    onRecords: (records: WhitelistRecord[]) => void,
+  subscribeToAllMembers(
+    onMembers: (members: UserProfile[]) => void,
     onError?: (error: Error) => void
   ): Unsubscribe {
-    const col = collection(this.db, 'whitelist');
+    const col = collection(this.db, 'users');
     return onSnapshot(
       col,
       (snapshot) => {
-        const records: WhitelistRecord[] = snapshot.docs.map((d) => {
-          const data = d.data();
-          return {
-            email: d.id,
-            status: data.status || 'preapproved',
-            added_at: data.added_at || 0,
-            uid: data.uid || null,
-          };
-        });
-        onRecords(records);
+        const members: UserProfile[] = snapshot.docs
+          .map((d) => {
+            const data = d.data();
+            return {
+              uid: d.id,
+              email: data.email || '',
+              display_name: data.display_name || 'Familiar',
+              role: data.role || 'member',
+              status: data.status || 'active',
+              photo_url: data.photo_url,
+              created_at: data.created_at,
+              updated_at: data.updated_at,
+            };
+          })
+          .filter((m) => m.status !== 'pending_approval' && m.status !== 'unverified_email');
+        onMembers(members);
       },
       (err) => {
         if (onError) onError(err);
-        else console.error('Error escuchando whitelist:', err);
+        else console.error('Error escuchando miembros familiares:', err);
       }
     );
   }

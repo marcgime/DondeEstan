@@ -1,5 +1,4 @@
 import type { AdminService } from '../admin_service';
-import type { WhitelistRecord } from '../types';
 import type { UserProfile } from '../../auth/types';
 
 export interface AdminViewOptions {
@@ -14,7 +13,7 @@ export function renderAdminView(
 ): () => void {
   const { adminService, currentAdminUid, onClose } = options;
   let pendingMembers: UserProfile[] = [];
-  let whitelistRecords: WhitelistRecord[] = [];
+  let activeMembers: UserProfile[] = [];
   let isRegistrationOpen = true;
   let isProcessing = false;
 
@@ -87,42 +86,24 @@ export function renderAdminView(
           </div>
         </div>
 
-        <!-- Section 3: Gestión de Lista Blanca (Whitelist) -->
+        <!-- Section 3: Usuarios Registrados / Activos -->
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between px-1">
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
-              Lista Blanca (Preautorizados)
+              Usuarios Registrados
             </h2>
-            <span id="whitelist-count-badge" class="text-[11px] font-bold text-text-secondary">
-              0 autorizados
+            <span id="members-count-badge" class="text-[11px] font-bold text-text-secondary">
+              0 familiares
             </span>
           </div>
 
           <!-- Quota Alert Banner (>15 members) -->
-          <div id="whitelist-quota-alert" class="hidden"></div>
+          <div id="members-quota-alert" class="hidden"></div>
 
-          <!-- Add Email Form -->
-          <form id="form-add-whitelist" class="flex gap-2">
-            <input 
-              type="email" 
-              id="input-whitelist-email"
-              placeholder="familiar@correo.com" 
-              required
-              class="flex-1 h-11 px-4 rounded-full bg-surface-base border border-border-subtle text-xs text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand-primary"
-            />
-            <button 
-              type="submit" 
-              id="btn-submit-whitelist"
-              class="px-4 h-11 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-xs hover:opacity-95 active:scale-95 transition-all"
-            >
-              Autorizar
-            </button>
-          </form>
-
-          <!-- Whitelist records list -->
-          <div id="whitelist-list-container" class="flex flex-col gap-2 mt-1">
+          <!-- Members records list -->
+          <div id="members-list-container" class="flex flex-col gap-2 mt-1">
             <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
-              Cargando lista blanca...
+              Cargando usuarios registrados...
             </div>
           </div>
         </div>
@@ -158,7 +139,7 @@ export function renderAdminView(
       isRegistrationOpen = next;
       updateRegistrationToggleUI();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al cambiar estado de registro.');
+      alert(err instanceof Error ? err.message : 'Error al modificar configuración.');
     } finally {
       isProcessing = false;
     }
@@ -169,32 +150,16 @@ export function renderAdminView(
     onClose();
   });
 
-  // Formulario añadir a Lista Blanca
-  const formWhitelist = container.querySelector('#form-add-whitelist') as HTMLFormElement | null;
-  formWhitelist?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = container.querySelector('#input-whitelist-email') as HTMLInputElement | null;
-    const email = input?.value.trim() || '';
-    if (!email) return;
-
-    try {
-      await adminService.addWhitelistEmail(email, currentAdminUid);
-      if (input) input.value = '';
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al autorizar el email.');
-    }
-  });
-
-  // Suscribirse a miembros pendientes
+  // Suscribirse a solicitudes pendientes
   const unsubPending = adminService.subscribeToPendingMembers((members) => {
     pendingMembers = members;
     renderPendingList();
   });
 
-  // Suscribirse a lista blanca
-  const unsubWhitelist = adminService.subscribeToWhitelist((records) => {
-    whitelistRecords = records;
-    renderWhitelist();
+  // Suscribirse a miembros activos registrados
+  const unsubMembers = adminService.subscribeToAllMembers((members) => {
+    activeMembers = members;
+    renderMembersList();
   });
 
   function renderPendingList(): void {
@@ -229,7 +194,6 @@ export function renderAdminView(
           <div class="flex items-center gap-1.5 shrink-0">
             <button 
               data-approve-uid="${m.uid}" 
-              data-approve-email="${escapeHtml(m.email)}"
               class="btn-approve px-3 py-1.5 rounded-full bg-status-online text-white text-[11px] font-bold hover:opacity-90 active:scale-95 transition-all shadow-xs"
             >
               Aprobar
@@ -250,12 +214,11 @@ export function renderAdminView(
     listEl.querySelectorAll('.btn-approve').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const uid = (btn as HTMLElement).dataset.approveUid;
-        const email = (btn as HTMLElement).dataset.approveEmail;
         if (!uid) return;
         try {
-          await adminService.approveMember(uid, email);
+          await adminService.approveMember(uid);
         } catch (err) {
-          alert(err instanceof Error ? err.message : 'Error al aprobar usuario.');
+          alert(err instanceof Error ? err.message : 'Error al aprobar solicitud.');
         }
       });
     });
@@ -268,34 +231,25 @@ export function renderAdminView(
         try {
           await adminService.rejectMember(uid);
         } catch (err) {
-          alert(err instanceof Error ? err.message : 'Error al rechazar usuario.');
+          alert(err instanceof Error ? err.message : 'Error al rechazar solicitud.');
         }
       });
     });
   }
 
-  function renderWhitelist(): void {
-    const listEl = container.querySelector('#whitelist-list-container');
-    const countBadge = container.querySelector('#whitelist-count-badge');
-    const alertEl = container.querySelector('#whitelist-quota-alert');
-    if (!listEl) return;
+  function renderMembersList(): void {
+    const listEl = container.querySelector('#members-list-container');
+    const badgeEl = container.querySelector('#members-count-badge');
+    const alertEl = container.querySelector('#members-quota-alert');
+    if (!listEl || !badgeEl) return;
 
-    const totalCount = whitelistRecords.length;
+    const totalCount = activeMembers.length;
+    badgeEl.textContent = `${totalCount} familiares`;
 
-    // Actualizar contador sin límite máximo fijo
-    if (countBadge) {
-      countBadge.textContent = `${totalCount} ${totalCount === 1 ? 'familiar' : 'familiares'}`;
-      countBadge.className =
-        totalCount > 15
-          ? 'text-[11px] font-bold text-status-warning'
-          : 'text-[11px] font-bold text-text-secondary';
-    }
-
-    // Alerta preventiva cuando excede de 15 personas
+    // Aviso de cuota Firebase Spark si supera 15 usuarios
     if (alertEl) {
       if (totalCount > 15) {
-        alertEl.className =
-          'p-3.5 rounded-2xl bg-status-warning/15 border border-status-warning/40 text-text-primary text-xs flex items-start gap-2.5 animate-in fade-in duration-200';
+        alertEl.className = 'p-3.5 rounded-2xl bg-status-warning/15 border border-status-warning/40 text-xs flex items-start gap-2.5';
         alertEl.innerHTML = `
           <svg class="w-5 h-5 text-status-warning shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -316,54 +270,78 @@ export function renderAdminView(
     if (totalCount === 0) {
       listEl.innerHTML = `
         <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
-          La lista blanca está vacía. Añade el primer correo arriba.
+          No hay usuarios activos registrados aún.
         </div>
       `;
       return;
     }
 
-    listEl.innerHTML = whitelistRecords
+    listEl.innerHTML = activeMembers
       .map(
-        (r) => `
-        <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-          <div class="flex items-center gap-2 truncate">
-            <span class="w-2 h-2 rounded-full ${
-              r.status === 'active'
-                ? 'bg-status-online'
-                : r.status === 'pending_approval'
-                ? 'bg-status-warning'
-                : 'bg-brand-primary'
-            }"></span>
-            <span class="font-medium text-text-primary truncate">${escapeHtml(r.email)}</span>
+        (m) => {
+          const isSelf = m.uid === currentAdminUid;
+          const initial = (m.display_name || 'F')[0].toUpperCase();
+
+          return `
+          <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2.5 truncate">
+              <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                ${
+                  m.photo_url
+                    ? `<img src="${escapeHtml(m.photo_url)}" alt="${escapeHtml(m.display_name)}" class="w-full h-full object-cover" />`
+                    : initial
+                }
+              </div>
+              <div class="truncate">
+                <p class="font-bold text-text-primary truncate flex items-center gap-1.5">
+                  ${escapeHtml(m.display_name)}
+                  ${isSelf ? '<span class="text-[10px] text-brand-primary font-normal">(Tú)</span>' : ''}
+                </p>
+                <p class="text-[11px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] uppercase font-bold text-text-secondary px-2 py-0.5 rounded-full bg-surface-base">
+                ${m.role === 'admin' ? 'Admin' : 'Familiar'}
+              </span>
+              ${
+                !isSelf
+                  ? `
+                <button 
+                  data-purge-uid="${m.uid}" 
+                  data-purge-name="${escapeHtml(m.display_name)}"
+                  class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
+                  title="Eliminar usuario familiar"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              `
+                  : ''
+              }
+            </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span class="text-[10px] uppercase font-bold text-text-secondary px-2 py-0.5 rounded-full bg-surface-base">
-              ${r.status === 'active' ? 'Activo' : r.status === 'pending_approval' ? 'Pendiente' : 'Preautorizado'}
-            </span>
-            <button 
-              data-remove-email="${escapeHtml(r.email)}" 
-              class="btn-remove-whitelist p-1 text-text-disabled hover:text-status-error transition-colors"
-              title="Eliminar de la lista blanca"
-            >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      `
+        `;
+        }
       )
       .join('');
 
-    listEl.querySelectorAll('.btn-remove-whitelist').forEach((btn) => {
+    // Bind eliminación de usuarios
+    listEl.querySelectorAll('.btn-purge-member').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const email = (btn as HTMLElement).dataset.removeEmail;
-        if (!email) return;
-        if (!confirm(`¿Eliminar ${email} de la lista blanca?`)) return;
+        const uid = (btn as HTMLElement).dataset.purgeUid;
+        const name = (btn as HTMLElement).dataset.purgeName || 'este usuario';
+        if (!uid) return;
+
+        if (!confirm(`¿Eliminar y desvincular a ${name} del núcleo familiar?\n\nPerderá el acceso de inmediato y podrá registrarse de nuevo si lo desea.`)) {
+          return;
+        }
+
         try {
-          await adminService.removeWhitelistEmail(email);
+          await adminService.purgeMember(uid, currentAdminUid);
         } catch (err) {
-          alert(err instanceof Error ? err.message : 'Error al eliminar de lista blanca.');
+          alert(err instanceof Error ? err.message : 'Error al eliminar usuario.');
         }
       });
     });
@@ -371,7 +349,7 @@ export function renderAdminView(
 
   return () => {
     unsubPending();
-    unsubWhitelist();
+    unsubMembers();
   };
 }
 
@@ -380,4 +358,3 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
-
