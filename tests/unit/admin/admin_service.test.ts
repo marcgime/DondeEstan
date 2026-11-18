@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminService } from '../../../src/admin/admin_service';
+import { handleAdminDeleteUser } from '../../../src/core/worker';
 import type { Firestore } from 'firebase/firestore';
 
 vi.mock('firebase/firestore', () => {
@@ -108,6 +109,24 @@ describe('AdminService', () => {
           groupIds: ['grp-1'],
         }),
       ]);
+    });
+  });
+
+  describe('Cloudflare Worker handleAdminDeleteUser', () => {
+    it('devuelve 501 si aún no se ha configurado FIREBASE_SERVICE_ACCOUNT y 401 si falta token', async () => {
+      const reqNoSecret = new Request('https://example.com/api/admin/delete-user', {
+        method: 'POST',
+      });
+      const resNoSecret = await handleAdminDeleteUser(reqNoSecret, {});
+      expect(resNoSecret.status).toBe(501);
+
+      const reqNoAuth = new Request('https://example.com/api/admin/delete-user', {
+        method: 'POST',
+      });
+      const resNoAuth = await handleAdminDeleteUser(reqNoAuth, {
+        FIREBASE_SERVICE_ACCOUNT: '{"project_id":"p","client_email":"e","private_key":"k"}',
+      });
+      expect(resNoAuth.status).toBe(401);
     });
   });
 });

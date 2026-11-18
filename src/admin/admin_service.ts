@@ -11,6 +11,7 @@ import {
   type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
+import { getFirebaseServices, isFirebaseConfigured } from '../core/firebase';
 import type { SystemConfig } from './types';
 import type { UserProfile } from '../auth/types';
 
@@ -199,6 +200,44 @@ export class AdminService {
     if (emailToClean && emailToClean.includes('@')) {
       const whitelistRef = doc(this.db, 'whitelist', emailToClean);
       await deleteDoc(whitelistRef);
+    }
+
+    await this.deleteRemoteAuthAccount(targetUid);
+  }
+
+  /**
+   * Invoca el endpoint del Worker de Cloudflare (/api/admin/delete-user)
+   * para eliminar inmediatamente la cuenta en Firebase Authentication.
+   */
+  private async deleteRemoteAuthAccount(targetUid: string): Promise<void> {
+    if (typeof fetch === 'undefined' || !isFirebaseConfigured()) {
+      return;
+    }
+
+    try {
+      const { auth } = getFirebaseServices();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ targetUid }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        console.warn(
+          'Aviso al eliminar cuenta en Firebase Authentication:',
+          data.error || response.status
+        );
+      }
+    } catch (err) {
+      console.warn('No se pudo contactar con /api/admin/delete-user:', err);
     }
   }
 }

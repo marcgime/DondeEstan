@@ -74,3 +74,4 @@ sequenceDiagram
 | Contrato / Flujo | Símbolo de Código | Ruta en Disco | Pruebas Unitarias |
 |---|---|---|---|
 | CT-CORE-01 | `getFirebaseServices` / `isFirebaseConfigured` | `src/core/firebase.ts` | `tests/unit/auth/whitelist.test.ts` |
+| CT-CORE-02 | `handleAdminDeleteUser` | `src/core/worker.ts` | `tests/unit/admin/admin_service.test.ts` |
