@@ -116,18 +116,9 @@ export function renderFloatingTabBar(
   // Iniciar cuenta atrás de 4 segundos para empequeñecer a solo logotipos
   scheduleAutoCompact();
 
-  // Cualquier toque o foco en el dock lo expande y reinicia los 4 segundos
-  const onDockInteract = (): void => {
-    wakeUpDock();
-  };
-
-  dockEl?.addEventListener('pointerdown', onDockInteract);
-  dockEl?.addEventListener('touchstart', onDockInteract, { passive: true });
-  dockEl?.addEventListener('mouseenter', onDockInteract);
-  dockEl?.addEventListener('focusin', onDockInteract);
-
   tabButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
       const targetTab = btn.getAttribute('data-tab') as FloatingTabId | null;
       if (!targetTab) return;
 
@@ -147,11 +138,15 @@ export function renderFloatingTabBar(
     });
   });
 
+  // Si el usuario toca el contenedor del dock fuera de un botón, expandir al terminar el click
+  const onDockClick = (): void => {
+    wakeUpDock();
+  };
+
+  dockEl?.addEventListener('click', onDockClick);
+
   return () => {
     clearInactivityTimer();
-    dockEl?.removeEventListener('pointerdown', onDockInteract);
-    dockEl?.removeEventListener('touchstart', onDockInteract);
-    dockEl?.removeEventListener('mouseenter', onDockInteract);
-    dockEl?.removeEventListener('focusin', onDockInteract);
+    dockEl?.removeEventListener('click', onDockClick);
   };
 }

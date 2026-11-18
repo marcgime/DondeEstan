@@ -51,11 +51,11 @@ class MockElement {
     this.attrs.delete(name);
   }
 
-  addEventListener(type: string, listener: () => void): void {
+  addEventListener(type: string, listener: (e: { stopPropagation: () => void }) => void): void {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-    this.listeners.get(type)!.add(listener);
+    this.listeners.get(type)!.add(() => listener({ stopPropagation: () => {} }));
   }
 
   removeEventListener(type: string, listener: () => void): void {
@@ -143,8 +143,12 @@ describe('FloatingTabBar (DS-NAV-DOCK)', () => {
     vi.advanceTimersByTime(100);
     expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(true);
 
-    // Al tocar el dock, vuelve a expandirse y reinicia la cuenta de 4 segundos
+    // No se expande prematuramente en pointerdown/touchstart (evita desplazar el botón bajo el dedo)
     container.dockEl.dispatch('pointerdown');
+    expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(true);
+
+    // Al completar el click sobre el dock o un botón, vuelve a expandirse y reinicia los 4 segundos
+    container.dockEl.dispatch('click');
     expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(false);
 
     vi.advanceTimersByTime(3999);
@@ -155,25 +159,27 @@ describe('FloatingTabBar (DS-NAV-DOCK)', () => {
     cleanup();
   });
 
-  it('navega a la pestaña seleccionada y gestiona el clic en la pestaña activa', () => {
+  it('estando en Perfil y minimizado, al pulsar el logotipo de Mapa abre Mapa con precisión', () => {
     const container = new MockContainer();
     let navigatedTo: FloatingTabId | null = null;
     const onActiveClick = vi.fn();
 
     const cleanup = renderFloatingTabBar(container as unknown as HTMLElement, {
-      activeTab: 'map',
+      activeTab: 'profile',
       onNavigateTab: (tab) => {
         navigatedTo = tab;
       },
       onActiveTabClick: onActiveClick,
     });
 
-    container.buttons.get('map')!.dispatch('click');
-    expect(onActiveClick).toHaveBeenCalledTimes(1);
-    expect(navigatedTo).toBeNull();
+    // Esperar 4 segundos a que el Tab Bar esté minimizado
+    vi.advanceTimersByTime(4000);
+    expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(true);
 
-    container.buttons.get('chat')!.dispatch('click');
-    expect(navigatedTo).toBe('chat');
+    // Presionar el logotipo de Mapa estando minimizado
+    container.buttons.get('map')!.dispatch('click');
+    expect(navigatedTo).toBe('map');
+    expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(false);
 
     cleanup();
   });
