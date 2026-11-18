@@ -157,17 +157,14 @@ export function renderMapView(
       </div>
 
       <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
-      <div id="contacts-scroll-wrapper" class="flex-1 overflow-y-auto px-4 pb-36">
+      <div id="contacts-scroll-wrapper" class="flex-1 overflow-y-auto px-4 pb-28">
         <div id="contacts-scroll-container" class="flex flex-col gap-2">
           <div class="p-6 text-center text-xs text-text-disabled">Cargando usuarios...</div>
         </div>
       </div>
 
-      <!-- iOS 26 Bottom Scroll Edge Effect (Fade-out without blur) -->
-      <div class="ios-bottom-fade"></div>
-
-      <!-- iOS 26 Tab Bar: Floating Centered Liquid Glass Pill (21pt inset) -->
-      <nav class="absolute safe-dock-bottom z-30 pointer-events-auto">
+      <!-- Bottom Dock: Floating Navigation -->
+      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab (Active) -->

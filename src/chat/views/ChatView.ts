@@ -57,7 +57,7 @@ export function renderChatView(
       </div>
 
       <!-- Message Composer Bar (Floating above Bottom Dock) -->
-      <div class="absolute safe-composer-bottom z-30">
+      <div class="absolute inset-x-4 safe-composer-bottom z-20">
         <form 
           id="chat-composer-form" 
           class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-full glass-panel shadow-dock"
@@ -83,11 +83,8 @@ export function renderChatView(
         </form>
       </div>
 
-      <!-- iOS 26 Bottom Scroll Edge Effect (Fade-out without blur) -->
-      <div class="ios-bottom-fade"></div>
-
-      <!-- iOS 26 Tab Bar: Floating Centered Liquid Glass Pill (21pt inset) -->
-      <nav class="absolute safe-dock-bottom z-30 pointer-events-auto">
+      <!-- DS-NAV-DOCK: Bottom Floating Navigation -->
+      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab -->
