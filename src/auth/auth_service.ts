@@ -1,22 +1,25 @@
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
   type Auth,
+  type User,
 } from 'firebase/auth';
 import {
   doc,
   getDoc,
   onSnapshot,
   serverTimestamp,
-  writeBatch,
+  setDoc,
+  updateDoc,
   type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
 import type { AuthSession, UserProfile } from './types';
-import { normalizeEmail, verifyEmailEligibility } from './whitelist';
+import { normalizeEmail } from './whitelist';
 import { isUserApproved } from './gatekeeper';
 
 export class FamilyAuthService {
@@ -40,47 +43,50 @@ export class FamilyAuthService {
       throw new Error('Por favor, introduce tu nombre completo.');
     }
 
-    // 1. Validar elegibilidad contra whitelist y config
-    const eligibility = await verifyEmailEligibility(this.db, email);
-    if (!eligibility.eligible) {
-      throw new Error(eligibility.reason || 'Correo no autorizado para registro.');
-    }
-
-    // 2. Crear credencial en Firebase Auth
+    // 1. Crear credencial en Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(this.auth, email, pass);
     const user = userCredential.user;
 
     // Actualizar nombre visible en el objeto Auth
     await updateProfile(user, { displayName: name });
 
-    // 3. Batch atómico: /users/{uid} en pending_approval y actualización de /whitelist/{email}
-    const batch = writeBatch(this.db);
+    // 2. Enviar correo de verificación nativo
+    await sendEmailVerification(user);
 
+    // 3. Crear documento de usuario con status 'unverified_email'
     const userDocRef = doc(this.db, 'users', user.uid);
     const profile: UserProfile = {
       uid: user.uid,
       email,
       display_name: name,
       role: 'member',
-      status: 'pending_approval',
+      status: 'unverified_email',
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     };
-    batch.set(userDocRef, profile);
-
-    const whitelistDocRef = doc(this.db, 'whitelist', email);
-    batch.update(whitelistDocRef, {
-      status: 'pending_approval',
-      uid: user.uid,
-      registered_at: serverTimestamp(),
-    });
-
-    await batch.commit();
+    await setDoc(userDocRef, profile);
 
     return {
       user: profile,
       isApproved: false,
     };
+  }
+
+  async checkEmailVerifiedAndPromote(user: User): Promise<boolean> {
+    await user.reload();
+    if (user.emailVerified) {
+      const userDocRef = doc(this.db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        status: 'pending_approval',
+        updated_at: serverTimestamp(),
+      });
+      return true;
+    }
+    return false;
+  }
+
+  async resendVerificationEmail(user: User): Promise<void> {
+    await sendEmailVerification(user);
   }
 
   async login(rawEmail: string, pass: string): Promise<AuthSession> {

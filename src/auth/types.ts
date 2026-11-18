@@ -1,6 +1,6 @@
 export type UserRole = 'admin' | 'member';
 
-export type UserStatus = 'pending_approval' | 'active' | 'rejected' | 'online' | 'offline';
+export type UserStatus = 'unverified_email' | 'pending_approval' | 'active' | 'rejected' | 'online' | 'offline';
 
 export interface UserLocation {
   lat: number;

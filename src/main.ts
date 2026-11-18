@@ -72,7 +72,7 @@ function init(): void {
     profileUnsubscribe = authService.subscribeToUserProfile(
       user.uid,
       (profile) => {
-        if (!profile || profile.status === 'pending_approval') {
+        if (!profile || profile.status === 'pending_approval' || profile.status === 'unverified_email') {
           isAppInitialized = false;
           if (activeCleanup) {
             activeCleanup();
@@ -84,10 +84,16 @@ function init(): void {
               email: user.email || '',
               display_name: user.displayName || user.email || 'Familiar',
               role: 'member',
-              status: 'pending_approval',
+              status: user.emailVerified ? 'pending_approval' : 'unverified_email',
             },
             onLogout: async () => {
               await authService.logout();
+            },
+            onCheckVerification: async () => {
+              return authService.checkEmailVerifiedAndPromote(user);
+            },
+            onResendVerification: async () => {
+              return authService.resendVerificationEmail(user);
             },
           });
           return;

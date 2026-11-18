@@ -17,6 +17,12 @@ describe('Gatekeeper Guard Logic', () => {
     expect(isUserRejected(baseProfile)).toBe(false);
   });
 
+  it('blocks unverified_email members and shows gatekeeper', () => {
+    const unverifiedProfile: UserProfile = { ...baseProfile, status: 'unverified_email' };
+    expect(isUserApproved(unverifiedProfile)).toBe(false);
+    expect(shouldShowGatekeeper(unverifiedProfile)).toBe(true);
+  });
+
   it('allows active members to pass the gatekeeper', () => {
     const activeProfile: UserProfile = { ...baseProfile, status: 'active' };
     expect(isUserApproved(activeProfile)).toBe(true);

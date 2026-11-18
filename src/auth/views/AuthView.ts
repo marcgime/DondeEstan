@@ -207,7 +207,7 @@ export function renderAuthView(
             isRegisterMode && !isResetMode
               ? `
             <p class="text-[11px] text-text-disabled text-center mt-4 leading-normal px-2">
-              * El alta requiere que tu email esté preautorizado en la lista blanca del núcleo familiar.
+              * Recibirás un enlace por correo para confirmar tu identidad antes de la autorización.
             </p>
           `
               : ''

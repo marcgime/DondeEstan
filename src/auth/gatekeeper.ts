@@ -8,7 +8,7 @@ export function isUserApproved(user: UserProfile | null): boolean {
 
 export function shouldShowGatekeeper(user: UserProfile | null): boolean {
   if (!user) return false;
-  return user.status === 'pending_approval';
+  return user.status === 'pending_approval' || user.status === 'unverified_email';
 }
 
 export function isUserRejected(user: UserProfile | null): boolean {
