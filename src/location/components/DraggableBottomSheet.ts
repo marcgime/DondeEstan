@@ -20,7 +20,7 @@ export function renderDraggableBottomSheet(
     <!-- Draggable Sheet Container -->
     <div 
       id="draggable-sheet"
-      class="fixed inset-x-0 bottom-0 z-[1250] glass-dock rounded-t-3xl shadow-dock text-text-primary pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
+      class="fixed inset-x-0 bottom-0 z-[1250] glass-dock rounded-t-3xl shadow-dock text-text-primary safe-sheet-bottom transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
       style="transform: translateY(0);"
     >
       <!-- Drag Handle -->
@@ -53,7 +53,7 @@ export function renderDraggableBottomSheet(
                 <h2 class="text-base font-extrabold text-text-primary leading-tight font-sans">
                   ${escapeHtml(member.display_name)}
                 </h2>
-                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary">
+                <span class="text-[0.6875rem] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary">
                   ${escapeHtml(member.role)}
                 </span>
               </div>
@@ -79,8 +79,8 @@ export function renderDraggableBottomSheet(
         <!-- Telemetry Cards Row: Coords & Precision -->
         <div class="grid grid-cols-2 gap-2.5 text-xs">
           <div class="p-3 rounded-2xl bg-surface-base/80 border border-border-subtle flex flex-col gap-1">
-            <span class="text-[11px] font-bold text-text-secondary">Ubicación GPS</span>
-            <span class="font-mono text-text-primary text-[11px] truncate">
+            <span class="text-[0.75rem] font-bold text-text-secondary">Ubicación GPS</span>
+            <span class="font-mono text-text-primary text-[0.75rem] truncate">
               ${
                 member.location
                   ? `${member.location.lat.toFixed(4)}, ${member.location.lng.toFixed(4)}`
@@ -90,7 +90,7 @@ export function renderDraggableBottomSheet(
           </div>
 
           <div class="p-3 rounded-2xl bg-surface-base/80 border border-border-subtle flex flex-col gap-1">
-            <span class="text-[11px] font-bold text-text-secondary">Estado Dispositivo</span>
+            <span class="text-[0.75rem] font-bold text-text-secondary">Estado Dispositivo</span>
             <div class="flex items-center gap-1.5 text-text-primary font-medium">
               <svg class="w-3.5 h-3.5 text-status-online" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />

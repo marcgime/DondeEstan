@@ -1,3 +1,5 @@
+import type { UiScaleLevel } from '../ui/theme/ui_scale';
+
 export interface CompressOptions {
   maxDimension?: number;
   quality?: number;
@@ -7,5 +9,6 @@ export interface CompressOptions {
 export interface ProfileUpdatePayload {
   displayName?: string;
   photoUrl?: string;
+  uiScale?: UiScaleLevel;
 }
 

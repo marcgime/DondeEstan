@@ -43,6 +43,7 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 
 - **BR-UI-01:** Prohibido el uso de estilos HEX o tamaños en píxeles no declarados en `tokens.json`.
 - **BR-UI-02:** Los componentes deben ser 100% accesibles con contraste AA verificado.
+- **BR-UI-03:** Escalado proporcional en `rem` desde `html` (`108%` por defecto, configurable en Perfil) y respeto estricto de `safe-area-inset-top` sin difuminado superior en iOS PWA.
 
 ---
 
@@ -54,3 +55,4 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 | CT-UI-02 | `renderGatekeeperScreen` | `src/ui/components/GatekeeperScreen.ts` | `tests/unit/auth/gatekeeper.test.ts` |
 | CT-UI-03 | `checkAndRenderIosInstallPrompt` | `src/ui/components/PwaInstallPrompt.ts` | `tests/unit/core/pwa.test.ts` |
 | CT-UI-04 | `PwaUtilities` | `src/core/pwa.ts` | `tests/unit/core/pwa.test.ts` |
+| CT-UI-05 | `applyUiScale` / `initUiScale` | `src/ui/theme/ui_scale.ts` | `tests/unit/core/pwa.test.ts` |

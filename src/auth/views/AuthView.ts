@@ -18,7 +18,7 @@ export function renderAuthView(
 
   function render(): void {
     container.innerHTML = `
-      <div class="h-full w-full flex flex-col justify-center items-center p-6 safe-top safe-bottom bg-surface-canvas text-text-primary overflow-y-auto">
+      <div class="h-full w-full flex flex-col justify-center items-center px-6 pb-6 safe-header-top safe-bottom bg-surface-canvas text-text-primary overflow-y-auto">
         <div class="w-full max-w-sm flex flex-col items-center my-auto">
           
           <!-- App Header & Logo -->
@@ -144,7 +144,7 @@ export function renderAuthView(
                     <button 
                       type="button" 
                       id="btn-forgot-password" 
-                      class="text-[11px] font-semibold text-brand-primary hover:underline"
+                      class="text-[0.75rem] font-semibold text-brand-primary hover:underline"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
@@ -206,7 +206,7 @@ export function renderAuthView(
           ${
             isRegisterMode && !isResetMode
               ? `
-            <p class="text-[11px] text-text-disabled text-center mt-4 leading-normal px-2">
+            <p class="text-[0.75rem] text-text-disabled text-center mt-4 leading-normal px-2">
               * Recibirás un enlace por correo para confirmar tu identidad antes de la autorización.
             </p>
           `

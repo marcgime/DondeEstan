@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { isIosDevice, isStandaloneMode, dismissIosInstallPrompt } from '../../../src/core/pwa';
+import {
+  applyUiScale,
+  getStoredUiScale,
+  getUiScalePercentage,
+  initUiScale,
+  isValidUiScale,
+  UI_SCALE_STORAGE_KEY,
+} from '../../../src/ui/theme/ui_scale';
 
 describe('PWA Utilities', () => {
   const store: Record<string, string> = {};
@@ -35,6 +43,20 @@ describe('PWA Utilities', () => {
     expect(localStorage.getItem('dondeestan_ios_pwa_dismissed')).toBeNull();
     dismissIosInstallPrompt();
     expect(localStorage.getItem('dondeestan_ios_pwa_dismissed')).toBe('true');
+  });
+
+  it('aplica por defecto el zoom ligero (108%) y permite cambiar la escala de UI', () => {
+    expect(getStoredUiScale()).toBe('default');
+    expect(getUiScalePercentage('default')).toBe('108%');
+    expect(initUiScale()).toBe('default');
+
+    expect(applyUiScale('comfortable')).toBe('comfortable');
+    expect(localStorage.getItem(UI_SCALE_STORAGE_KEY)).toBe('comfortable');
+    expect(getStoredUiScale()).toBe('comfortable');
+    expect(getUiScalePercentage('comfortable')).toBe('115%');
+
+    expect(isValidUiScale('large')).toBe(true);
+    expect(isValidUiScale('invalid')).toBe(false);
   });
 });
 

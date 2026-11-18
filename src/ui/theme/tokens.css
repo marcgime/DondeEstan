@@ -53,15 +53,38 @@
   --shadow-card: 0 8px 24px -4px rgba(30, 26, 34, 0.06), 0 2px 6px -1px rgba(30, 26, 34, 0.04);
   --shadow-dock: 0 16px 36px -6px rgba(40, 25, 68, 0.16);
   --shadow-alert: 0 12px 32px 0 rgba(107, 56, 251, 0.28);
+
+  /* Global UI Zoom / Font Scale (108% default for comfortable mobile reading) */
+  --app-font-scale: 108%;
 }
 
 /* iOS Safe Areas & Gesture Collision Prevention */
 .safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(env(safe-area-inset-top, 0px), 0.75rem);
 }
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-header-top {
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.875rem);
+}
+
+.safe-dock-bottom {
+  bottom: max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem);
+}
+
+.safe-composer-bottom {
+  bottom: max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem);
+}
+
+.safe-banner-bottom {
+  bottom: max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 5.5rem);
+}
+
+.safe-sheet-bottom {
+  padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1rem);
 }
 
 /* Glassmorphism con soporte forzado para WebKit iOS Safari */
@@ -80,6 +103,12 @@
 }
 
 /* Prevent elastic bounce on iOS Safari and guarantee full viewport coverage */
+html {
+  font-size: var(--app-font-scale, 108%);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html, body {
   height: 100%;
   height: -webkit-fill-available;

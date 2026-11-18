@@ -55,8 +55,8 @@ export function renderGatekeeperScreen(
     }
 
     container.innerHTML = `
-      <div class="h-full w-full flex flex-col justify-between items-center p-6 safe-top safe-bottom bg-surface-canvas text-text-primary">
-        <div class="w-full max-w-sm flex flex-col items-center pt-8 text-center">
+      <div class="h-full w-full flex flex-col justify-between items-center px-6 pb-6 safe-header-top safe-bottom bg-surface-canvas text-text-primary overflow-y-auto">
+        <div class="w-full max-w-sm flex flex-col items-center pt-4 text-center">
           
           <!-- Icon Badge -->
           <div class="w-24 h-24 mb-6 rounded-pebble bg-surface-elevated flex items-center justify-center shadow-card border border-border-subtle">

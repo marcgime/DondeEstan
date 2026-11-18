@@ -1,4 +1,5 @@
 import './ui/theme/tokens.css';
+import { initUiScale, applyUiScale, isValidUiScale } from './ui/theme/ui_scale';
 import { getFirebaseServices, isFirebaseConfigured } from './core/firebase';
 import { FamilyAuthService } from './auth/auth_service';
 import { renderAuthView } from './auth/views/AuthView';
@@ -23,6 +24,7 @@ if (!appContainer) {
 }
 
 function init(): void {
+  initUiScale();
   registerServiceWorker();
 
   if (!isFirebaseConfigured()) {
@@ -102,6 +104,9 @@ function init(): void {
 
         if (profile && isUserApproved(profile)) {
           latestProfile = profile;
+          if (isValidUiScale(profile.ui_scale)) {
+            applyUiScale(profile.ui_scale);
+          }
           const activeUser = user;
 
           if (!currentTracker) {

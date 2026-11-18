@@ -70,4 +70,4 @@ sequenceDiagram
 | CT-01 | `UserProfileUpdate` | `src/profile/types.ts` | `tests/unit/profile/profile_service.test.ts` |
 | CT-02 | `compressAndCropAvatar` | `src/profile/image_compressor.ts` | `tests/unit/profile/profile_service.test.ts` |
 | CT-03 | `ProfileService` | `src/profile/profile_service.ts` | `tests/unit/profile/profile_service.test.ts` |
-| UI-01 | `renderProfileView` | `src/profile/views/ProfileView.ts` | Compilación e integración Vite |
+| UI-01 | `renderProfileView` | `src/profile/views/ProfileView.ts` | `tests/unit/profile/profile_service.test.ts` |

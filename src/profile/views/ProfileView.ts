@@ -2,6 +2,13 @@ import type { ProfileService } from '../profile_service';
 import { compressAndCropAvatar } from '../image_compressor';
 import type { UserProfile } from '../../auth/types';
 import { triggerHaptic } from '../../ui/utils/haptics';
+import {
+  UI_SCALE_OPTIONS,
+  applyUiScale,
+  getStoredUiScale,
+  isValidUiScale,
+  type UiScaleLevel,
+} from '../../ui/theme/ui_scale';
 
 export interface ProfileViewOptions {
   profile: UserProfile;
@@ -19,14 +26,17 @@ export function renderProfileView(
   const initial = (profile.display_name || 'F')[0].toUpperCase();
   let isEditingName = false;
   let isUploadingPhoto = false;
+  let currentScale: UiScaleLevel = isValidUiScale(profile.ui_scale)
+    ? profile.ui_scale
+    : getStoredUiScale();
 
   function render(): void {
     container.innerHTML = `
       <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
         
         <!-- Top Header -->
-        <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex items-center justify-between border-b border-border-subtle glass-panel z-20">
-          <h1 class="text-sm font-bold text-text-primary">Mi Perfil</h1>
+        <header class="shrink-0 px-4 safe-header-top pb-3 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20">
+          <h1 class="text-base font-bold text-text-primary">Mi Perfil</h1>
           <button 
             id="profile-btn-logout"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-status-error text-xs font-semibold hover:bg-status-error/10 transition-colors"
@@ -133,7 +143,7 @@ export function renderProfileView(
                   </div>
                   <div class="text-left">
                     <p class="text-text-primary text-xs font-bold">Panel de Administración</p>
-                    <p class="text-[11px] text-text-secondary font-normal">Gestionar usuarios y grupos</p>
+                    <p class="text-[0.75rem] text-text-secondary font-normal">Gestionar usuarios y grupos</p>
                   </div>
                 </div>
                 <svg class="w-4 h-4 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -144,6 +154,39 @@ export function renderProfileView(
           `
               : ''
           }
+
+          <!-- Selector de Zoom / Tamaño de Interfaz -->
+          <div class="w-full max-w-sm p-4 rounded-2xl glass-panel shadow-xs flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-text-primary">Tamaño de Letra y Zoom</p>
+                <p class="text-[0.75rem] text-text-secondary">Ajusta la escala visual de toda la aplicación</p>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
+                ${UI_SCALE_OPTIONS.find((o) => o.id === currentScale)?.percentage || '108%'}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1.5">
+              ${UI_SCALE_OPTIONS.map((opt) => {
+                const isActive = opt.id === currentScale;
+                return `
+                  <button
+                    type="button"
+                    data-ui-scale="${opt.id}"
+                    class="btn-ui-scale py-2 px-1.5 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                      isActive
+                        ? 'bg-brand-primary text-brand-on-primary border-brand-primary shadow-xs font-bold'
+                        : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary font-semibold'
+                    }"
+                  >
+                    <span class="text-xs">${opt.label}</span>
+                    <span class="text-[0.6875rem] opacity-80">${opt.percentage}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
 
           <!-- Info Cards -->
           <div class="w-full max-w-sm flex flex-col gap-2.5 mt-1">
@@ -166,7 +209,7 @@ export function renderProfileView(
         </div>
 
         <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-        <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-[1100] pointer-events-auto">
+        <nav class="absolute inset-x-4 safe-dock-bottom z-[1100] pointer-events-auto">
           <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
             
             <!-- Map Tab -->
@@ -229,6 +272,25 @@ export function renderProfileView(
       if (onOpenAdminPanel) {
         onOpenAdminPanel();
       }
+    });
+
+    // Selector de escala visual (Zoom de interfaz)
+    container.querySelectorAll('.btn-ui-scale').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const rawScale = (btn as HTMLElement).dataset.uiScale;
+        if (!isValidUiScale(rawScale) || rawScale === currentScale) return;
+
+        triggerHaptic('light');
+        currentScale = applyUiScale(rawScale);
+        profile.ui_scale = currentScale;
+        render();
+
+        try {
+          await profileService.updateUiScale(profile.uid, currentScale);
+        } catch (err) {
+          console.warn('No se pudo sincronizar la escala visual en la nube:', err);
+        }
+      });
     });
 
     // Subida y compresión de imagen

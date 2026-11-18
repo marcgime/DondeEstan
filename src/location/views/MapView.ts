@@ -60,9 +60,9 @@ export function renderMapView(
   container.innerHTML = `
     <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
-      <!-- Top Floating Header Pill -->
-      <div class="shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 flex justify-between items-center z-20 gap-2">
-        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel shadow-sm">
+      <!-- Top Header Pill Bar -->
+      <div class="shrink-0 px-4 safe-header-top pb-2.5 flex justify-between items-center z-20 gap-2 bg-surface-canvas">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-elevated border border-border-subtle shadow-sm">
           <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
           <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans truncate">
             Localizando usuarios...
@@ -139,7 +139,7 @@ export function renderMapView(
       <!-- BARRA DE CONTROL INTERMEDIA: Toggle Switch -->
       <div class="px-5 py-2.5 shrink-0 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span id="selected-counter-badge" class="px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold">
+          <span id="selected-counter-badge" class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[0.6875rem] font-bold">
             Todos visibles
           </span>
         </div>
@@ -161,7 +161,7 @@ export function renderMapView(
       </div>
 
       <!-- Bottom Dock: Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-30 pointer-events-auto">
+      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab (Active) -->
@@ -244,7 +244,7 @@ export function renderMapView(
     if (accessibleGroups.length <= 1) {
       const groupName = accessibleGroups[0]?.name || 'Familia';
       slot.innerHTML = `
-        <span class="px-3 py-1 rounded-full glass-panel shadow-sm text-xs font-bold text-brand-primary whitespace-nowrap">
+        <span class="px-3 py-1 rounded-full bg-surface-elevated border border-border-subtle shadow-sm text-xs font-bold text-brand-primary whitespace-nowrap">
           ${escapeHtml(groupName)}
         </span>
       `;
@@ -254,7 +254,7 @@ export function renderMapView(
     slot.innerHTML = `
       <select 
         id="select-active-group" 
-        class="glass-panel text-xs font-bold text-text-primary px-3 py-1.5 rounded-full border border-surface-glass-border shadow-sm focus:outline-none cursor-pointer"
+        class="bg-surface-elevated text-xs font-bold text-text-primary px-3 py-1.5 rounded-full border border-border-subtle shadow-sm focus:outline-none cursor-pointer"
       >
         <option value="all" ${activeGroupId === 'all' ? 'selected' : ''}>Todos los grupos</option>
         ${accessibleGroups
@@ -329,9 +329,9 @@ export function renderMapView(
               <div>
                 <h4 class="text-xs font-bold text-text-primary flex items-center gap-1.5">
                   ${escapeHtml(member.display_name)}
-                  ${member.uid === options.uid ? '<span class="text-[10px] text-brand-primary font-normal">(Tú)</span>' : ''}
+                  ${member.uid === options.uid ? '<span class="text-[0.6875rem] text-brand-primary font-normal">(Tú)</span>' : ''}
                 </h4>
-                <p class="text-[11px] text-text-secondary">
+                <p class="text-[0.75rem] text-text-secondary">
                   ${member.isLive ? 'En línea ahora' : member.relativeTimeText || 'Desconectado'}
                 </p>
               </div>
@@ -357,7 +357,7 @@ export function renderMapView(
                 </div>
               `
                   : `
-                <span class="text-[10px] text-text-disabled font-medium px-2 py-0.5 rounded-full bg-surface-base">
+                <span class="text-[0.6875rem] text-text-disabled font-medium px-2 py-0.5 rounded-full bg-surface-base">
                   Visible
                 </span>
               `
@@ -408,13 +408,13 @@ export function renderMapView(
     if (counterBadge) {
       if (showAll) {
         counterBadge.textContent = 'Todos visibles';
-        counterBadge.className = 'px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-bold';
+        counterBadge.className = 'px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[0.6875rem] font-bold';
       } else {
         const count = selectedMemberUids.size;
         counterBadge.textContent = `${count} de ${groupMembers.length} seleccionados`;
         counterBadge.className = count > 0 
-          ? 'px-2 py-0.5 rounded-full bg-status-online/15 text-status-online text-[10px] font-bold'
-          : 'px-2 py-0.5 rounded-full bg-surface-elevated text-text-disabled text-[10px] font-bold';
+          ? 'px-2.5 py-0.5 rounded-full bg-status-online/15 text-status-online text-[0.6875rem] font-bold'
+          : 'px-2.5 py-0.5 rounded-full bg-surface-elevated text-text-disabled text-[0.6875rem] font-bold';
       }
     }
 

@@ -16,6 +16,7 @@ export interface UserProfile {
   role: UserRole;
   status: UserStatus;
   groupIds?: string[];
+  ui_scale?: 'compact' | 'default' | 'comfortable' | 'large';
   location?: UserLocation;
   created_at?: unknown;
   updated_at?: unknown;

@@ -13,7 +13,7 @@ export function checkAndRenderIosInstallPrompt(container: HTMLElement): void {
   const banner = document.createElement('div');
   banner.id = 'ios-install-banner';
   banner.className =
-    'fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-[1300] p-4 rounded-3xl glass-dock shadow-alert text-text-primary animate-in slide-in-from-bottom duration-300 max-w-sm mx-auto';
+    'fixed inset-x-3 safe-banner-bottom z-[1300] p-4 rounded-3xl glass-dock shadow-alert text-text-primary animate-in slide-in-from-bottom duration-300 max-w-sm mx-auto';
 
   banner.innerHTML = `
     <div class="flex items-start justify-between gap-3">
@@ -25,7 +25,7 @@ export function checkAndRenderIosInstallPrompt(container: HTMLElement): void {
         </div>
         <div>
           <h3 class="text-xs font-bold text-text-primary">Instala Familia en tu iPhone</h3>
-          <p class="text-[11px] text-text-secondary mt-0.5 leading-snug">
+          <p class="text-[0.75rem] text-text-secondary mt-0.5 leading-snug">
             Pulsa <span class="font-bold text-brand-primary">Compartir</span>
             <svg class="w-3.5 h-3.5 inline-block text-brand-primary align-text-bottom" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

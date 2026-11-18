@@ -28,10 +28,10 @@ export function renderAdminView(
   });
 
   container.innerHTML = `
-    <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-top safe-bottom">
+    <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
       
       <!-- Top Bar -->
-      <header class="min-h-16 shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2 border-b border-border-subtle glass-panel flex items-center justify-between z-10">
+      <header class="shrink-0 px-4 safe-header-top pb-3 border-b border-border-subtle bg-surface-canvas flex items-center justify-between z-10">
         <div class="flex items-center gap-2.5">
           <button 
             id="admin-btn-back" 
@@ -42,9 +42,9 @@ export function renderAdminView(
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 class="text-sm font-extrabold tracking-tight text-text-primary">Administración</h1>
+          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Administración</h1>
         </div>
-        <span class="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-bold">
+        <span class="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[0.75rem] font-bold">
           Modo Admin
         </span>
       </header>
@@ -56,7 +56,7 @@ export function renderAdminView(
         <div class="p-4 rounded-3xl glass-panel shadow-xs flex items-center justify-between">
           <div>
             <h2 class="text-xs font-bold text-text-primary">Registro</h2>
-            <p id="reg-status-text" class="text-[11px] text-text-secondary mt-0.5">
+            <p id="reg-status-text" class="text-[0.75rem] text-text-secondary mt-0.5">
               ${isRegistrationOpen ? 'Permitiendo solicitudes de alta' : 'Registro cerrado a nuevas altas'}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function renderAdminView(
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
               Solicitudes Pendientes
             </h2>
-            <span id="pending-count-badge" class="text-[11px] font-bold text-brand-primary">
+            <span id="pending-count-badge" class="text-[0.75rem] font-bold text-brand-primary">
               0 pendientes
             </span>
           </div>
@@ -96,7 +96,7 @@ export function renderAdminView(
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
               Grupos
             </h2>
-            <span id="groups-count-badge" class="text-[11px] font-bold text-brand-primary">
+            <span id="groups-count-badge" class="text-[0.75rem] font-bold text-brand-primary">
               0 grupos
             </span>
           </div>
@@ -133,7 +133,7 @@ export function renderAdminView(
             <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
               Usuarios Registrados
             </h2>
-            <span id="members-count-badge" class="text-[11px] font-bold text-text-secondary">
+            <span id="members-count-badge" class="text-[0.75rem] font-bold text-text-secondary">
               0 usuarios
             </span>
           </div>
@@ -254,19 +254,19 @@ export function renderAdminView(
             </div>
             <div class="truncate">
               <p class="text-xs font-bold text-text-primary truncate">${escapeHtml(m.display_name)}</p>
-              <p class="text-[11px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+              <p class="text-[0.75rem] text-text-secondary truncate">${escapeHtml(m.email)}</p>
             </div>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button 
               data-approve-uid="${m.uid}" 
-              class="btn-approve px-3 py-1.5 rounded-full bg-status-online text-white text-[11px] font-bold hover:opacity-90 active:scale-95 transition-all shadow-xs"
+              class="btn-approve px-3 py-1.5 rounded-full bg-status-online text-white text-[0.75rem] font-bold hover:opacity-90 active:scale-95 transition-all shadow-xs"
             >
               Aprobar
             </button>
             <button 
               data-reject-uid="${m.uid}" 
-              class="btn-reject px-3 py-1.5 rounded-full bg-surface-elevated text-status-error text-[11px] font-bold hover:bg-status-error/10 active:scale-95 transition-all"
+              class="btn-reject px-3 py-1.5 rounded-full bg-surface-elevated text-status-error text-[0.75rem] font-bold hover:bg-status-error/10 active:scale-95 transition-all"
             >
               Rechazar
             </button>
@@ -335,7 +335,7 @@ export function renderAdminView(
               </div>
               <div class="truncate">
                 <p class="font-bold text-text-primary truncate">${escapeHtml(g.name)}</p>
-                <p class="text-[11px] text-text-secondary">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
+                <p class="text-[0.75rem] text-text-secondary">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
               </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
@@ -398,7 +398,7 @@ export function renderAdminView(
           </svg>
           <div>
             <p class="font-bold text-text-primary">Aviso: ${totalCount} usuarios registrados</p>
-            <p class="text-[11px] text-text-secondary mt-0.5 leading-snug">
+            <p class="text-[0.75rem] text-text-secondary mt-0.5 leading-snug">
               Al superar 15 miembros se aconseja monitorizar las cuotas diarias del plan gratuito Spark de Firebase para evitar saturar las lecturas en tiempo real.
             </p>
           </div>
@@ -426,11 +426,11 @@ export function renderAdminView(
         // Obtener globos interactivos de los grupos
         let groupBadgesHtml = '';
         if (m.role === 'admin') {
-          groupBadgesHtml = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">Todos los grupos (Admin)</span>`;
+          groupBadgesHtml = `<span class="px-2.5 py-1 rounded-full text-[0.6875rem] font-bold bg-brand-primary/10 text-brand-primary">Todos los grupos (Admin)</span>`;
         } else {
           const userGroupIds = Array.isArray(m.groupIds) ? m.groupIds : [];
           if (groups.length === 0) {
-            groupBadgesHtml = `<span class="text-[10px] text-text-disabled italic">No hay grupos creados</span>`;
+            groupBadgesHtml = `<span class="text-[0.6875rem] text-text-disabled italic">No hay grupos creados</span>`;
           } else {
             groupBadgesHtml = groups
               .map((g) => {
@@ -440,7 +440,7 @@ export function renderAdminView(
                     <button 
                       data-toggle-uid="${m.uid}"
                       data-toggle-group-id="${g.id}"
-                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-status-online/15 text-status-online border border-status-online/40 hover:opacity-80"
+                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-status-online/15 text-status-online border border-status-online/40 hover:opacity-80"
                       title="Asignado a ${escapeHtml(g.name)}. Pulsa para desasignar."
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-status-online shrink-0"></span>
@@ -452,7 +452,7 @@ export function renderAdminView(
                     <button 
                       data-toggle-uid="${m.uid}"
                       data-toggle-group-id="${g.id}"
-                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-surface-elevated text-text-disabled border border-border-subtle hover:text-text-primary hover:border-border-strong opacity-70 hover:opacity-100"
+                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[0.6875rem] font-medium transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-surface-elevated text-text-disabled border border-border-subtle hover:text-text-primary hover:border-border-strong opacity-70 hover:opacity-100"
                       title="No asignado a ${escapeHtml(g.name)}. Pulsa para asignar."
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-border-strong shrink-0"></span>
@@ -479,9 +479,9 @@ export function renderAdminView(
                 <div class="truncate">
                   <p class="font-bold text-text-primary truncate flex items-center gap-1.5">
                     ${escapeHtml(m.display_name)}
-                    ${isSelf ? '<span class="text-[10px] text-brand-primary font-normal">(Tú)</span>' : ''}
+                    ${isSelf ? '<span class="text-[0.6875rem] text-brand-primary font-normal">(Tú)</span>' : ''}
                   </p>
-                  <p class="text-[11px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+                  <p class="text-[0.75rem] text-text-secondary truncate">${escapeHtml(m.email)}</p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
@@ -506,7 +506,7 @@ export function renderAdminView(
 
             <!-- Globos interactivos de Grupos (Verde = asignado, Gris = no asignado) -->
             <div class="flex flex-wrap gap-1.5 items-center pt-2 border-t border-border-subtle/50">
-              <span class="text-[10px] text-text-secondary font-semibold mr-0.5">Grupos:</span>
+              <span class="text-[0.6875rem] text-text-secondary font-semibold mr-0.5">Grupos:</span>
               ${groupBadgesHtml}
             </div>
           </div>

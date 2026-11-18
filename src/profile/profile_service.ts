@@ -1,5 +1,6 @@
 import { doc, updateDoc, type Firestore } from 'firebase/firestore';
 import type { ProfileUpdatePayload } from './types';
+import type { UiScaleLevel } from '../ui/theme/ui_scale';
 
 export class ProfileService {
   constructor(private readonly db: Firestore) {}
@@ -22,6 +23,10 @@ export class ProfileService {
       updates.photo_url = payload.photoUrl;
     }
 
+    if (payload.uiScale !== undefined) {
+      updates.ui_scale = payload.uiScale;
+    }
+
     await updateDoc(userRef, updates);
   }
 
@@ -31,6 +36,10 @@ export class ProfileService {
 
   async updateAvatar(uid: string, photoUrl: string): Promise<void> {
     await this.updateProfile(uid, { photoUrl });
+  }
+
+  async updateUiScale(uid: string, uiScale: UiScaleLevel): Promise<void> {
+    await this.updateProfile(uid, { uiScale });
   }
 }
 

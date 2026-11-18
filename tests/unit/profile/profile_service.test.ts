@@ -40,6 +40,12 @@ describe('ProfileService', () => {
       await expect(service.updateAvatar('u1', 'data:image/jpeg;base64,mockdata')).resolves.not.toThrow();
     });
   });
+
+  describe('updateUiScale', () => {
+    it('debe actualizar la preferencia de zoom de interfaz en Firestore', async () => {
+      await expect(service.updateUiScale('u1', 'comfortable')).resolves.not.toThrow();
+    });
+  });
 });
 
 describe('image_compressor', () => {
