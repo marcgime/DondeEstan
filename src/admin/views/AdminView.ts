@@ -151,9 +151,6 @@ export function renderAdminView(
 
       </div>
 
-      <!-- Modal Slot para Asignación de Grupos -->
-      <div id="admin-modal-slot"></div>
-
     </div>
   `;
 
@@ -426,27 +423,50 @@ export function renderAdminView(
         const isSelf = m.uid === currentAdminUid;
         const initial = (m.display_name || 'F')[0].toUpperCase();
 
-        // Obtener nombres de los grupos del usuario
+        // Obtener globos interactivos de los grupos
         let groupBadgesHtml = '';
         if (m.role === 'admin') {
-          groupBadgesHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">Todos los grupos (Admin)</span>`;
+          groupBadgesHtml = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary">Todos los grupos (Admin)</span>`;
         } else {
           const userGroupIds = Array.isArray(m.groupIds) ? m.groupIds : [];
-          if (userGroupIds.length === 0) {
-            groupBadgesHtml = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-warning/15 text-status-warning">⚠️ Sin grupo</span>`;
+          if (groups.length === 0) {
+            groupBadgesHtml = `<span class="text-[10px] text-text-disabled italic">No hay grupos creados</span>`;
           } else {
-            groupBadgesHtml = userGroupIds
-              .map((gid) => {
-                const grp = groups.find((g) => g.id === gid);
-                const name = grp ? grp.name : 'Grupo';
-                return `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-elevated text-text-secondary">${escapeHtml(name)}</span>`;
+            groupBadgesHtml = groups
+              .map((g) => {
+                const isAssigned = userGroupIds.includes(g.id);
+                if (isAssigned) {
+                  return `
+                    <button 
+                      data-toggle-uid="${m.uid}"
+                      data-toggle-group-id="${g.id}"
+                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-status-online/15 text-status-online border border-status-online/40 hover:opacity-80"
+                      title="Asignado a ${escapeHtml(g.name)}. Pulsa para desasignar."
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full bg-status-online shrink-0"></span>
+                      ${escapeHtml(g.name)}
+                    </button>
+                  `;
+                } else {
+                  return `
+                    <button 
+                      data-toggle-uid="${m.uid}"
+                      data-toggle-group-id="${g.id}"
+                      class="btn-toggle-group px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 bg-surface-elevated text-text-disabled border border-border-subtle hover:text-text-primary hover:border-border-strong opacity-70 hover:opacity-100"
+                      title="No asignado a ${escapeHtml(g.name)}. Pulsa para asignar."
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full bg-border-strong shrink-0"></span>
+                      ${escapeHtml(g.name)}
+                    </button>
+                  `;
+                }
               })
-              .join(' ');
+              .join('');
           }
         }
 
         return `
-          <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex flex-col gap-2 text-xs">
+          <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex flex-col gap-2.5 text-xs">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2.5 truncate">
                 <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
@@ -466,23 +486,6 @@ export function renderAdminView(
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
                 ${
-                  m.role !== 'admin'
-                    ? `
-                  <button 
-                    data-manage-groups-uid="${m.uid}"
-                    data-manage-groups-name="${escapeHtml(m.display_name)}"
-                    class="btn-manage-groups px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 text-[11px] font-bold transition-all active:scale-95 flex items-center gap-1"
-                    title="Asignar grupos"
-                  >
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                    Grupos
-                  </button>
-                `
-                    : ''
-                }
-                ${
                   !isSelf
                     ? `
                   <button 
@@ -501,9 +504,9 @@ export function renderAdminView(
               </div>
             </div>
 
-            <!-- Chips de Grupos -->
-            <div class="flex flex-wrap gap-1 items-center pt-1 border-t border-border-subtle/50">
-              <span class="text-[10px] text-text-disabled font-medium mr-1">Grupos:</span>
+            <!-- Globos interactivos de Grupos (Verde = asignado, Gris = no asignado) -->
+            <div class="flex flex-wrap gap-1.5 items-center pt-2 border-t border-border-subtle/50">
+              <span class="text-[10px] text-text-secondary font-semibold mr-0.5">Grupos:</span>
               ${groupBadgesHtml}
             </div>
           </div>
@@ -511,15 +514,39 @@ export function renderAdminView(
       })
       .join('');
 
-    // Bind modal de asignación de grupos
-    listEl.querySelectorAll('.btn-manage-groups').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const uid = (btn as HTMLElement).dataset.manageGroupsUid;
-        const name = (btn as HTMLElement).dataset.manageGroupsName || 'Usuario';
-        if (!uid) return;
+    // Bind toggle directo de grupos desde los globos interactivos
+    listEl.querySelectorAll('.btn-toggle-group').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const uid = (btn as HTMLElement).dataset.toggleUid;
+        const gid = (btn as HTMLElement).dataset.toggleGroupId;
+        if (!uid || !gid) return;
+
         const member = activeMembers.find((m) => m.uid === uid);
         if (!member) return;
-        openGroupAssignmentModal(member, name);
+
+        const currentGroupIds = Array.isArray(member.groupIds) ? [...member.groupIds] : [];
+        let nextGroupIds: string[];
+        if (currentGroupIds.includes(gid)) {
+          nextGroupIds = currentGroupIds.filter((id) => id !== gid);
+        } else {
+          nextGroupIds = [...currentGroupIds, gid];
+        }
+
+        // Actualización optimista inmediata en la UI
+        member.groupIds = nextGroupIds;
+        renderMembersList();
+        renderGroupsList();
+
+        try {
+          await groupService.assignUserGroups(uid, nextGroupIds);
+        } catch (err) {
+          // Revertir en caso de error
+          member.groupIds = currentGroupIds;
+          renderMembersList();
+          renderGroupsList();
+          alert(err instanceof Error ? err.message : 'Error al modificar asignación de grupo.');
+        }
       });
     });
 
@@ -544,104 +571,6 @@ export function renderAdminView(
           alert(err instanceof Error ? err.message : 'Error al eliminar usuario.');
         }
       });
-    });
-  }
-
-  function openGroupAssignmentModal(member: UserProfile, name: string): void {
-    const modalSlot = container.querySelector('#admin-modal-slot');
-    if (!modalSlot) return;
-
-    const currentGroupIds = new Set(member.groupIds || []);
-
-    modalSlot.innerHTML = `
-      <div class="fixed inset-0 z-[1600] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-surface-canvas border border-border-subtle rounded-3xl p-5 max-w-sm w-full shadow-dock flex flex-col gap-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-text-primary">
-              Asignar Grupos a ${escapeHtml(name)}
-            </h3>
-            <button id="btn-close-group-modal" class="text-text-secondary hover:text-text-primary p-1">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <p class="text-xs text-text-secondary">
-            Selecciona a qué grupos pertenecerá este usuario. Podrá interactuar con los miembros de los grupos marcados.
-          </p>
-
-          <div class="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
-            ${
-              groups.length === 0
-                ? '<p class="text-xs text-text-disabled">No hay grupos creados.</p>'
-                : groups
-                    .map(
-                      (g) => `
-                <label class="flex items-center justify-between p-2.5 rounded-xl bg-surface-base border border-border-subtle cursor-pointer hover:bg-surface-elevated transition-colors text-xs">
-                  <span class="font-bold text-text-primary">${escapeHtml(g.name)}</span>
-                  <input 
-                    type="checkbox" 
-                    value="${g.id}" 
-                    class="group-checkbox w-4 h-4 text-brand-primary rounded accent-brand-primary" 
-                    ${currentGroupIds.has(g.id) ? 'checked' : ''}
-                  />
-                </label>
-              `
-                    )
-                    .join('')
-            }
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-border-subtle">
-            <button 
-              id="btn-cancel-groups" 
-              class="px-4 py-2 rounded-full text-xs font-semibold text-text-secondary hover:text-text-primary"
-            >
-              Cancelar
-            </button>
-            <button 
-              id="btn-save-groups" 
-              class="px-5 py-2 rounded-full text-xs font-bold bg-brand-primary text-brand-on-primary hover:opacity-95 shadow-xs"
-            >
-              Guardar Cambios
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    modalSlot.querySelector('#btn-close-group-modal')?.addEventListener('click', () => {
-      modalSlot.innerHTML = '';
-    });
-    modalSlot.querySelector('#btn-cancel-groups')?.addEventListener('click', () => {
-      modalSlot.innerHTML = '';
-    });
-
-    const saveBtn = modalSlot.querySelector('#btn-save-groups') as HTMLButtonElement | null;
-    saveBtn?.addEventListener('click', async () => {
-      const selectedIds: string[] = [];
-      modalSlot.querySelectorAll<HTMLInputElement>('.group-checkbox:checked').forEach((box) => {
-        selectedIds.push(box.value);
-      });
-
-      if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Guardando...';
-      }
-
-      try {
-        await groupService.assignUserGroups(member.uid, selectedIds);
-        member.groupIds = selectedIds;
-        renderMembersList();
-        modalSlot.innerHTML = '';
-      } catch (err) {
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.textContent = 'Guardar Cambios';
-        }
-        alert(err instanceof Error ? err.message : 'Error al guardar grupos.');
-      }
     });
   }
 
