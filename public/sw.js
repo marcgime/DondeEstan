@@ -1,12 +1,14 @@
 // Service Worker para DondeEstan PWA
-const CACHE_NAME = 'dondeestan-shell-v11';
+const CACHE_NAME = 'dondeestan-shell-v12';
 
 const STATIC_PRECACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg'
+  '/favicon.png',
+  '/icons/apple-touch-icon.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

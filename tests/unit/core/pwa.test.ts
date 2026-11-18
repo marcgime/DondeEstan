@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { isIosDevice, isStandaloneMode, dismissIosInstallPrompt } from '../../../src/core/pwa';
 import {
   applyUiScale,
@@ -57,6 +59,25 @@ describe('PWA Utilities', () => {
 
     expect(isValidUiScale('large')).toBe(true);
     expect(isValidUiScale('invalid')).toBe(false);
+  });
+
+  it('configura DondeEstan como nombre por defecto y el logo oficial en manifest.json e index.html', () => {
+    const manifestRaw = readFileSync(resolve(process.cwd(), 'public/manifest.json'), 'utf-8');
+    const manifest = JSON.parse(manifestRaw) as {
+      name: string;
+      short_name: string;
+      icons: Array<{ src: string; sizes: string; type: string }>;
+    };
+
+    expect(manifest.name).toBe('DondeEstan');
+    expect(manifest.short_name).toBe('DondeEstan');
+    expect(manifest.icons.some((i) => i.src === '/icons/icon-192.png')).toBe(true);
+    expect(manifest.icons.some((i) => i.src === '/icons/icon-512.png')).toBe(true);
+
+    const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8');
+    expect(indexHtml).toContain('name="apple-mobile-web-app-title" content="DondeEstan"');
+    expect(indexHtml).toContain('href="/favicon.png"');
+    expect(indexHtml).toContain('href="/icons/apple-touch-icon.png"');
   });
 });
 

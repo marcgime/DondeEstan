@@ -18,13 +18,11 @@ export function checkAndRenderIosInstallPrompt(container: HTMLElement): void {
   banner.innerHTML = `
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
+        <div class="w-10 h-10 rounded-2xl bg-surface-elevated flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+          <img src="/icons/icon-192.png" alt="DondeEstan" class="w-full h-full object-cover" />
         </div>
         <div>
-          <h3 class="text-xs font-bold text-text-primary">Instala Familia en tu iPhone</h3>
+          <h3 class="text-xs font-bold text-text-primary">Instala DondeEstan en tu iPhone</h3>
           <p class="text-[0.75rem] text-text-secondary mt-0.5 leading-snug">
             Pulsa <span class="font-bold text-brand-primary">Compartir</span>
             <svg class="w-3.5 h-3.5 inline-block text-brand-primary align-text-bottom" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

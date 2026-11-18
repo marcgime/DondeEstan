@@ -22,11 +22,8 @@ export function renderAuthView(
         <div class="w-full max-w-sm flex flex-col items-center my-auto">
           
           <!-- App Header & Logo -->
-          <div class="w-20 h-20 mb-5 rounded-pebble bg-brand-primary flex items-center justify-center shadow-card text-brand-on-primary">
-            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          <div class="w-20 h-20 mb-5 rounded-pebble bg-surface-elevated flex items-center justify-center shadow-card overflow-hidden">
+            <img src="/icons/icon-192.png" alt="DondeEstan" class="w-full h-full object-cover" />
           </div>
 
           <h1 class="text-2xl font-extrabold tracking-tight text-text-primary mb-1 font-sans">

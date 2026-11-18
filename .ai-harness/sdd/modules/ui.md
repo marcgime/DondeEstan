@@ -49,6 +49,7 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 - **BR-UI-02:** Los componentes deben ser 100% accesibles con contraste AA verificado.
 - **BR-UI-03:** Escalado proporcional en `rem` desde `html` (`108%` por defecto, configurable en Perfil) y respeto estricto de `safe-area-inset-top` sin difuminado superior en iOS PWA.
 - **BR-UI-04:** `DS-NAV-DOCK` oculta las etiquetas textuales tras 4 segundos sin interacción dejando solo los 3 logotipos.
+- **BR-UI-05:** El manifiesto PWA (`public/manifest.json`) y las etiquetas de `index.html` declaran `"DondeEstan"` como nombre por defecto al guardar en el escritorio o pantalla de inicio, y utilizan el logotipo oficial como favicon (`/favicon.png`), `apple-touch-icon` (`/icons/apple-touch-icon.png`), iconos PWA (`/icons/icon-192.png`, `/icons/icon-512.png`) y cabecera visual de la app (`AuthView`, `PwaInstallPrompt`).
 
 ---
 
@@ -62,3 +63,4 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 | CT-UI-04 | `PwaUtilities` | `src/core/pwa.ts` | `tests/unit/core/pwa.test.ts` |
 | CT-UI-05 | `applyUiScale` / `initUiScale` | `src/ui/theme/ui_scale.ts` | `tests/unit/core/pwa.test.ts` |
 | CT-UI-06 | `renderFloatingTabBar` | `src/ui/components/FloatingTabBar.ts` | `tests/unit/ui/floating_tab_bar.test.ts` |
+| CT-UI-07 | `renderAuthView` | `src/auth/views/AuthView.ts` | `tests/unit/core/pwa.test.ts` |
