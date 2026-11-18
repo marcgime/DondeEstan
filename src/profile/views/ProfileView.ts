@@ -34,12 +34,12 @@ export function renderProfileView(
     container.innerHTML = `
       <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
         
-        <!-- Top Header -->
-        <header class="shrink-0 px-4 safe-header-top pb-2 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20">
-          <h1 class="text-base font-bold text-text-primary">Mi Perfil</h1>
+        <!-- iOS Nav Bar (Compact 44pt row: Page Title on Left, Primary Action on Right) -->
+        <header class="ios-nav-bar safe-header-top">
+          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Mi Perfil</h1>
           <button 
             id="profile-btn-logout"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-status-error text-xs font-semibold hover:bg-status-error/10 transition-colors"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-elevated border border-border-subtle text-status-error text-xs font-bold hover:bg-status-error/10 transition-colors"
             title="Cerrar sesión"
           >
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -50,7 +50,7 @@ export function renderProfileView(
         </header>
 
         <!-- Profile Content -->
-        <div class="flex-1 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-36">
+        <div id="profile-scroll-container" class="flex-1 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-36">
           
           <!-- Avatar Big with Upload Badge -->
           <div class="relative mt-1">
@@ -208,8 +208,11 @@ export function renderProfileView(
 
         </div>
 
-        <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-        <nav class="absolute inset-x-4 safe-dock-bottom z-[1100] pointer-events-auto">
+        <!-- iOS 26 Bottom Scroll Edge Effect (Fade-out without blur) -->
+        <div class="ios-bottom-fade"></div>
+
+        <!-- iOS 26 Tab Bar: Floating Centered Liquid Glass Pill (21pt inset) -->
+        <nav class="absolute safe-dock-bottom z-[1100] pointer-events-auto">
           <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
             
             <!-- Map Tab -->
@@ -235,7 +238,10 @@ export function renderProfileView(
             </button>
 
             <!-- Settings Tab (Active) -->
-            <button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm">
+            <button
+              id="nav-profile-active"
+              class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm"
+            >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
@@ -260,6 +266,12 @@ export function renderProfileView(
     container.querySelector('#nav-profile-chat')?.addEventListener('click', () => {
       triggerHaptic('light');
       onNavigateTab('chat');
+    });
+
+    container.querySelector('#nav-profile-active')?.addEventListener('click', () => {
+      triggerHaptic('light');
+      const scrollEl = container.querySelector('#profile-scroll-container') as HTMLElement | null;
+      scrollEl?.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     container.querySelector('#profile-btn-logout')?.addEventListener('click', async () => {

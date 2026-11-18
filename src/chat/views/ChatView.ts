@@ -28,21 +28,16 @@ export function renderChatView(
   container.innerHTML = `
     <div id="chat-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
-      <!-- Top Header -->
-      <header class="shrink-0 px-4 safe-header-top pb-2 flex items-center justify-between border-b border-border-subtle bg-surface-canvas z-20 gap-2">
-        <div class="flex items-center gap-3 truncate">
-          <div class="w-9 h-9 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shrink-0">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <div id="chat-header-group-slot" class="truncate">
-            <h1 class="text-sm font-bold text-text-primary flex items-center gap-2">
-              Chat
-              <span class="w-2 h-2 rounded-full bg-status-online"></span>
-            </h1>
-            <p class="text-[0.75rem] text-text-secondary">Mensajería instantánea segura</p>
-          </div>
+      <!-- iOS Nav Bar (Compact 44pt row: Page Title on Left, Group Action on Right) -->
+      <header class="ios-nav-bar safe-header-top">
+        <div class="flex items-center gap-2 min-w-0">
+          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Chat</h1>
+          <span class="w-2 h-2 rounded-full bg-status-online shrink-0"></span>
+        </div>
+        <div id="chat-header-group-slot" class="flex items-center shrink-0">
+          <span class="px-3 py-1 rounded-full bg-surface-elevated border border-border-subtle text-xs font-bold text-brand-primary">
+            Familia
+          </span>
         </div>
       </header>
 
@@ -62,7 +57,7 @@ export function renderChatView(
       </div>
 
       <!-- Message Composer Bar (Floating above Bottom Dock) -->
-      <div class="absolute inset-x-4 safe-composer-bottom z-20">
+      <div class="absolute safe-composer-bottom z-30">
         <form 
           id="chat-composer-form" 
           class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-full glass-panel shadow-dock"
@@ -88,8 +83,11 @@ export function renderChatView(
         </form>
       </div>
 
-      <!-- DS-NAV-DOCK: Bottom Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
+      <!-- iOS 26 Bottom Scroll Edge Effect (Fade-out without blur) -->
+      <div class="ios-bottom-fade"></div>
+
+      <!-- iOS 26 Tab Bar: Floating Centered Liquid Glass Pill (21pt inset) -->
+      <nav class="absolute safe-dock-bottom z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab -->
@@ -180,37 +178,28 @@ export function renderChatView(
     if (accessibleGroups.length <= 1) {
       const gname = accessibleGroups[0]?.name || 'Familia';
       slot.innerHTML = `
-        <h1 class="text-sm font-bold text-text-primary flex items-center gap-2">
-          Chat: ${escapeHtml(gname)}
-          <span class="w-2 h-2 rounded-full bg-status-online"></span>
-        </h1>
-        <p class="text-[0.75rem] text-text-secondary">Mensajería instantánea de grupo</p>
+        <span class="px-3 py-1 rounded-full bg-surface-elevated border border-border-subtle shadow-xs text-xs font-bold text-brand-primary whitespace-nowrap">
+          ${escapeHtml(gname)}
+        </span>
       `;
       return;
     }
 
     slot.innerHTML = `
-      <div class="flex flex-col">
-        <div class="flex items-center gap-1.5">
-          <label for="chat-group-select" class="text-[0.6875rem] uppercase font-bold text-text-secondary">Grupo:</label>
-          <select 
-            id="chat-group-select" 
-            class="bg-surface-elevated text-xs font-bold text-text-primary px-2.5 py-1 rounded-full border border-border-subtle shadow-xs focus:outline-none cursor-pointer"
-          >
-            ${accessibleGroups
-              .map(
-                (g) => `
-              <option value="${g.id}" ${g.id === activeGroupId ? 'selected' : ''}>
-                ${escapeHtml(g.name)}
-              </option>
-            `
-              )
-              .join('')}
-          </select>
-          <span class="w-2 h-2 rounded-full bg-status-online"></span>
-        </div>
-        <p class="text-[0.6875rem] text-text-secondary mt-0.5">Mensajería instantánea de grupo</p>
-      </div>
+      <select 
+        id="chat-group-select" 
+        class="bg-surface-elevated text-xs font-bold text-text-primary px-3 py-1.5 rounded-full border border-border-subtle shadow-xs focus:outline-none cursor-pointer"
+      >
+        ${accessibleGroups
+          .map(
+            (g) => `
+          <option value="${g.id}" ${g.id === activeGroupId ? 'selected' : ''}>
+            ${escapeHtml(g.name)}
+          </option>
+        `
+          )
+          .join('')}
+      </select>
     `;
 
     slot.querySelector('#chat-group-select')?.addEventListener('change', (e) => {

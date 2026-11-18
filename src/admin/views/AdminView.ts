@@ -30,17 +30,18 @@ export function renderAdminView(
   container.innerHTML = `
     <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
       
-      <!-- Top Bar -->
-      <header class="shrink-0 px-4 safe-header-top pb-2 border-b border-border-subtle bg-surface-canvas flex items-center justify-between z-10">
+      <!-- iOS Nav Bar (Compact 44pt row: Back Button + Page Title + Primary Action) -->
+      <header class="ios-nav-bar safe-header-top">
         <div class="flex items-center gap-2.5">
           <button 
             id="admin-btn-back" 
-            class="w-9 h-9 rounded-full bg-surface-card border border-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors active:scale-95"
-            title="Volver"
+            class="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-elevated border border-border-subtle text-brand-primary text-xs font-bold hover:opacity-90 transition-colors active:scale-95"
+            title="Volver a Perfil"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
+            <span>Perfil</span>
           </button>
           <h1 class="text-base font-extrabold tracking-tight text-text-primary">Administración</h1>
         </div>

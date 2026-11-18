@@ -58,23 +58,26 @@ export function renderMapView(
   const selectedMemberUids = new Set<string>();
 
   container.innerHTML = `
-    <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+    <div id="map-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
       
-      <!-- Top Header Pill Bar -->
-      <div class="shrink-0 px-4 safe-header-top pb-2 flex justify-between items-center z-20 gap-2 bg-surface-canvas">
-        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-elevated border border-border-subtle shadow-sm">
-          <span class="w-2.5 h-2.5 rounded-full bg-status-online animate-pulse"></span>
-          <span id="live-members-badge" class="text-xs font-bold text-text-primary font-sans truncate">
-            Localizando usuarios...
-          </span>
+      <!-- iOS Nav Bar (Compact 44pt row: Page Title + Live Status + Group Action) -->
+      <header class="ios-nav-bar safe-header-top">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <h1 class="text-base font-extrabold tracking-tight text-text-primary shrink-0">Mapa</h1>
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-elevated border border-border-subtle truncate">
+            <span class="w-2 h-2 rounded-full bg-status-online animate-pulse shrink-0"></span>
+            <span id="live-members-badge" class="text-[0.6875rem] font-bold text-text-secondary font-sans truncate">
+              Localizando...
+            </span>
+          </div>
         </div>
 
-        <!-- Group Selector Slot -->
-        <div id="group-selector-slot" class="flex items-center"></div>
-      </div>
+        <!-- Primary Nav Bar Action: Group Selector Slot -->
+        <div id="group-selector-slot" class="flex items-center shrink-0"></div>
+      </header>
 
       <!-- MAP FRAME: Cuadrado que ocupa el ancho de la pantalla -->
-      <div class="px-4 shrink-0">
+      <div class="px-4 pt-2.5 shrink-0">
         <div class="relative w-full aspect-square max-h-[44vh] rounded-3xl overflow-hidden border border-surface-glass-border shadow-dock bg-surface-base">
           <div id="google-map-container" class="h-full w-full flex items-center justify-center">
             <div class="text-center p-6 text-text-secondary text-xs">
@@ -154,18 +157,24 @@ export function renderMapView(
       </div>
 
       <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
-      <div class="flex-1 overflow-y-auto px-4 pb-36">
+      <div id="contacts-scroll-wrapper" class="flex-1 overflow-y-auto px-4 pb-36">
         <div id="contacts-scroll-container" class="flex flex-col gap-2">
           <div class="p-6 text-center text-xs text-text-disabled">Cargando usuarios...</div>
         </div>
       </div>
 
-      <!-- Bottom Dock: Floating Glass Navigation -->
-      <nav class="absolute inset-x-4 safe-dock-bottom z-30 pointer-events-auto">
+      <!-- iOS 26 Bottom Scroll Edge Effect (Fade-out without blur) -->
+      <div class="ios-bottom-fade"></div>
+
+      <!-- iOS 26 Tab Bar: Floating Centered Liquid Glass Pill (21pt inset) -->
+      <nav class="absolute safe-dock-bottom z-30 pointer-events-auto">
         <div class="max-w-xs mx-auto h-14 rounded-full glass-dock shadow-dock flex items-center justify-around px-2">
           
           <!-- Map Tab (Active) -->
-          <button class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm">
+          <button
+            id="nav-btn-map-active"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-sm"
+          >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
@@ -203,7 +212,9 @@ export function renderMapView(
     </div>
   `;
 
+  const mapRoot = container.querySelector('#map-view-root') as HTMLElement;
   const mapContainer = container.querySelector('#google-map-container') as HTMLElement;
+  const contactsWrapper = container.querySelector('#contacts-scroll-wrapper') as HTMLElement;
   const contactsContainer = container.querySelector('#contacts-scroll-container') as HTMLElement;
   const liveBadge = container.querySelector('#live-members-badge') as HTMLElement;
   const modalSlot = container.querySelector('#modal-slot') as HTMLElement;
@@ -435,18 +446,22 @@ export function renderMapView(
     }
   }
 
-  function initLeaflet(): void {
-    const leafletService = new LeafletFamilyMapService(mapContainer, (selectedMember) => {
-      renderDraggableBottomSheet(modalSlot, {
-        member: selectedMember,
-        onCenter: (coords) => {
-          mapService?.centerOn(coords);
-        },
-        onClose: () => {
-          modalSlot.innerHTML = '';
-        },
-      });
+  function openMemberSheet(selectedMember: MemberLocationState): void {
+    mapRoot?.classList.add('ios-modal-open');
+    renderDraggableBottomSheet(modalSlot, {
+      member: selectedMember,
+      onCenter: (coords) => {
+        mapService?.centerOn(coords);
+      },
+      onClose: () => {
+        modalSlot.innerHTML = '';
+        mapRoot?.classList.remove('ios-modal-open');
+      },
     });
+  }
+
+  function initLeaflet(): void {
+    const leafletService = new LeafletFamilyMapService(mapContainer, openMemberSheet);
     const defaultCenter = currentUserCoords || { lat: 41.5674, lng: 2.0109 };
     leafletService.initialize(defaultCenter, 15);
     mapService = leafletService;
@@ -456,17 +471,7 @@ export function renderMapView(
   // Inicializar Google Maps con fallback automático a Leaflet interactivo
   loadGoogleMaps()
     .then(() => {
-      const gMap = new FamilyMapService(mapContainer, (selectedMember) => {
-        renderDraggableBottomSheet(modalSlot, {
-          member: selectedMember,
-          onCenter: (coords) => {
-            mapService?.centerOn(coords);
-          },
-          onClose: () => {
-            modalSlot.innerHTML = '';
-          },
-        });
-      });
+      const gMap = new FamilyMapService(mapContainer, openMemberSheet);
 
       const initialized = gMap.initialize();
       if (initialized) {
@@ -593,7 +598,15 @@ export function renderMapView(
     }
   });
 
-  // Navegación Bottom Dock
+  // Navegación Bottom Dock (iOS 26 Tab Bar)
+  container.querySelector('#nav-btn-map-active')?.addEventListener('click', () => {
+    triggerHaptic('light');
+    if (contactsWrapper) {
+      contactsWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    autoFitVisibleMembers();
+  });
+
   container.querySelector('#nav-btn-chat')?.addEventListener('click', () => {
     triggerHaptic('light');
     if (options.onNavigateTab) {
