@@ -28,7 +28,7 @@ export function renderAdminView(
   });
 
   container.innerHTML = `
-    <div class="fixed inset-0 z-[1500] bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
+    <div id="admin-view-root" class="relative h-full w-full bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
       
       <!-- iOS Nav Bar (Compact 44pt row: Back Button + Page Title + Primary Action) -->
       <header class="ios-nav-bar safe-header-top">

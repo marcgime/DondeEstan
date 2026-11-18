@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminService } from '../../../src/admin/admin_service';
+import { renderAdminView } from '../../../src/admin/views/AdminView';
+import type { GroupService } from '../../../src/admin/group_service';
 import { handleAdminDeleteUser } from '../../../src/core/worker';
 import type { Firestore } from 'firebase/firestore';
 
@@ -127,6 +129,56 @@ describe('AdminService', () => {
         FIREBASE_SERVICE_ACCOUNT: '{"project_id":"p","client_email":"e","private_key":"k"}',
       });
       expect(resNoAuth.status).toBe(401);
+    });
+  });
+
+  describe('renderAdminView', () => {
+    it('renderiza el encabezado con botón de volver a Perfil dentro del layout de #app (sin fixed inset-0 que solape el escudo de iOS)', () => {
+      let backClickHandler: (() => void) | null = null;
+      const backBtn = {
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          if (event === 'click') backClickHandler = cb;
+        }),
+      };
+
+      const container = {
+        innerHTML: '',
+        querySelector: vi.fn((selector: string) => {
+          if (selector === '#admin-btn-back') return backBtn;
+          return null;
+        }),
+        querySelectorAll: vi.fn(() => []),
+      } as unknown as HTMLElement;
+
+      const onCloseMock = vi.fn();
+      const mockAdminService = {
+        getSystemConfig: vi.fn(async () => ({ registration_open: true, max_members: 10 })),
+        subscribeToPendingMembers: vi.fn(() => vi.fn()),
+        subscribeToAllMembers: vi.fn(() => vi.fn()),
+      } as unknown as AdminService;
+
+      const mockGroupService = {
+        subscribeToGroups: vi.fn(() => vi.fn()),
+      } as unknown as GroupService;
+
+      const cleanup = renderAdminView(container, {
+        adminService: mockAdminService,
+        groupService: mockGroupService,
+        currentAdminUid: 'admin-1',
+        onClose: onCloseMock,
+      });
+
+      expect(container.innerHTML).toContain('id="admin-view-root"');
+      expect(container.innerHTML).toContain('relative h-full w-full');
+      expect(container.innerHTML).not.toContain('fixed inset-0');
+      expect(container.innerHTML).toContain('id="admin-btn-back"');
+      expect(container.innerHTML).toContain('Administración');
+
+      expect(backClickHandler).not.toBeNull();
+      backClickHandler!();
+      expect(onCloseMock).toHaveBeenCalledTimes(1);
+
+      cleanup();
     });
   });
 });
