@@ -29,6 +29,7 @@ export function renderProfileView(
   const initial = (profile.display_name || 'F')[0].toUpperCase();
   let isEditingName = false;
   let isUploadingPhoto = false;
+  let isZoomMenuOpen = false;
   let currentScale: UiScaleLevel = isValidUiScale(profile.ui_scale)
     ? profile.ui_scale
     : getStoredUiScale();
@@ -59,6 +60,8 @@ export function renderProfileView(
       cleanupTabBar();
       cleanupTabBar = null;
     }
+    const activeScaleOpt =
+      UI_SCALE_OPTIONS.find((o) => o.id === currentScale) || UI_SCALE_OPTIONS[1];
     container.innerHTML = `
       <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
         
@@ -183,37 +186,63 @@ export function renderProfileView(
               : ''
           }
 
-          <!-- Selector de Zoom / Tamaño de Interfaz -->
-          <div class="w-full max-w-sm p-4 rounded-2xl glass-panel shadow-xs flex flex-col gap-3">
-            <div class="flex items-center justify-between">
+          <!-- Selector de Zoom / Tamaño de Interfaz (Menú Plegable) -->
+          <div class="w-full max-w-sm rounded-2xl glass-panel shadow-xs overflow-hidden">
+            <button
+              type="button"
+              id="btn-toggle-zoom-menu"
+              aria-expanded="${isZoomMenuOpen ? 'true' : 'false'}"
+              class="w-full p-3.5 flex items-center justify-between gap-3 text-left hover:bg-brand-primary/5 transition-colors cursor-pointer"
+            >
               <div>
                 <p class="text-xs font-bold text-text-primary">Tamaño de Letra y Zoom</p>
-                <p class="text-[0.75rem] text-text-secondary">Ajusta la escala visual de toda la aplicación</p>
+                <p class="text-[0.75rem] text-text-secondary">
+                  ${isZoomMenuOpen ? 'Selecciona un tamaño para toda la aplicación' : `Actual: ${activeScaleOpt.label}`}
+                </p>
               </div>
-              <span class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
-                ${UI_SCALE_OPTIONS.find((o) => o.id === currentScale)?.percentage || '108%'}
-              </span>
-            </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
+                  ${activeScaleOpt.percentage}
+                </span>
+                <svg
+                  class="w-4 h-4 text-text-secondary transition-transform ${isZoomMenuOpen ? 'rotate-180 text-brand-primary' : ''}"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
 
-            <div class="grid grid-cols-4 gap-1.5">
-              ${UI_SCALE_OPTIONS.map((opt) => {
-                const isActive = opt.id === currentScale;
-                return `
-                  <button
-                    type="button"
-                    data-ui-scale="${opt.id}"
-                    class="btn-ui-scale py-2 px-1.5 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border ${
-                      isActive
-                        ? 'bg-brand-primary text-brand-on-primary border-brand-primary shadow-xs font-bold'
-                        : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary font-semibold'
-                    }"
-                  >
-                    <span class="text-xs">${opt.label}</span>
-                    <span class="text-[0.6875rem] opacity-80">${opt.percentage}</span>
-                  </button>
-                `;
-              }).join('')}
-            </div>
+            ${
+              isZoomMenuOpen
+                ? `
+              <div id="zoom-menu-options" class="px-3.5 pb-3.5 pt-1 border-t border-border-subtle">
+                <div class="grid grid-cols-4 gap-1.5 mt-2">
+                  ${UI_SCALE_OPTIONS.map((opt) => {
+                    const isActive = opt.id === currentScale;
+                    return `
+                      <button
+                        type="button"
+                        data-ui-scale="${opt.id}"
+                        class="btn-ui-scale py-2 px-1.5 rounded-xl text-center transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                          isActive
+                            ? 'bg-brand-primary text-brand-on-primary border-brand-primary shadow-xs font-bold'
+                            : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary font-semibold'
+                        }"
+                      >
+                        <span class="text-xs">${opt.label}</span>
+                        <span class="text-[0.6875rem] opacity-80">${opt.percentage}</span>
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `
+                : ''
+            }
           </div>
 
           <!-- Info Cards -->
@@ -273,21 +302,33 @@ export function renderProfileView(
       }
     });
 
+    container.querySelector('#btn-toggle-zoom-menu')?.addEventListener('click', () => {
+      triggerHaptic('light');
+      isZoomMenuOpen = !isZoomMenuOpen;
+      render();
+    });
+
     // Selector de escala visual (Zoom de interfaz)
     container.querySelectorAll('.btn-ui-scale').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const rawScale = (btn as HTMLElement).dataset.uiScale;
-        if (!isValidUiScale(rawScale) || rawScale === currentScale) return;
+        if (!isValidUiScale(rawScale)) return;
 
         triggerHaptic('light');
-        currentScale = applyUiScale(rawScale);
-        profile.ui_scale = currentScale;
+        const changed = rawScale !== currentScale;
+        if (changed) {
+          currentScale = applyUiScale(rawScale);
+          profile.ui_scale = currentScale;
+        }
+        isZoomMenuOpen = false;
         render();
 
-        try {
-          await profileService.updateUiScale(profile.uid, currentScale);
-        } catch (err) {
-          console.warn('No se pudo sincronizar la escala visual en la nube:', err);
+        if (changed) {
+          try {
+            await profileService.updateUiScale(profile.uid, currentScale);
+          } catch (err) {
+            console.warn('No se pudo sincronizar la escala visual en la nube:', err);
+          }
         }
       });
     });

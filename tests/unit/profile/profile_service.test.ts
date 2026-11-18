@@ -111,6 +111,71 @@ describe('renderProfileView - Núcleo (Grupos del usuario)', () => {
     cleanup();
     expect(unsubscribeMock).toHaveBeenCalledTimes(1);
   });
+
+  it('mantiene el menú de zoom plegado por defecto, lo abre al clicar y lo minimiza tras seleccionar otro zoom (BR-PROFILE-04)', async () => {
+    let toggleHandler: (() => void) | null = null;
+    let scaleBtnHandler: (() => Promise<void>) | null = null;
+
+    const toggleBtn = {
+      addEventListener: vi.fn((event: string, cb: () => void) => {
+        if (event === 'click') toggleHandler = cb;
+      }),
+    };
+    const scaleBtnLarge = {
+      dataset: { uiScale: 'large' },
+      addEventListener: vi.fn((event: string, cb: () => Promise<void>) => {
+        if (event === 'click') scaleBtnHandler = cb;
+      }),
+    };
+
+    const container = {
+      innerHTML: '',
+      querySelector: vi.fn((selector: string) => {
+        if (selector === '#btn-toggle-zoom-menu') return toggleBtn;
+        return null;
+      }),
+      querySelectorAll: vi.fn((selector: string) => {
+        if (selector === '.btn-ui-scale' && container.innerHTML.includes('id="zoom-menu-options"')) {
+          return [scaleBtnLarge];
+        }
+        return [];
+      }),
+    } as unknown as HTMLElement;
+
+    const updateUiScaleMock = vi.fn(async () => {});
+    const cleanup = renderProfileView(container, {
+      profile: {
+        uid: 'u1',
+        email: 'user@example.com',
+        display_name: 'Marc',
+        role: 'member',
+        status: 'active',
+        ui_scale: 'comfortable',
+      },
+      profileService: { updateUiScale: updateUiScaleMock } as unknown as ProfileService,
+      onNavigateTab: vi.fn(),
+      onLogout: vi.fn(async () => {}),
+    });
+
+    // 1. Plegado por defecto
+    expect(container.innerHTML).toContain('aria-expanded="false"');
+    expect(container.innerHTML).not.toContain('id="zoom-menu-options"');
+
+    // 2. Al clicar se despliega el detalle
+    expect(toggleHandler).not.toBeNull();
+    toggleHandler!();
+    expect(container.innerHTML).toContain('aria-expanded="true"');
+    expect(container.innerHTML).toContain('id="zoom-menu-options"');
+
+    // 3. Al seleccionar otro zoom se aplica y se minimiza automáticamente
+    expect(scaleBtnHandler).not.toBeNull();
+    await scaleBtnHandler!();
+    expect(container.innerHTML).toContain('aria-expanded="false"');
+    expect(container.innerHTML).not.toContain('id="zoom-menu-options"');
+    expect(updateUiScaleMock).toHaveBeenCalledWith('u1', 'large');
+
+    cleanup();
+  });
 });
 
 
