@@ -78,6 +78,11 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
     });
+    if (typeof registration.update === 'function') {
+      registration.update().catch((err) => {
+        console.warn('No se pudo actualizar el Service Worker en segundo plano:', err);
+      });
+    }
     return registration;
   } catch (error) {
     console.warn('Registro de Service Worker omitido o no soportado:', error);

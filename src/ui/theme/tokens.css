@@ -68,7 +68,15 @@
 }
 
 .safe-header-top {
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.875rem);
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 0.875rem), 1rem);
+}
+
+/* En iOS WebKit (iPhone PWA), garantizar que todas las cabeceras queden fuera
+   de la zona superior de difuminado del sistema (Dynamic Island / barra de estado ~60px) */
+@supports (-webkit-touch-callout: none) {
+  .safe-header-top {
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 1rem), 3.75rem);
+  }
 }
 
 .safe-dock-bottom {
@@ -87,19 +95,19 @@
   padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1rem);
 }
 
-/* Glassmorphism con soporte forzado para WebKit iOS Safari */
+/* Superficies nítidas sin difuminado (evita letras borrosas en WebKit iOS) */
 .glass-panel {
-  background-color: rgba(255, 255, 255, 0.65) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  backdrop-filter: blur(16px) !important;
-  border: 1px solid var(--color-surface-glass-border);
+  background-color: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--color-border-subtle);
 }
 
 .glass-dock {
-  background-color: rgba(255, 255, 255, 0.68) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid var(--color-surface-glass-border);
+  background-color: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--color-border-subtle);
 }
 
 /* Prevent elastic bounce on iOS Safari and guarantee full viewport coverage */
@@ -128,19 +136,17 @@ html, body {
   height: 100dvh;
 }
 
-/* Transiciones fluidas entre pestañas */
+/* Transiciones fluidas entre pestañas (sin transform residual para evitar rasterizado borroso en iOS) */
 .view-enter {
-  animation: viewSlideIn 0.25s cubic-bezier(0.2, 0.0, 0, 1.0) forwards;
+  animation: viewSlideIn 0.18s ease-out;
 }
 
 @keyframes viewSlideIn {
   from {
-    opacity: 0;
-    transform: translateY(6px);
+    opacity: 0.6;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
