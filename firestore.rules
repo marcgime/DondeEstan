@@ -63,6 +63,12 @@ service cloud.firestore {
         allow update: if false; // Mensajes inmutables
         allow delete: if isAdmin();
       }
+
+      // Subcolección de viajes de GuIA
+      match /trips/{tripId} {
+        allow read, create, update: if isActiveMember() || isAdmin();
+        allow delete: if isActiveMember() || isAdmin();
+      }
     }
   }
 }

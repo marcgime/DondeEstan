@@ -16,6 +16,7 @@ export interface Group {
   name: string;
   created_at: number;
   created_by: string;
+  guia_enabled?: boolean;
 }
 
 

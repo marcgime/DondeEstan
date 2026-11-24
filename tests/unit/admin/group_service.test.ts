@@ -112,9 +112,22 @@ describe('GroupService', () => {
           name: 'Familia',
           created_at: 1000,
           created_by: 'admin-1',
+          guia_enabled: false,
         },
       ]);
       expect(typeof unsub).toBe('function');
+    });
+  });
+
+  describe('setGroupGuiaEnabled', () => {
+    it('debe rechazar ID de grupo vacío', async () => {
+      await expect(service.setGroupGuiaEnabled('', true)).rejects.toThrow(
+        'ID de grupo no válido.'
+      );
+    });
+
+    it('debe actualizar el campo guia_enabled en Firestore', async () => {
+      await expect(service.setGroupGuiaEnabled('grp-1', true)).resolves.not.toThrow();
     });
   });
 

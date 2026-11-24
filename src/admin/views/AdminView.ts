@@ -339,7 +339,23 @@ export function renderAdminView(
                 <p class="text-[0.75rem] text-text-secondary">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
               </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- Botón Toggle GuIA -->
+              <button 
+                type="button"
+                data-toggle-guia-group-id="${g.id}"
+                data-toggle-guia-current="${g.guia_enabled ? 'true' : 'false'}"
+                class="btn-toggle-guia px-2.5 py-1 rounded-full text-[0.7rem] font-bold transition-all shadow-xs flex items-center gap-1 ${
+                  g.guia_enabled
+                    ? 'bg-status-online text-white hover:opacity-90'
+                    : 'bg-surface-elevated text-text-disabled hover:text-text-primary'
+                }"
+                title="${g.guia_enabled ? 'Deshabilitar pestaña GuIA para este grupo' : 'Habilitar pestaña GuIA para este grupo'}"
+              >
+                <span>🧭</span>
+                <span>${g.guia_enabled ? 'GuIA On' : 'GuIA Off'}</span>
+              </button>
+
               <button 
                 data-delete-group-id="${g.id}"
                 data-delete-group-name="${escapeHtml(g.name)}"
@@ -355,6 +371,21 @@ export function renderAdminView(
         `;
       })
       .join('');
+
+    // Bind toggle GuIA por grupo
+    listEl.querySelectorAll('.btn-toggle-guia').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const gid = (btn as HTMLElement).dataset.toggleGuiaGroupId;
+        const currentVal = (btn as HTMLElement).dataset.toggleGuiaCurrent === 'true';
+        if (!gid) return;
+
+        try {
+          await groupService.setGroupGuiaEnabled(gid, !currentVal);
+        } catch (err) {
+          alert(err instanceof Error ? err.message : 'Error al modificar estado de GuIA.');
+        }
+      });
+    });
 
     // Bind eliminación de grupos
     listEl.querySelectorAll('.btn-delete-group').forEach((btn) => {

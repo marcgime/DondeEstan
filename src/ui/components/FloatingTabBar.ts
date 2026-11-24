@@ -1,9 +1,10 @@
 import { triggerHaptic } from '../utils/haptics';
 
-export type FloatingTabId = 'map' | 'chat' | 'profile';
+export type FloatingTabId = 'map' | 'guia' | 'chat' | 'profile';
 
 export interface FloatingTabBarOptions {
   activeTab: FloatingTabId;
+  showGuiaTab?: boolean;
   onNavigateTab?: (tab: FloatingTabId) => void;
   onActiveTabClick?: () => void;
   inactivityMs?: number;
@@ -18,6 +19,7 @@ export function renderFloatingTabBar(
 ): () => void {
   const {
     activeTab,
+    showGuiaTab = false,
     onNavigateTab,
     onActiveTabClick,
     inactivityMs = DEFAULT_TAB_INACTIVITY_MS,
@@ -55,6 +57,28 @@ export function renderFloatingTabBar(
           </svg>
           <span class="dock-tab-label">Mapa</span>
         </button>
+
+        ${
+          showGuiaTab
+            ? `
+        <!-- GuIA Tab -->
+        <button
+          type="button"
+          id="nav-btn-guia"
+          data-tab="guia"
+          aria-label="GuIA"
+          ${activeTab === 'guia' ? 'aria-current="page"' : ''}
+          class="${getTabButtonClass('guia')}"
+        >
+          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5l-2.5 6-6 2.5 2.5-6 6-2.5z" />
+          </svg>
+          <span class="dock-tab-label">GuIA</span>
+        </button>
+        `
+            : ''
+        }
 
         <!-- Chat Tab -->
         <button

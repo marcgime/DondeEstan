@@ -6,7 +6,7 @@ import { loadGoogleMaps } from '../maps_loader';
 import { FamilyMapService } from '../map_service';
 import { LeafletFamilyMapService } from '../leaflet_map_service';
 import { renderDraggableBottomSheet } from '../components/DraggableBottomSheet';
-import { renderFloatingTabBar } from '../../ui/components/FloatingTabBar';
+import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import type { GeolocationTracker } from '../tracker';
 import type { GroupService } from '../../admin/group_service';
@@ -19,7 +19,7 @@ export interface MapViewOptions {
   tracker: GeolocationTracker;
   groupService?: GroupService;
   currentUser?: UserProfile;
-  onNavigateTab?: (tab: 'map' | 'chat' | 'profile') => void;
+  onNavigateTab?: (tab: FloatingTabId) => void;
   onLogout?: () => Promise<void>;
 }
 
@@ -244,6 +244,7 @@ export function renderMapView(
     slot.querySelector('#select-active-group')?.addEventListener('change', (e) => {
       activeGroupId = (e.target as HTMLSelectElement).value;
       triggerHaptic('light');
+      updateTabBar();
       if (showAll) {
         selectedMemberUids.clear();
         getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
@@ -461,6 +462,7 @@ export function renderMapView(
         groupsList
       );
       renderGroupSelector();
+      updateTabBar();
       if (showAll) {
         getGroupMembers().forEach((m) => selectedMemberUids.add(m.uid));
       }
@@ -561,18 +563,33 @@ export function renderMapView(
 
   // Navegación Bottom Dock (auto-compacto a los 4s + onda efecto agua 0.5s)
   const dockSlot = container.querySelector('#map-dock-slot') as HTMLElement | null;
-  const cleanupTabBar = dockSlot
-    ? renderFloatingTabBar(dockSlot, {
-        activeTab: 'map',
-        onNavigateTab: options.onNavigateTab,
-        onActiveTabClick: () => {
-          if (contactsWrapper) {
-            contactsWrapper.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-          autoFitVisibleMembers();
-        },
-      })
-    : null;
+  let cleanupTabBar: (() => void) | null = null;
+
+  function updateTabBar(): void {
+    if (!dockSlot) return;
+    if (cleanupTabBar) {
+      cleanupTabBar();
+      cleanupTabBar = null;
+    }
+    const showGuia =
+      activeGroupId === 'all'
+        ? accessibleGroups.some((g) => g.guia_enabled)
+        : Boolean(accessibleGroups.find((g) => g.id === activeGroupId)?.guia_enabled);
+
+    cleanupTabBar = renderFloatingTabBar(dockSlot, {
+      activeTab: 'map',
+      showGuiaTab: showGuia,
+      onNavigateTab: options.onNavigateTab,
+      onActiveTabClick: () => {
+        if (contactsWrapper) {
+          contactsWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        autoFitVisibleMembers();
+      },
+    });
+  }
+
+  updateTabBar();
 
   // Retornar función de limpieza
   return () => {

@@ -14,6 +14,8 @@ import { renderMapView } from './location/views/MapView';
 import { FamilyChatService, renderChatView } from './chat';
 import { ProfileService, renderProfileView } from './profile';
 import { AdminService, GroupService, renderAdminView } from './admin';
+import { GuiaService, renderGuiaView } from './guia';
+import type { FloatingTabId } from './ui/components/FloatingTabBar';
 import { registerServiceWorker } from './core/pwa';
 import { checkAndRenderIosInstallPrompt } from './ui/components/PwaInstallPrompt';
 
@@ -38,11 +40,12 @@ function init(): void {
   const groupService = new GroupService(db);
   const profileService = new ProfileService(db);
   const adminService = new AdminService(db);
+  const guiaService = new GuiaService(db);
 
   let profileUnsubscribe: Unsubscribe | null = null;
   let activeCleanup: (() => void) | null = null;
   let currentTracker: GeolocationTracker | null = null;
-  let currentTab: 'map' | 'chat' | 'profile' = 'map';
+  let currentTab: FloatingTabId = 'map';
   let isAppInitialized = false;
   let latestProfile: UserProfile | null = null;
 
@@ -145,6 +148,19 @@ function init(): void {
                 uid: activeUser.uid,
                 db,
                 tracker: currentTracker!,
+                groupService,
+                currentUser: currentProfile,
+                onNavigateTab: (tab) => {
+                  currentTab = tab;
+                  renderTab();
+                },
+                onLogout: async () => {
+                  await authService.logout();
+                },
+              });
+            } else if (currentTab === 'guia') {
+              activeCleanup = renderGuiaView(appContainer!, {
+                guiaService,
                 groupService,
                 currentUser: currentProfile,
                 onNavigateTab: (tab) => {

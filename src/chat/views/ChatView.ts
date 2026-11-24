@@ -3,7 +3,7 @@ import type { ChatMessage, ChatSender } from '../types';
 import type { GroupService } from '../../admin/group_service';
 import type { Group } from '../../admin/types';
 import type { UserProfile } from '../../auth/types';
-import { renderFloatingTabBar } from '../../ui/components/FloatingTabBar';
+import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 
 export interface ChatViewOptions {
@@ -11,7 +11,7 @@ export interface ChatViewOptions {
   chatService: FamilyChatService;
   groupService?: GroupService;
   userProfile?: UserProfile;
-  onNavigateTab: (tab: 'map' | 'chat' | 'profile') => void;
+  onNavigateTab: (tab: FloatingTabId) => void;
   onLogout?: () => Promise<void>;
 }
 
@@ -171,6 +171,7 @@ export function renderChatView(
       if (newGroupId !== activeGroupId) {
         activeGroupId = newGroupId;
         triggerHaptic('light');
+        updateTabBar();
         subscribeToCurrentChatGroup();
       }
     });
@@ -245,6 +246,7 @@ export function renderChatView(
         activeGroupId = accessibleGroups[0].id;
       }
       renderChatHeader();
+      updateTabBar();
       subscribeToCurrentChatGroup();
 
       // Precarga en segundo plano de los demás grupos para cambio instantáneo
@@ -282,20 +284,34 @@ export function renderChatView(
 
   // Navegación Bottom Dock (auto-compacto a los 4s + onda efecto agua 0.5s)
   const dockSlot = container.querySelector('#chat-dock-slot') as HTMLElement | null;
-  const cleanupTabBar = dockSlot
-    ? renderFloatingTabBar(dockSlot, {
-        activeTab: 'chat',
-        onNavigateTab,
-        onActiveTabClick: () => {
-          if (messagesContainer) {
-            messagesContainer.scrollTo({
-              top: messagesContainer.scrollHeight,
-              behavior: 'smooth',
-            });
-          }
-        },
-      })
-    : null;
+  let cleanupTabBar: (() => void) | null = null;
+
+  function updateTabBar(): void {
+    if (!dockSlot) return;
+    if (cleanupTabBar) {
+      cleanupTabBar();
+      cleanupTabBar = null;
+    }
+    const showGuia = activeGroupId
+      ? Boolean(accessibleGroups.find((g) => g.id === activeGroupId)?.guia_enabled)
+      : accessibleGroups.some((g) => g.guia_enabled);
+
+    cleanupTabBar = renderFloatingTabBar(dockSlot, {
+      activeTab: 'chat',
+      showGuiaTab: showGuia,
+      onNavigateTab,
+      onActiveTabClick: () => {
+        if (messagesContainer) {
+          messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth',
+          });
+        }
+      },
+    });
+  }
+
+  updateTabBar();
 
   // Retornar función de limpieza
   return () => {

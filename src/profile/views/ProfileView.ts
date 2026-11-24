@@ -2,7 +2,7 @@ import type { ProfileService } from '../profile_service';
 import { compressAndCropAvatar } from '../image_compressor';
 import type { UserProfile } from '../../auth/types';
 import type { Group, GroupService } from '../../admin';
-import { renderFloatingTabBar } from '../../ui/components/FloatingTabBar';
+import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import {
   UI_SCALE_OPTIONS,
@@ -16,7 +16,7 @@ export interface ProfileViewOptions {
   profile: UserProfile;
   profileService: ProfileService;
   groupService?: GroupService;
-  onNavigateTab: (tab: 'map' | 'chat' | 'profile') => void;
+  onNavigateTab: (tab: FloatingTabId) => void;
   onOpenAdminPanel?: () => void;
   onLogout: () => Promise<void>;
 }
@@ -288,11 +288,17 @@ export function renderProfileView(
     bindEvents();
   }
 
-  function bindEvents(): void {
+  function renderTabBarProfile(): void {
     const dockSlot = container.querySelector('#profile-dock-slot') as HTMLElement | null;
     if (dockSlot) {
+      if (cleanupTabBar) {
+        cleanupTabBar();
+        cleanupTabBar = null;
+      }
+      const showGuia = userGroups.some((g) => g.guia_enabled);
       cleanupTabBar = renderFloatingTabBar(dockSlot, {
         activeTab: 'profile',
+        showGuiaTab: showGuia,
         zIndexClass: 'z-[1100]',
         onNavigateTab,
         onActiveTabClick: () => {
@@ -301,6 +307,10 @@ export function renderProfileView(
         },
       });
     }
+  }
+
+  function bindEvents(): void {
+    renderTabBarProfile();
 
     container.querySelector('#profile-btn-logout')?.addEventListener('click', async () => {
       triggerHaptic('light');
@@ -405,6 +415,7 @@ export function renderProfileView(
     groupsUnsubscribe = groupService.subscribeToGroups((allGroups) => {
       userGroups = groupService.getUserGroups(profile, allGroups);
       groupsLoaded = true;
+      renderTabBarProfile();
       const groupsEl = container.querySelector('#profile-user-groups');
       if (groupsEl) {
         groupsEl.innerHTML = renderUserGroupsContent();

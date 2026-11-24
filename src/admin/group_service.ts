@@ -92,6 +92,7 @@ export class GroupService {
             name: data.name || 'Grupo',
             created_at: data.created_at || 0,
             created_by: data.created_by || '',
+            guia_enabled: Boolean(data.guia_enabled),
           };
         });
         onGroups(groups);
@@ -104,6 +105,19 @@ export class GroupService {
         }
       }
     );
+  }
+
+  /**
+   * Habilita o deshabilita la visualización del módulo de GuIA para un grupo.
+   */
+  async setGroupGuiaEnabled(groupId: string, enabled: boolean): Promise<void> {
+    if (!groupId) {
+      throw new Error('ID de grupo no válido.');
+    }
+    const groupRef = doc(this.db, 'groups', groupId);
+    await updateDoc(groupRef, {
+      guia_enabled: Boolean(enabled),
+    });
   }
 
   /**
