@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GuIA — TripCraft Travel Planning PWA</title>
+
+  <!-- PWA & Apple iOS Support -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#FF6B5B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GuIA">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'coral-pop': '#FF6B5B',
+            'coral-hover': '#FF8A7D',
+            'coral-deep': '#AE3026',
+            'mint-fixed': '#D3EBE1',
+            'mint-accent': '#1F6A57',
+            'gold-accent': '#F9C846',
+            'periwinkle': '#7C89FF',
+          },
+          fontFamily: {
+            space: ["'Space Grotesk'", "sans-serif"],
+            inter: ["'Inter'", "system-ui", "sans-serif"],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #F8F9FA;
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
+    }
+    .font-space { font-family: 'Space Grotesk', sans-serif; }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.80);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen antialiased flex flex-col">
+
+  <!-- Header Global Glassmorphism -->
+  <header class="glass-nav border-b border-slate-200/80 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateToCatalog()">
+        <div class="w-10 h-10 rounded-2xl bg-coral-pop flex items-center justify-center text-white font-space font-black text-xl shadow-[0_4px_16px_rgba(255,107,91,0.35)] active:scale-95 transition-all">
+          G
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl font-black font-space tracking-wider uppercase text-slate-900">GuIA</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-space uppercase font-bold bg-mint-fixed text-mint-accent border border-mint-accent/20">
+              TRIPCRAFT PWA
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Itinerarios cinéticos y bitácora táctil en ruta</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button onclick="navigateToCatalog()" id="nav-btn-catalog" class="text-xs font-space uppercase font-bold px-3.5 py-1.5 rounded-full text-slate-700 hover:bg-slate-100 transition hidden sm:inline-block">
+          Mis Viajes
+        </button>
+        <div id="storage-status-badge" class="flex items-center space-x-2 text-xs font-space uppercase font-bold text-mint-accent bg-mint-fixed/50 px-3 py-1 rounded-full border border-mint-accent/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="storage-status-text">PWA Sync</span>
+        </div>
+        <button id="btn-open-modal" class="inline-flex items-center px-4 py-2 bg-coral-pop hover:bg-coral-hover text-white text-xs font-space uppercase font-bold rounded-full shadow-[0_4px_16px_rgba(255,107,91,0.35)] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-coral-pop focus:ring-offset-2">
+          + Nuevo Viaje
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal con Vistas Dinámicas -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+    <!-- 1. VISTA: CATÁLOGO ("Mis Viajes") -->
+    <section id="view-catalog" class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-5">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black font-space uppercase text-slate-900 tracking-tight">Mis Viajes</h1>
+          <p class="text-sm text-slate-500 mt-1">Explora tus rutas planificadas o consulta el cronograma operativo diario.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="catalog-count-badge" class="px-3.5 py-1 bg-mint-fixed text-mint-accent text-xs font-space uppercase font-bold rounded-full border border-mint-accent/20">
+            0 viajes
+          </span>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Viajes -->
+      <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Tarjetas dinámicas inyectadas por JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="catalog-empty" class="hidden text-center py-16 px-4 glass-card rounded-3xl border-2 border-dashed border-slate-300">
+        <div class="w-16 h-16 mx-auto mb-4 bg-coral-pop/10 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+          🧭
+        </div>
+        <h3 class="text-lg font-space uppercase font-bold text-slate-900 mb-1">Aún no tienes ningún viaje planificado</h3>
+        <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
+          Diseña tu primera experiencia a medida con la asistencia inteligente y el cronograma dinámico de GuIA.
+        </p>
+        <button onclick="openNewTripModal()" class="inline-flex items-center px-5 py-2.5 bg-coral-pop hover:bg-coral-hover text-white text-xs font-space uppercase font-bold rounded-full shadow-[0_4px_16px_rgba(255,107,91,0.35)] active:scale-95 transition-all">
+          + Crear mi primer viaje
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. VISTA: DETALLE DE ITINERARIO (Franjas y Bitácora) -->
+    <section id="view-detail" class="hidden space-y-6">
+      
+      <!-- Barra superior de navegación / Retorno al catálogo -->
+      <div class="flex items-center justify-between">
+        <button onclick="navigateToCatalog()" class="inline-flex items-center space-x-2 text-xs font-space uppercase font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200/80 hover:bg-slate-50 px-4 py-2 rounded-full transition shadow-sm">
+          <span>&larr;</span>
+          <span>Volver a Mis Viajes</span>
+        </button>
+        <div class="flex items-center space-x-2">
+          <button id="btn-detail-delete" class="px-3.5 py-1.5 text-xs font-space uppercase font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 rounded-full shadow-sm transition">
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero / Resumen del Itinerario Activo -->
+      <div id="hero-banner" class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden text-white border border-slate-700/50 min-h-[260px] sm:min-h-[300px] flex flex-col justify-end">
+        <div id="hero-bg-container" class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-zinc-900"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent"></div>
+        </div>
+        <div class="relative z-10">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <div>
+              <span class="inline-block px-3 py-1 bg-coral-pop/20 text-coral-pop border border-coral-pop/30 rounded-full text-[10px] font-space uppercase font-bold tracking-wider mb-2">
+                Itinerario Activo
+              </span>
+              <h1 id="hero-destino" class="text-3xl sm:text-4xl font-black font-space uppercase tracking-tight">Destino</h1>
+              <p id="hero-ubicacion" class="text-slate-300 text-sm mt-1">Alojamiento: ...</p>
+            </div>
+            <div class="text-right bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20">
+              <div class="text-xs text-slate-300 font-space uppercase font-medium">Presupuesto Estimado</div>
+              <div id="hero-presupuesto" class="text-2xl font-black font-space text-white">— €</div>
+              <div class="text-[11px] text-mint-fixed font-space uppercase font-bold">Por persona</div>
+            </div>
+          </div>
+          <p id="hero-resumen" class="text-slate-200 text-sm sm:text-base max-w-3xl leading-relaxed">
+            Resumen del estilo de viaje.
+          </p>
+        </div>
+      </div>
+
+      <!-- Selector de Días y Timeline -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Columna Izquierda: Parrilla Diaria -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900">Programación Diaria</h2>
+              <div id="selected-day-date" class="text-sm font-medium text-slate-500 mt-0.5"></div>
+            </div>
+            <div id="tabs-dias" class="flex flex-wrap gap-2">
+              <!-- Pestañas de días dinámicas -->
+            </div>
+          </div>
+
+          <div id="timeline-container" class="space-y-4">
+            <!-- Tarjetas de franjas temporales inyectadas por JS -->
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Información de Itinerario y Privacidad -->
+        <div class="space-y-6">
+          <div class="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-900 mb-2 flex items-center space-x-2">
+              <span>✈️</span>
+              <span>Itinerario Personalizado</span>
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+              Planificación generada con asistencia inteligente de GuIA, optimizada según tus preferencias y horarios de estancia.
+            </p>
+            <div class="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Moneda de referencia</span>
+              <span class="font-bold text-slate-800">Euros (€)</span>
+            </div>
+          </div>
+
+          <!-- Privacidad & Gobernanza -->
+          <div class="bg-blue-50 rounded-xl border border-blue-200/60 p-4 text-xs text-blue-900 leading-relaxed">
+            <p class="font-bold flex items-center space-x-1 mb-1">
+              <span>🛡️ Garantía de Privacidad GuIA</span>
+            </p>
+            <p>Tus itinerarios y preferencias se conservan en tu almacenamiento local cifrado. Cero analíticas invasivas ni telemetría externa.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Nuevo Itinerario -->
+  <div id="modal-nuevo" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900">Diseñar Itinerario con IA</h3>
+          <p class="text-xs text-slate-500">Configura tus preferencias para armar tu plan a medida</p>
+        </div>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-nuevo-viaje" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Destino y zona de alojamiento</label>
+          <input type="text" id="input-destino" required placeholder="Ej. Granada, zona Albaicín" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <!-- Selector de Rango de Fechas Integrado (CMP-06) -->
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Fechas del Viaje (Check-in / Check-out)</label>
+          <div class="relative">
+            <button type="button" id="btn-date-range-trigger" aria-haspopup="dialog" aria-expanded="false" class="w-full flex items-center justify-between px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl hover:border-[#FF6B5B] focus:ring-2 focus:ring-[#FF6B5B] focus:border-[#FF6B5B] bg-slate-50/50 hover:bg-white transition-all text-left shadow-sm">
+              <div class="flex items-center gap-2.5 text-slate-800 truncate">
+                <svg class="w-4 h-4 text-[#FF6B5B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span id="date-range-summary-text" class="font-medium text-slate-800">Selecciona las fechas de tu viaje</span>
+              </div>
+              <span class="text-xs text-slate-400 shrink-0">▼</span>
+            </button>
+
+            <!-- Popover unificado CMP-06 -->
+            <div id="popover-date-range" class="hidden absolute left-0 right-0 z-50 mt-1.5 p-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200">
+              <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                <div class="flex items-center gap-2">
+                  <button type="button" id="btn-cal-prev-month" class="p-1 hover:bg-slate-100 rounded-lg text-slate-600 font-bold transition-colors">&larr;</button>
+                  <span id="cal-current-month-label" class="text-xs font-bold text-slate-900 tracking-wide uppercase">Noviembre 2026</span>
+                  <button type="button" id="btn-cal-next-month" class="p-1 hover:bg-slate-100 rounded-lg text-slate-600 font-bold transition-colors">&rarr;</button>
+                </div>
+                <span id="cal-selection-hint" class="text-[11px] text-[#FF6B5B] font-semibold bg-red-50 px-2 py-0.5 rounded-full">1. Elige entrada</span>
+              </div>
+
+              <!-- Días de la semana -->
+              <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 mb-1">
+                <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
+              </div>
+
+              <!-- Grid interactivo de días -->
+              <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selección Horaria para Llegada y Salida (Pasos de 15 min) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+          <div class="min-w-0">
+            <div class="flex items-center justify-between mb-1 gap-2">
+              <label class="block text-xs font-medium text-slate-700 truncate">Hora de Llegada</label>
+              <span class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded shrink-0">Pasos 15 min</span>
+            </div>
+            <input type="time" id="input-hora-llegada" step="900" value="10:00" required class="w-full min-w-0 box-border px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-coral-pop focus:border-coral-pop outline-none bg-white">
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center justify-between mb-1 gap-2">
+              <label class="block text-xs font-medium text-slate-700 truncate">Hora de Salida</label>
+              <span class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded shrink-0">Pasos 15 min</span>
+            </div>
+            <input type="time" id="input-hora-salida" step="900" value="18:00" required class="w-full min-w-0 box-border px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-coral-pop focus:border-coral-pop outline-none bg-white">
+          </div>
+        </div>
+
+        <!-- Campos ocultos sincronizados de llegada y salida para el envío del formulario -->
+        <input type="hidden" id="input-llegada" name="llegada" required>
+        <input type="hidden" id="input-salida" name="salida" required>
+
+        <div class="border-t border-slate-100 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Parámetros del Agente IA (Escala 1 a 5)</h4>
+            <span class="text-[11px] text-blue-600 font-medium">10 Dimensiones de Preferencia</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <!-- 1. Entorno -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>1. Entorno (Naturaleza ↔ Ciudad)</span>
+                <span id="val-entorno" class="font-bold text-blue-600">3</span>
+              </div>
+              <input type="range" id="pref-entorno" min="1" max="5" value="3" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 2. Planificación -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>2. Planificación (Improvisación ↔ Detalle)</span>
+                <span id="val-planificacion" class="font-bold text-blue-600">4</span>
+              </div>
+              <input type="range" id="pref-planificacion" min="1" max="5" value="4" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 3. Ritmo -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>3. Ritmo (Slow Travel ↔ Non-stop)</span>
+                <span id="val-ritmo" class="font-bold text-blue-600">3</span>
+              </div>
+              <input type="range" id="pref-ritmo" min="1" max="5" value="3" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 4. Cultural vs Ocio -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>4. Enfoque (Relax ↔ Historia Profunda)</span>
+                <span id="val-cultural" class="font-bold text-blue-600">4</span>
+              </div>
+              <input type="range" id="pref-cultural" min="1" max="5" value="4" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 5. Gastronomía -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>5. Gastronomía (Rápido ↔ Gourmet)</span>
+                <span id="val-gastro" class="font-bold text-blue-600">4</span>
+              </div>
+              <input type="range" id="pref-gastro" min="1" max="5" value="4" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 6. Presupuesto -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>6. Presupuesto (Backpacker ↔ Premium)</span>
+                <span id="val-presupuesto" class="font-bold text-blue-600">3</span>
+              </div>
+              <input type="range" id="pref-presupuesto" min="1" max="5" value="3" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 7. Movilidad -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>7. Movilidad (A pie ↔ Chofer/Privado)</span>
+                <span id="val-movilidad" class="font-bold text-blue-600">2</span>
+              </div>
+              <input type="range" id="pref-movilidad" min="1" max="5" value="2" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 8. Social -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>8. Social (Recóndito ↔ Popular/Top)</span>
+                <span id="val-social" class="font-bold text-blue-600">3</span>
+              </div>
+              <input type="range" id="pref-social" min="1" max="5" value="3" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 9. Vida Nocturna -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>9. Horario (Madrugador ↔ Vida Nocturna)</span>
+                <span id="val-nocturno" class="font-bold text-blue-600">3</span>
+              </div>
+              <input type="range" id="pref-nocturno" min="1" max="5" value="3" class="w-full accent-blue-600">
+            </div>
+
+            <!-- 10. Actividad Física -->
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div class="flex justify-between text-slate-700 mb-1">
+                <span>10. Físico (Cero esfuerzo ↔ Multideporte)</span>
+                <span id="val-fisico" class="font-bold text-blue-600">2</span>
+              </div>
+              <input type="range" id="pref-fisico" min="1" max="5" value="2" class="w-full accent-blue-600">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-generar" class="w-full py-3 bg-coral-pop hover:bg-coral-hover text-white font-space uppercase font-bold text-xs rounded-full shadow-[0_4px_16px_rgba(255,107,91,0.35)] transition flex items-center justify-center space-x-2">
+          <span>Generar Itinerario con Agente IA</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar Viaje -->
+  <div id="modal-editar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <h3 class="text-lg font-bold text-slate-900">Editar Itinerario</h3>
+        <button id="btn-close-modal-editar" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-editar-viaje" class="space-y-4">
+        <input type="hidden" id="edit-itinerary-id">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Destino</label>
+          <input type="text" id="edit-destino" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-coral-pop outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Zona de Alojamiento</label>
+          <input type="text" id="edit-alojamiento" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-coral-pop outline-none">
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeEditModal()" class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 bg-coral-pop hover:bg-coral-hover text-white text-xs font-semibold rounded-lg shadow transition">
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Confirmar Eliminación -->
+  <div id="modal-eliminar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+        ⚠️
+      </div>
+      <h3 class="text-base font-bold text-slate-900 mb-1">¿Eliminar este viaje?</h3>
+      <p class="text-xs text-slate-500 mb-5">Esta acción eliminará el itinerario y sus registros de bitácora de forma permanente.</p>
+      <input type="hidden" id="delete-itinerary-id">
+
+      <div class="flex justify-center space-x-3">
+        <button onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+          Cancelar
+        </button>
+        <button onclick="executeDeleteTrip()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow transition">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // Capa de Almacenamiento Híbrida (API First con Fallback LocalStorage)
+    // -------------------------------------------------------------------------
+    const LS_ITINERARIES_KEY = 'guia_itineraries_v1';
+    const LS_EXPENSES_KEY = 'guia_expenses_v1';
+
+    const DEMO_SEED_ITINERARY = {
+      id: 'itinerary-granada-demo',
+      metadatos_itinerario: {
+        destino: 'Granada',
+        alojamiento_ubicacion: 'Centro / Albaicín',
+        duracion_dias: 3,
+        resumen_estilo: 'Itinerario cultural equilibrado con alta gastronomía local',
+      },
+      plan_diario: [
+        {
+          dia_numero: 1,
+          fecha: '2026-11-10',
+          descripcion_general_dia: 'Llegada, paseo por el centro histórico y primeras tapas',
+          franjas: {
+            manana: {
+              actividades: 'Llegada a Granada, check-in en el alojamiento y orientación inicial.',
+              logistica_transporte: 'Paseo a pie desde la estación o taxi local.',
+              sugerencia_gastronomica: 'Churros con chocolate en Plaza Bib-Rambla.',
+            },
+            medio_dia: {
+              actividades: 'Visita a la Catedral de Granada y la Capilla Real.',
+              logistica_transporte: 'Recorrido 100% peatonal por el centro.',
+              sugerencia_gastronomica: 'Tapas tradicionales en Calle Navas (Bodegas Castañeda).',
+            },
+            tarde: {
+              actividades: 'Subida al Albaicín, Carrera del Darro y Mirador de San Nicolás al atardecer.',
+              logistica_transporte: 'Caminata con cuestas o microbús C31/C32.',
+              sugerencia_gastronomica: 'Té moruno y dulces árabes en Calle Calderería Nueva.',
+            },
+            noche: {
+              actividades: 'Paseo nocturno por el Paseo de los Tristes con vistas a la Alhambra iluminada.',
+              logistica_transporte: 'A pie por el bajo Albaicín.',
+              sugerencia_gastronomica: 'Cena con vistas en el Mirador de Morayma.',
+            },
+          },
+        },
+        {
+          dia_numero: 2,
+          fecha: '2026-11-11',
+          descripcion_general_dia: 'Jornada completa en el Conjunto Monumental de la Alhambra y Generalife',
+          franjas: {
+            manana: {
+              actividades: 'Entrada a Palacios Nazaríes, Patio de los Leones y Alcazaba militar.',
+              logistica_transporte: 'Cuesta de Gomérez a pie o microbús C30.',
+              sugerencia_gastronomica: 'Tentempié ligero en los jardines exteriores.',
+            },
+            medio_dia: {
+              actividades: 'Paseo por el Palacio de Carlos V y el Museo de la Alhambra.',
+              logistica_transporte: 'Dentro del recinto monumental.',
+              sugerencia_gastronomica: 'Almuerzo en Parador de San Francisco.',
+            },
+            tarde: {
+              actividades: 'Jardines del Generalife y acequias nazaríes.',
+              logistica_transporte: 'A pie por las terrazas del Generalife.',
+              sugerencia_gastronomica: 'Merienda artesanal en el Realejo.',
+            },
+            noche: {
+              actividades: 'Ruta nocturna de tapas por el barrio judío del Realejo.',
+              logistica_transporte: 'Paseo peatonal relajado.',
+              sugerencia_gastronomica: 'Tapas variadas en Campo del Príncipe.',
+            },
+          },
+        },
+        {
+          dia_numero: 3,
+          fecha: '2026-11-12',
+          descripcion_general_dia: 'Cuevas del Sacromonte, Carmen de los Mártires y compras de despedida',
+          franjas: {
+            manana: {
+              actividades: 'Museo Cuevas del Sacromonte y miradores altos de la colina.',
+              logistica_transporte: 'Microbús C34 o caminata panorámica.',
+              sugerencia_gastronomica: 'Desayuno andaluz con pan de pueblo y tomate.',
+            },
+            medio_dia: {
+              actividades: 'Descenso hacia Plaza Nueva y compras de productos locales en la Alcaicería.',
+              logistica_transporte: 'A pie.',
+              sugerencia_gastronomica: 'Plato alpujarreño o fritura andaluza.',
+            },
+            tarde: {
+              actividades: 'Paseo tranquilo por los jardines del Carmen de los Mártires.',
+              logistica_transporte: 'A pie o taxi.',
+              sugerencia_gastronomica: 'Café de despedida antes del traslado de salida.',
+            },
+            noche: {
+              actividades: 'Cierre del viaje y salida hacia el destino de origen.',
+              logistica_transporte: 'Transporte hacia estación/aeropuerto según horario de salida.',
+              sugerencia_gastronomica: 'Snack de viaje ligero.',
+            },
+          },
+        },
+      ],
+    };
+
+    const DEMO_SEED_EXPENSES = [
+      {
+        id: 'exp-demo-1',
+        itineraryId: 'itinerary-granada-demo',
+        dia_numero: 1,
+        concepto: 'Tapas en Calle Navas',
+        importe: 18.5,
+        moneda: 'EUR',
+        categoria: 'comida'
+      },
+      {
+        id: 'exp-demo-2',
+        itineraryId: 'itinerary-granada-demo',
+        dia_numero: 2,
+        concepto: 'Entrada General Alhambra',
+        importe: 38.0,
+        moneda: 'EUR',
+        categoria: 'actividad'
+      }
+    ];
+
+    function resolveDayDate(itinerary, day, dayIndex) {
+      if (day && day.fecha && day.fecha !== 'YYYY-MM-DD' && !day.fecha.includes('YYYY') && /^d{4}-d{2}-d{2}/.test(day.fecha)) {
+        return day.fecha;
+      }
+      if (itinerary && Array.isArray(itinerary.plan_diario)) {
+        const validDay = itinerary.plan_diario.find(d => d.fecha && d.fecha !== 'YYYY-MM-DD' && !d.fecha.includes('YYYY') && /^d{4}-d{2}-d{2}/.test(d.fecha));
+        if (validDay) {
+          const baseTime = new Date(validDay.fecha.slice(0, 10) + 'T00:00:00Z').getTime();
+          const dayNum = (day && typeof day.dia_numero === 'number') ? day.dia_numero : (dayIndex + 1);
+          const offset = (dayNum - validDay.dia_numero) * 86400000;
+          const res = new Date(baseTime + offset).toISOString().slice(0, 10);
+          if (day) day.fecha = res;
+          return res;
+        }
+      }
+      const startStr = (itinerary && (itinerary.llegada || itinerary.metadatos_itinerario?.fecha_inicio || itinerary.createdAt)) ? (itinerary.llegada || itinerary.metadatos_itinerario?.fecha_inicio || itinerary.createdAt).slice(0, 10) : new Date().toISOString().slice(0, 10);
+      const baseTime = new Date(startStr + 'T00:00:00Z').getTime();
+      const dayNum = (day && typeof day.dia_numero === 'number') ? day.dia_numero : (dayIndex + 1);
+      const res = new Date(baseTime + (dayNum - 1) * 86400000).toISOString().slice(0, 10);
+      if (day) day.fecha = res;
+      return res;
+    }
+
+    function getLocalItineraries() {
+      try {
+        const raw = localStorage.getItem(LS_ITINERARIES_KEY);
+        if (!raw) {
+          localStorage.setItem(LS_ITINERARIES_KEY, JSON.stringify([DEMO_SEED_ITINERARY]));
+          return [DEMO_SEED_ITINERARY];
+        }
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach(it => {
+            if (it && Array.isArray(it.plan_diario)) {
+              it.plan_diario.forEach((d, idx) => {
+                resolveDayDate(it, d, idx);
+              });
+            }
+          });
+          return parsed;
+        }
+        return [DEMO_SEED_ITINERARY];
+      } catch (e) {
+        return [DEMO_SEED_ITINERARY];
+      }
+    }
+
+    function saveLocalItineraries(list) {
+      try {
+        localStorage.setItem(LS_ITINERARIES_KEY, JSON.stringify(list));
+      } catch (e) {
+        void e;
+      }
+    }
+
+    function getLocalExpenses(itineraryId) {
+      try {
+        const raw = localStorage.getItem(LS_EXPENSES_KEY);
+        let all = raw ? JSON.parse(raw) : DEMO_SEED_EXPENSES;
+        if (!raw) {
+          localStorage.setItem(LS_EXPENSES_KEY, JSON.stringify(DEMO_SEED_EXPENSES));
+        }
+        if (itineraryId) {
+          return all.filter(e => e.itineraryId === itineraryId);
+        }
+        return all;
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function addLocalExpense(expense) {
+      const all = getLocalExpenses();
+      all.push(expense);
+      try {
+        localStorage.setItem(LS_EXPENSES_KEY, JSON.stringify(all));
+      } catch (e) {
+        void e;
+      }
+    }
+
+    let isServerApiAvailable = true;
+
+    async function apiFetch(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        if (res.ok) return { ok: true, status: res.status, data: await res.json() };
+        return { ok: false, status: res.status };
+      } catch (err) {
+        isServerApiAvailable = false;
+        const badge = document.getElementById('storage-status-text');
+        if (badge) badge.innerText = 'PWA Offline';
+        return { ok: false, error: err };
+      }
+    }
+
+    function parseClientHour(isoStr) {
+      if (!isoStr) return 12;
+      const m = String(isoStr).match(/T(d{1,2}):(d{2})/);
+      if (m) return parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+      const d = new Date(isoStr);
+      return isNaN(d.getTime()) ? 12 : d.getHours() + d.getMinutes() / 60;
+    }
+
+    function determineActiveSlotsClient(dayNumber, totalDays, arrIso, depIso) {
+      const arrHour = parseClientHour(arrIso);
+      const depHour = parseClientHour(depIso);
+
+      const isArrivalDay = dayNumber === 1;
+      const isDepartureDay = dayNumber === totalDays;
+
+      let manana = true;
+      let medio_dia = true;
+      let tarde = true;
+      let noche = true;
+
+      if (isArrivalDay) {
+        manana = arrHour < 12.0;
+        medio_dia = arrHour < 15.5;
+        tarde = arrHour < 19.5;
+        noche = arrHour < 23.5;
+      }
+
+      if (isDepartureDay) {
+        if (depHour < 8.5) manana = false;
+        if (depHour < 14.5) medio_dia = false;
+        if (depHour < 18.5) tarde = false;
+        if (depHour < 21.5) noche = false;
+      }
+
+      if (!manana && !medio_dia && !tarde && !noche) {
+        if (isArrivalDay && arrHour >= 21.0) {
+          noche = true;
+        } else if (isDepartureDay && depHour <= 14.5) {
+          manana = true;
+        }
+      }
+
+      return { manana, medio_dia, tarde, noche };
+    }
+
+    // Generador determinista cliente para modo offline o Cloudflare Pages estático
+    function generateClientItinerary(request) {
+      const start = new Date(request.llegada);
+      const end = new Date(request.salida);
+      const diffTime = Math.max(end.getTime() - start.getTime(), 3600000);
+      const duracion = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      const destino = request.destino;
+      const p = request.configuracion || {};
+
+      const days = [];
+      for (let i = 1; i <= duracion; i++) {
+        const dayDate = new Date(start.getTime() + (i - 1) * 86400000).toISOString().slice(0, 10);
+        const active = determineActiveSlotsClient(i, duracion, request.llegada, request.salida);
+        const franjas = {};
+
+        if (active.manana) {
+          franjas.manana = {
+            actividades: 'Paseo panorámico y puntos de interés matutinos en ' + destino,
+            logistica_transporte: p.movilidad_transporte <= 2 ? 'Recorrido a pie' : 'Transporte público local',
+            sugerencia_gastronomica: 'Desayuno artesanal y café de especialidad local'
+          };
+        }
+        if (active.medio_dia) {
+          franjas.medio_dia = {
+            actividades: 'Visita cultural y principales monumentos de la zona',
+            logistica_transporte: 'Paseo peatonal por el distrito histórico',
+            sugerencia_gastronomica: p.prioridad_gastronomica >= 4 ? 'Menú degustación de cocina tradicional' : 'Tapas y gastronomía de mercado'
+          };
+        }
+        if (active.tarde) {
+          franjas.tarde = {
+            actividades: 'Descanso en parques o miradores al atardecer',
+            logistica_transporte: 'Desplazamiento a pie',
+            sugerencia_gastronomica: 'Merienda o snack tradicional'
+          };
+        }
+        if (active.noche) {
+          franjas.noche = {
+            actividades: 'Paseo nocturno y ambiente vibrante de la ciudad',
+            logistica_transporte: 'Paseo relajado',
+            sugerencia_gastronomica: 'Cena relajada en zona emblemática'
+          };
+        }
+
+        days.push({
+          dia_numero: i,
+          fecha: dayDate,
+          descripcion_general_dia: 'Jornada ' + i + ': Recorrido adaptado a tu horario en ' + destino,
+          franjas: franjas
+        });
+      }
+
+      const pConfort = p.presupuesto_confort || 3;
+      const pGastro = p.prioridad_gastronomica || 3;
+      const estimatedEur = (75 + pConfort * 25 + pGastro * 15) * duracion;
+
+      return {
+        id: 'itinerary-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        metadatos_itinerario: {
+          destino,
+          alojamiento_ubicacion: 'Zona céntrica seleccionada',
+          duracion_dias: duracion,
+          resumen_estilo: 'Itinerario a medida optimizado por GuIA (Ritmo: ' + (p.ritmo_viaje || 3) + '/5, Gastro: ' + (p.prioridad_gastronomica || 3) + '/5)',
+          imagen_url: request.imagen_url || null,
+          presupuesto_estimado_por_persona: estimatedEur
+        },
+        plan_diario: days,
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // Lógica de la Interfaz y Controladores
+    // -------------------------------------------------------------------------
+    let currentItineraries = [];
+    let activeItinerary = null;
+    let selectedDayIndex = 0;
+
+    function formatToLocal15Min(date) {
+      const d = new Date(date);
+      const m = d.getMinutes();
+      const rem = m % 15;
+      d.setMinutes(m + (rem === 0 ? 0 : 15 - rem));
+      d.setSeconds(0, 0);
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return year + '-' + month + '-' + day + 'T' + hours + ':' + mins;
+    }
+
+    // Inicialización y controlador del Selector de Rango de Fechas (CMP-06)
+    const monthNamesEs = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    const monthShortEs = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const weekdayNamesEs = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const weekdayShortEs = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    let calViewDate = new Date();
+    let pickerStartDate = new Date().toISOString().slice(0, 10);
+    let pickerEndDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+
+    function getDayOfWeekInfo(isoStr) {
+      if (!isoStr || isoStr === 'YYYY-MM-DD' || isoStr.includes('YYYY')) {
+        return { weekday: '', shortWeekday: '', dayNum: '', monthShort: '', formattedShort: '', formattedFull: '' };
+      }
+      const parts = isoStr.split('T')[0].split('-');
+      if (parts.length < 3) return { weekday: '', shortWeekday: '', dayNum: '', monthShort: '', formattedShort: '', formattedFull: '' };
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      if (isNaN(y) || isNaN(m) || isNaN(d)) return { weekday: '', shortWeekday: '', dayNum: '', monthShort: '', formattedShort: '', formattedFull: '' };
+      const dateObj = new Date(y, m, d);
+      const dayIdx = dateObj.getDay();
+      const weekday = weekdayNamesEs[dayIdx] || '';
+      const shortWeekday = weekdayShortEs[dayIdx] || '';
+      const monthShort = monthShortEs[m] || '';
+      const dd = String(d).padStart(2, '0');
+      const mm = String(m + 1).padStart(2, '0');
+      return {
+        weekday: weekday,
+        shortWeekday: shortWeekday,
+        dayNum: d,
+        monthShort: monthShort,
+        formattedShort: shortWeekday + ' ' + d + ' ' + monthShort,
+        formattedFull: weekday ? (weekday + ' ' + dd + '/' + mm + '/' + y) : (dd + '/' + mm + '/' + y)
+      };
+    }
+
+    function formatShortDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      return parseInt(d, 10) + ' ' + monthShortEs[parseInt(m, 10) - 1] + ' ' + y;
+    }
+
+    function formatDayFullDate(isoStr) {
+      return getDayOfWeekInfo(isoStr).formattedFull;
+    }
+
+    function syncInputsAndSummary() {
+      const summaryEl = document.getElementById('date-range-summary-text');
+      const hLlegadaInput = document.getElementById('input-hora-llegada');
+      const hSalidaInput = document.getElementById('input-hora-salida');
+      const hLlegada = (hLlegadaInput && hLlegadaInput.value) ? hLlegadaInput.value : '10:00';
+      const hSalida = (hSalidaInput && hSalidaInput.value) ? hSalidaInput.value : '18:00';
+
+      if (!pickerStartDate && !pickerEndDate) {
+        summaryEl.textContent = 'Selecciona las fechas de tu viaje';
+        summaryEl.className = 'font-medium text-slate-400';
+        document.getElementById('input-llegada').value = '';
+        document.getElementById('input-salida').value = '';
+        return;
+      }
+
+      if (pickerStartDate && !pickerEndDate) {
+        summaryEl.textContent = 'Desde ' + formatShortDate(pickerStartDate) + ' (Selecciona salida)';
+        summaryEl.className = 'font-medium text-[#FF6B5B]';
+        document.getElementById('input-llegada').value = pickerStartDate + 'T' + hLlegada;
+        document.getElementById('input-salida').value = '';
+        return;
+      }
+
+      const s = new Date(pickerStartDate + 'T00:00:00Z');
+      const e = new Date(pickerEndDate + 'T00:00:00Z');
+      const diffDays = Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
+      const dayLabel = diffDays === 1 ? '1 día' : diffDays + ' días';
+      summaryEl.textContent = formatShortDate(pickerStartDate) + ' – ' + formatShortDate(pickerEndDate) + ' (' + dayLabel + ')';
+      summaryEl.className = 'font-medium text-slate-900';
+
+      // Sincronizar campos ISO completos para el backend y generador IA
+      document.getElementById('input-llegada').value = pickerStartDate + 'T' + hLlegada;
+      document.getElementById('input-salida').value = pickerEndDate + 'T' + hSalida;
+    }
+
+    function updateCalendarHighlight(hoverIso) {
+      const grid = document.getElementById('cal-days-grid');
+      if (!grid) return;
+      const buttons = grid.querySelectorAll('button[data-iso]');
+      const activeEnd = pickerEndDate || hoverIso;
+
+      buttons.forEach(btn => {
+        const iso = btn.getAttribute('data-iso');
+        if (btn.disabled) return;
+        const isStart = iso === pickerStartDate;
+        const isEnd = iso === activeEnd;
+        const isInRange = pickerStartDate && activeEnd && iso > pickerStartDate && iso < activeEnd;
+
+        btn.className = 'h-8 w-full text-xs rounded-lg flex items-center justify-center transition-colors ';
+        if (isStart || isEnd) {
+          btn.className += 'bg-[#FF6B5B] text-white font-bold shadow-md shadow-red-200';
+        } else if (isInRange) {
+          btn.className += 'bg-[#D3EBE1] text-[#1F6A57] font-semibold';
+        } else {
+          btn.className += 'text-slate-700 hover:bg-slate-100 font-medium';
+        }
+      });
+    }
+
+    function renderCalendar() {
+      const year = calViewDate.getFullYear();
+      const month = calViewDate.getMonth();
+      document.getElementById('cal-current-month-label').textContent = monthNamesEs[month] + ' ' + year;
+
+      const firstDay = new Date(year, month, 1);
+      const startDayIndex = (firstDay.getDay() + 6) % 7; // Lunes = 0
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const todayIso = new Date().toISOString().slice(0, 10);
+
+      const grid = document.getElementById('cal-days-grid');
+      grid.innerHTML = '';
+
+      // Celdas vacías antes del primer día del mes
+      for (let i = 0; i < startDayIndex; i++) {
+        const spacer = document.createElement('div');
+        spacer.className = 'h-8';
+        grid.appendChild(spacer);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(day);
+        btn.setAttribute('data-iso', iso);
+
+        const isPast = iso < todayIso;
+        if (isPast) {
+          btn.disabled = true;
+          btn.className = 'h-8 w-full text-xs rounded-lg flex items-center justify-center text-slate-300 cursor-not-allowed';
+        } else {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            if (!pickerStartDate || (pickerStartDate && pickerEndDate)) {
+              // Primer clic: fija fecha de inicio
+              pickerStartDate = iso;
+              pickerEndDate = null;
+              document.getElementById('cal-selection-hint').textContent = '2. Elige salida';
+              updateCalendarHighlight(null);
+              syncInputsAndSummary();
+            } else if (iso < pickerStartDate) {
+              // Regla BR-04: Fecha anterior se reasigna como nuevo inicio
+              pickerStartDate = iso;
+              pickerEndDate = null;
+              document.getElementById('cal-selection-hint').textContent = '2. Elige salida';
+              updateCalendarHighlight(null);
+              syncInputsAndSummary();
+            } else {
+              // Segundo clic: fija fecha de fin y cierra
+              pickerEndDate = iso;
+              document.getElementById('cal-selection-hint').textContent = 'Rango listo';
+              document.getElementById('popover-date-range').classList.add('hidden');
+              updateCalendarHighlight(null);
+              syncInputsAndSummary();
+            }
+          };
+
+          btn.onmouseenter = () => {
+            if (pickerStartDate && !pickerEndDate) {
+              updateCalendarHighlight(iso);
+            }
+          };
+        }
+
+        grid.appendChild(btn);
+      }
+
+      grid.onmouseleave = () => {
+        if (pickerStartDate && !pickerEndDate) {
+          updateCalendarHighlight(null);
+        }
+      };
+
+      updateCalendarHighlight(null);
+    }
+
+    const popoverDateRange = document.getElementById('popover-date-range');
+    const triggerDateRange = document.getElementById('btn-date-range-trigger');
+
+    triggerDateRange.onclick = (e) => {
+      e.stopPropagation();
+      popoverDateRange.classList.toggle('hidden');
+      if (!popoverDateRange.classList.contains('hidden')) {
+        renderCalendar();
+      }
+    };
+
+    document.getElementById('btn-cal-prev-month').onclick = (e) => {
+      e.stopPropagation();
+      calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() - 1, 1);
+      renderCalendar();
+    };
+
+    document.getElementById('btn-cal-next-month').onclick = (e) => {
+      e.stopPropagation();
+      calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + 1, 1);
+      renderCalendar();
+    };
+
+    document.addEventListener('click', (e) => {
+      if (!popoverDateRange.contains(e.target) && e.target !== triggerDateRange) {
+        popoverDateRange.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !popoverDateRange.classList.contains('hidden')) {
+        popoverDateRange.classList.add('hidden');
+      }
+    });
+
+    // Control de selectores horarios con pasos de 15 minutos
+    ['input-hora-llegada', 'input-hora-salida'].forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      const updateHandler = () => {
+        if (!input.value) return;
+        syncInputsAndSummary();
+      };
+      input.addEventListener('change', updateHandler);
+      input.addEventListener('input', updateHandler);
+    });
+
+    function hashCityClient(city) {
+      let hash = 0;
+      const str = (city || '').trim().toLowerCase();
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function getDestinationFallbackUrl(city) {
+      const hash = hashCityClient(city);
+      const clean = (city || 'Destino').trim();
+      const angle = hash % 360;
+      const cX = 20 + (hash % 60);
+      const cY = 25 + ((hash >> 2) % 50);
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(' + angle + ')"><stop offset="0%" stop-color="#0F172A" /><stop offset="50%" stop-color="#1E293B" /><stop offset="100%" stop-color="#020617" /></linearGradient><radialGradient id="cg" cx="' + cX + '%" cy="' + cY + '%" r="40%"><stop offset="0%" stop-color="#FF6B5B" stop-opacity="0.55" /><stop offset="100%" stop-color="#FF6B5B" stop-opacity="0" /></radialGradient></defs><rect width="800" height="500" fill="url(#bg)" /><rect width="800" height="500" fill="url(#cg)" /><text x="50%" y="54%" text-anchor="middle" fill="rgba(255,255,255,0.22)" font-family="Space Grotesk, sans-serif" font-weight="900" font-size="64" letter-spacing="0.15em">' + clean.toUpperCase() + '</text></svg>';
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    async function resolveDestinationImageUrl(city) {
+      if (!city) return null;
+      try {
+        const res = await apiFetch('/api/destinations/image?city=' + encodeURIComponent(city));
+        if (res.ok && res.data && res.data.imageUrl && !res.data.isFallback) {
+          return res.data.imageUrl;
+        }
+      } catch (_e) {
+        void _e;
+      }
+
+      try {
+        const clean = city.split(',')[0].trim();
+        const urlEs = 'https://es.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=1000&origin=*&titles=' + encodeURIComponent(clean);
+        const rEs = await fetch(urlEs);
+        if (rEs.ok) {
+          const d = await rEs.json();
+          const pages = d.query && d.query.pages;
+          if (pages) {
+            for (const k of Object.keys(pages)) {
+              if (k !== '-1' && pages[k] && pages[k].thumbnail && pages[k].thumbnail.source) {
+                return pages[k].thumbnail.source;
+              }
+            }
+          }
+        }
+        const urlEn = 'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=1000&origin=*&titles=' + encodeURIComponent(clean);
+        const rEn = await fetch(urlEn);
+        if (rEn.ok) {
+          const d = await rEn.json();
+          const pages = d.query && d.query.pages;
+          if (pages) {
+            for (const k of Object.keys(pages)) {
+              if (k !== '-1' && pages[k] && pages[k].thumbnail && pages[k].thumbnail.source) {
+                return pages[k].thumbnail.source;
+              }
+            }
+          }
+        }
+      } catch (_cfErr) {
+        void _cfErr;
+      }
+
+      return null;
+    }
+
+    // Inicializar estado del rango y horarios
+    renderCalendar();
+    syncInputsAndSummary();
+
+    const prefKeys = [
+      'entorno', 'planificacion', 'ritmo', 'cultural', 'gastro',
+      'presupuesto', 'movilidad', 'social', 'nocturno', 'fisico'
+    ];
+
+    prefKeys.forEach(id => {
+      const input = document.getElementById('pref-' + id);
+      const val = document.getElementById('val-' + id);
+      if (input && val) {
+        input.addEventListener('input', () => val.innerText = input.value);
+      }
+    });
+
+    const modalNuevo = document.getElementById('modal-nuevo');
+    document.getElementById('btn-open-modal').onclick = () => modalNuevo.classList.remove('hidden');
+    document.getElementById('btn-close-modal').onclick = () => modalNuevo.classList.add('hidden');
+    function openNewTripModal() { modalNuevo.classList.remove('hidden'); }
+
+    const modalEditar = document.getElementById('modal-editar');
+    document.getElementById('btn-close-modal-editar').onclick = closeEditModal;
+    function closeEditModal() { modalEditar.classList.add('hidden'); }
+
+    const modalEliminar = document.getElementById('modal-eliminar');
+    function closeDeleteModal() { modalEliminar.classList.add('hidden'); }
+
+    function navigateToCatalog() {
+      window.location.hash = '#catalog';
+      document.getElementById('view-catalog').classList.remove('hidden');
+      document.getElementById('view-detail').classList.add('hidden');
+      loadCatalog();
+    }
+
+    async function navigateToDetail(itineraryId) {
+      window.location.hash = '#detail/' + itineraryId;
+      document.getElementById('view-catalog').classList.add('hidden');
+      document.getElementById('view-detail').classList.remove('hidden');
+      await loadItineraryDetail(itineraryId);
+    }
+
+    async function loadCatalog() {
+      const res = await apiFetch('/api/itineraries');
+      if (res.ok && Array.isArray(res.data)) {
+        currentItineraries = res.data;
+        saveLocalItineraries(res.data);
+      } else {
+        const local = getLocalItineraries();
+        const allExpenses = getLocalExpenses();
+        currentItineraries = local.map(it => {
+          const total = allExpenses
+            .filter(e => e.itineraryId === it.id)
+            .reduce((acc, curr) => acc + (Number(curr.importe) || 0), 0);
+          return { ...it, totalExpenses: total };
+        });
+      }
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const grid = document.getElementById('catalog-grid');
+      const empty = document.getElementById('catalog-empty');
+      const countBadge = document.getElementById('catalog-count-badge');
+
+      countBadge.innerText = currentItineraries.length + (currentItineraries.length === 1 ? ' viaje' : ' viajes');
+
+      if (currentItineraries.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.innerHTML = '';
+
+      currentItineraries.forEach(it => {
+        const destCity = it.metadatos_itinerario.destino || 'Destino';
+        const cardImgId = 'card-img-' + it.id;
+        let destImg = it.metadatos_itinerario.imagen_url;
+
+        // Si el viaje no tiene imagen asignada aún (ej. creado con anterioridad), resolver en background
+        if (!destImg) {
+          destImg = getDestinationFallbackUrl(destCity);
+          resolveDestinationImageUrl(destCity).then(imgUrl => {
+            if (imgUrl) {
+              it.metadatos_itinerario.imagen_url = imgUrl;
+              const imgEl = document.getElementById(cardImgId);
+              if (imgEl) imgEl.src = imgUrl;
+              saveLocalItineraries(currentItineraries);
+            }
+          }).catch(() => {});
+        }
+
+        const card = document.createElement('div');
+        card.className = 'glass-card rounded-3xl border border-slate-700/50 p-6 shadow-md hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden group min-h-[310px] text-white';
+        
+        const rawBudget = it.metadatos_itinerario ? it.metadatos_itinerario.presupuesto_estimado_por_persona : undefined;
+        const budgetText = (typeof rawBudget === 'number' && rawBudget > 0)
+          ? Math.round(rawBudget) + ' € / pers.'
+          : '— € / pers.';
+
+        card.innerHTML = `
+          <!-- Fondo fotográfico inmersivo con máscara de contraste (CMP-07) -->
+          <div class="absolute inset-0 z-0">
+            <img 
+              id="${cardImgId}"
+              src="${destImg}" 
+              alt="Fotografía de ${destCity}" 
+              loading="lazy" 
+              decoding="async"
+              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              onerror="this.onerror=null;this.src=getDestinationFallbackUrl('${destCity}');"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent rounded-3xl"></div>
+          </div>
+
+          <div class="relative z-10 flex flex-col justify-between h-full">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-space uppercase font-bold bg-mint-fixed text-mint-accent border border-mint-accent/20 shadow-sm">
+                  ${it.metadatos_itinerario.duracion_dias} días
+                </span>
+                <span class="text-[11px] font-space uppercase font-bold text-white bg-black/45 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                  💰 ${budgetText}
+                </span>
+              </div>
+              <h3 class="text-2xl font-space font-black uppercase text-white mb-1 tracking-tight drop-shadow-sm">${it.metadatos_itinerario.destino}</h3>
+              <p class="text-xs text-slate-200 mb-3 flex items-center space-x-1 font-medium">
+                <span>📍</span>
+                <span>${it.metadatos_itinerario.alojamiento_ubicacion}</span>
+              </p>
+              <p class="text-xs text-slate-200 bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10 line-clamp-2 mb-4 leading-relaxed">
+                ${it.metadatos_itinerario.resumen_estilo}
+              </p>
+            </div>
+
+            <div class="border-t border-white/15 pt-4 flex items-center justify-between gap-2">
+              <button onclick="navigateToDetail('${it.id}')" class="flex-1 py-2.5 px-4 bg-coral-pop hover:bg-coral-hover text-white text-xs font-space uppercase font-bold rounded-full shadow-[0_4px_12px_rgba(255,107,91,0.35)] active:scale-95 transition-all flex items-center justify-center space-x-1">
+                <span>Abrir</span>
+                <span>&rarr;</span>
+              </button>
+              <button onclick="handleOpenEdit('${it.id}')" title="Editar destino" class="p-2.5 bg-black/35 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 rounded-full text-xs font-semibold transition">
+                ✏️
+              </button>
+              <button onclick="handleOpenDelete('${it.id}')" title="Eliminar viaje" class="p-2.5 bg-black/35 backdrop-blur-md border border-rose-400/40 text-rose-300 hover:bg-rose-500/20 rounded-full text-xs font-semibold transition">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function handleOpenEdit(id) {
+      const it = currentItineraries.find(item => item.id === id);
+      if (!it) return;
+      document.getElementById('edit-itinerary-id').value = it.id;
+      document.getElementById('edit-destino').value = it.metadatos_itinerario.destino;
+      document.getElementById('edit-alojamiento').value = it.metadatos_itinerario.alojamiento_ubicacion;
+      modalEditar.classList.remove('hidden');
+    }
+
+    document.getElementById('form-editar-viaje').onsubmit = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-itinerary-id').value;
+      const destino = document.getElementById('edit-destino').value;
+      const alojamiento = document.getElementById('edit-alojamiento').value;
+
+      const res = await apiFetch('/api/itineraries/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destino, alojamiento_ubicacion: alojamiento })
+      });
+
+      // Actualizar copia local
+      const list = getLocalItineraries();
+      const target = list.find(it => it.id === id);
+      if (target) {
+        target.metadatos_itinerario.destino = destino;
+        target.metadatos_itinerario.alojamiento_ubicacion = alojamiento;
+        saveLocalItineraries(list);
+      }
+
+      closeEditModal();
+      await loadCatalog();
+    };
+
+    function handleOpenDelete(id) {
+      document.getElementById('delete-itinerary-id').value = id;
+      modalEliminar.classList.remove('hidden');
+    }
+
+    async function executeDeleteTrip() {
+      const id = document.getElementById('delete-itinerary-id').value;
+      await apiFetch('/api/itineraries/' + id, { method: 'DELETE' });
+
+      // Actualizar local
+      let list = getLocalItineraries();
+      list = list.filter(it => it.id !== id);
+      saveLocalItineraries(list);
+
+      closeDeleteModal();
+      if (activeItinerary && activeItinerary.id === id) {
+        navigateToCatalog();
+      } else {
+        await loadCatalog();
+      }
+    }
+
+    async function loadItineraryDetail(id) {
+      const res = await apiFetch('/api/itineraries/' + id);
+      if (res.ok && res.data) {
+        activeItinerary = res.data;
+      } else {
+        const list = getLocalItineraries();
+        activeItinerary = list.find(it => it.id === id) || null;
+      }
+
+      if (!activeItinerary) {
+        navigateToCatalog();
+        return;
+      }
+
+      selectedDayIndex = 0;
+
+      document.getElementById('btn-detail-delete').onclick = () => {
+        handleOpenDelete(activeItinerary.id);
+      };
+
+      renderItineraryDetail();
+    }
+
+    function renderItineraryDetail() {
+      if (!activeItinerary) return;
+
+      const destCity = activeItinerary.metadatos_itinerario.destino || 'Destino';
+      let destImg = activeItinerary.metadatos_itinerario.imagen_url;
+
+      if (!destImg) {
+        destImg = getDestinationFallbackUrl(destCity);
+        resolveDestinationImageUrl(destCity).then(imgUrl => {
+          if (imgUrl) {
+            activeItinerary.metadatos_itinerario.imagen_url = imgUrl;
+            const heroImgEl = document.getElementById('hero-bg-img');
+            if (heroImgEl) heroImgEl.src = imgUrl;
+            saveLocalItineraries(currentItineraries);
+          }
+        }).catch(() => {});
+      }
+
+      const heroBg = document.getElementById('hero-bg-container');
+      if (heroBg) {
+        heroBg.innerHTML = `
+          <img 
+            id="hero-bg-img"
+            src="${destImg}" 
+            alt="Fotografía de ${destCity}" 
+            loading="eager" 
+            decoding="async"
+            class="w-full h-full object-cover object-center"
+            onerror="this.onerror=null;this.src=getDestinationFallbackUrl('${destCity}');"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent"></div>
+        `;
+      }
+
+      document.getElementById('hero-destino').innerText = activeItinerary.metadatos_itinerario.destino;
+      document.getElementById('hero-ubicacion').innerText = 'Alojamiento: ' + activeItinerary.metadatos_itinerario.alojamiento_ubicacion;
+      document.getElementById('hero-resumen').innerText = activeItinerary.metadatos_itinerario.resumen_estilo;
+
+      const rawBudget = activeItinerary.metadatos_itinerario?.presupuesto_estimado_por_persona;
+      const heroPresupuestoEl = document.getElementById('hero-presupuesto');
+      if (heroPresupuestoEl) {
+        heroPresupuestoEl.innerText = (typeof rawBudget === 'number' && rawBudget > 0)
+          ? Math.round(rawBudget) + ' €'
+          : '— €';
+      }
+
+      const tabs = document.getElementById('tabs-dias');
+      tabs.innerHTML = '';
+      activeItinerary.plan_diario.forEach((day, index) => {
+        const dDate = resolveDayDate(activeItinerary, day, index);
+        const dayInfo = getDayOfWeekInfo(dDate);
+        const isSelected = index === selectedDayIndex;
+        const btn = document.createElement('button');
+        btn.className = 'px-3.5 py-1.5 text-center rounded-2xl transition-all flex flex-col items-center justify-center min-w-[76px] sm:min-w-[88px] ' + 
+          (isSelected ? 'bg-coral-pop text-white shadow-[0_4px_16px_rgba(255,107,91,0.35)] ring-2 ring-coral-pop ring-offset-2' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100');
+        
+        const weekdayBadge = dayInfo.shortWeekday ? (dayInfo.shortWeekday + ' ' + (dayInfo.dayNum || '')) : '';
+        btn.innerHTML = '<span class="text-xs font-space uppercase font-bold leading-tight">Día ' + day.dia_numero + '</span>' +
+          (weekdayBadge ? '<span class="text-[10px] font-medium leading-none mt-0.5 capitalize ' + (isSelected ? 'text-white/90' : 'text-slate-500') + '">' + weekdayBadge + '</span>' : '');
+        btn.setAttribute('aria-label', 'Día ' + day.dia_numero + (dayInfo.formattedFull ? (', ' + dayInfo.formattedFull) : ''));
+        btn.onclick = () => {
+          selectedDayIndex = index;
+          renderItineraryDetail();
+        };
+        tabs.appendChild(btn);
+      });
+
+      const day = activeItinerary.plan_diario[selectedDayIndex];
+      const resolvedDate = resolveDayDate(activeItinerary, day, selectedDayIndex);
+      const dayInfo = getDayOfWeekInfo(resolvedDate);
+      const dayDateEl = document.getElementById('selected-day-date');
+      if (dayDateEl) {
+        if (dayInfo.weekday) {
+          dayDateEl.innerHTML = '<div class="flex items-center gap-2 mt-0.5">' +
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-space uppercase font-bold bg-coral-pop text-white shadow-sm">' + dayInfo.weekday + '</span>' +
+            '<span class="text-slate-600 font-medium text-xs sm:text-sm">' + (resolvedDate ? formatShortDate(resolvedDate) : '') + '</span>' +
+            '</div>';
+        } else {
+          dayDateEl.innerText = '';
+        }
+      }
+
+      const container = document.getElementById('timeline-container');
+      container.innerHTML = '';
+
+      if (!day) return;
+
+      const daySummaryCard = document.createElement('div');
+      daySummaryCard.className = 'glass-card rounded-2xl p-4 border border-slate-200/80 bg-white/70 shadow-sm flex items-start gap-3';
+      daySummaryCard.innerHTML = '<div class="w-10 h-10 rounded-xl bg-coral-pop/10 text-coral-pop flex flex-col items-center justify-center font-space shrink-0 border border-coral-pop/20">' +
+        '<span class="text-[10px] font-bold uppercase leading-none">DÍA</span>' +
+        '<span class="text-base font-black leading-none">' + day.dia_numero + '</span>' +
+        '</div>' +
+        '<div class="flex-1 min-w-0">' +
+        '<div class="flex items-center gap-2 flex-wrap">' +
+        '<h3 class="text-sm font-bold text-slate-900 font-space uppercase tracking-wide">' +
+        'Día ' + day.dia_numero + ' · <span class="capitalize text-coral-pop">' + (dayInfo.weekday || '') + '</span>' +
+        '</h3>' +
+        (resolvedDate ? '<span class="text-xs text-slate-500 font-medium">(' + formatShortDate(resolvedDate) + ')</span>' : '') +
+        '</div>' +
+        '<p class="text-xs text-slate-600 mt-1 leading-relaxed">' +
+        (day.descripcion_general_dia || ('Planificación diaria optimizada para el Día ' + day.dia_numero)) +
+        '</p>' +
+        '</div>';
+      container.appendChild(daySummaryCard);
+
+      const franjasConfig = [
+        { key: 'manana', label: 'Mañana', icon: '🌅', color: 'border-amber-200 bg-amber-50/50' },
+        { key: 'medio_dia', label: 'Mediodía', icon: '☀️', color: 'border-orange-200 bg-orange-50/50' },
+        { key: 'tarde', label: 'Tarde', icon: '🌇', color: 'border-indigo-200 bg-indigo-50/50' },
+        { key: 'noche', label: 'Noche', icon: '🌙', color: 'border-slate-200 bg-slate-50/50' },
+      ];
+
+      franjasConfig.forEach(cfg => {
+        const item = day.franjas[cfg.key];
+        if (!item) return;
+
+        const slotCard = document.createElement('div');
+        slotCard.className = 'p-5 rounded-2xl border ' + cfg.color + ' transition-all shadow-sm';
+        slotCard.innerHTML = `
+          <div class="flex items-center space-x-2 mb-2">
+            <span class="text-lg">${cfg.icon}</span>
+            <h4 class="font-space uppercase font-bold text-xs tracking-wider text-slate-800">${cfg.label}</h4>
+          </div>
+          <p class="text-sm font-medium text-slate-900 mb-2 leading-relaxed">${item.actividades}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 mt-3 pt-3 border-t border-slate-200/50">
+            <div class="flex items-start space-x-1.5">
+              <span>🚶</span>
+              <span><strong>Movilidad:</strong> ${item.logistica_transporte}</span>
+            </div>
+            <div class="flex items-start space-x-1.5">
+              <span>🍽️</span>
+              <span><strong>Gastronomía:</strong> ${item.sugerencia_gastronomica}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(slotCard);
+      });
+    }
+
+    document.getElementById('form-nuevo-viaje').onsubmit = async (e) => {
+      e.preventDefault();
+      syncInputsAndSummary();
+      const destino = document.getElementById('input-destino').value;
+      const hLlegadaInput = document.getElementById('input-hora-llegada');
+      const hSalidaInput = document.getElementById('input-hora-salida');
+      const hLlegadaVal = (hLlegadaInput && hLlegadaInput.value) ? hLlegadaInput.value : '10:00';
+      const hSalidaVal = (hSalidaInput && hSalidaInput.value) ? hSalidaInput.value : '18:00';
+
+      const llegada = pickerStartDate ? (pickerStartDate + 'T' + hLlegadaVal) : (document.getElementById('input-llegada').value || (new Date().toISOString().slice(0, 10) + 'T' + hLlegadaVal));
+      const salida = pickerEndDate ? (pickerEndDate + 'T' + hSalidaVal) : (document.getElementById('input-salida').value || (new Date(Date.now() + 86400000).toISOString().slice(0, 10) + 'T' + hSalidaVal));
+
+      const btn = document.getElementById('btn-generar');
+      btn.innerHTML = '<span class="animate-pulse">🤖 Diseñando itinerario personalizado con IA...</span>';
+      btn.disabled = true;
+
+      // Resolver fotografía de destino de inmediato
+      let destImgUrl = await resolveDestinationImageUrl(destino);
+      if (!destImgUrl) {
+        destImgUrl = getDestinationFallbackUrl(destino);
+      }
+
+      const payload = {
+        destino,
+        llegada,
+        salida,
+        imagen_url: destImgUrl,
+        configuracion: {
+          entorno_principal: parseInt(document.getElementById('pref-entorno').value, 10),
+          estilo_planificacion: parseInt(document.getElementById('pref-planificacion').value, 10),
+          ritmo_viaje: parseInt(document.getElementById('pref-ritmo').value, 10),
+          enfoque_cultural_vs_ocio: parseInt(document.getElementById('pref-cultural').value, 10),
+          prioridad_gastronomica: parseInt(document.getElementById('pref-gastro').value, 10),
+          presupuesto_confort: parseInt(document.getElementById('pref-presupuesto').value, 10),
+          movilidad_transporte: parseInt(document.getElementById('pref-movilidad').value, 10),
+          experiencia_social: parseInt(document.getElementById('pref-social').value, 10),
+          vida_nocturna_horario: parseInt(document.getElementById('pref-nocturno').value, 10),
+          actividad_fisica: parseInt(document.getElementById('pref-fisico').value, 10)
+        }
+      };
+
+      try {
+        let newItinerary = null;
+        const res = await apiFetch('/api/itinerary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok && res.data) {
+          newItinerary = res.data;
+          if (!newItinerary.metadatos_itinerario.imagen_url) {
+            newItinerary.metadatos_itinerario.imagen_url = destImgUrl;
+          }
+        } else {
+          // Generación client-side offline / fallback estático garantizado
+          newItinerary = generateClientItinerary(payload);
+        }
+
+        // Filtro de seguridad estricto para adaptar las franjas según horas de llegada y salida y asegurar fechas válidas
+        if (newItinerary && Array.isArray(newItinerary.plan_diario)) {
+          const totalDays = newItinerary.plan_diario.length;
+          const baseLlegada = new Date((llegada || new Date().toISOString()).slice(0, 10) + 'T00:00:00Z');
+          const baseTime = isNaN(baseLlegada.getTime()) ? Date.now() : baseLlegada.getTime();
+          newItinerary.plan_diario.forEach((day, idx) => {
+            const dayNum = typeof day.dia_numero === 'number' ? day.dia_numero : idx + 1;
+            day.dia_numero = dayNum;
+            if (!day.fecha || day.fecha === 'YYYY-MM-DD' || !/^d{4}-d{2}-d{2}/.test(day.fecha)) {
+              day.fecha = new Date(baseTime + (dayNum - 1) * 86400000).toISOString().slice(0, 10);
+            }
+            const active = determineActiveSlotsClient(dayNum, totalDays, llegada, salida);
+            const filtered = {};
+            if (active.manana && day.franjas && day.franjas.manana) filtered.manana = day.franjas.manana;
+            if (active.medio_dia && day.franjas && day.franjas.medio_dia) filtered.medio_dia = day.franjas.medio_dia;
+            if (active.tarde && day.franjas && day.franjas.tarde) filtered.tarde = day.franjas.tarde;
+            if (active.noche && day.franjas && day.franjas.noche) filtered.noche = day.franjas.noche;
+            day.franjas = filtered;
+          });
+          newItinerary.llegada = llegada;
+          newItinerary.salida = salida;
+        }
+
+        // Guardar en almacenamiento local
+        const list = getLocalItineraries();
+        list.unshift(newItinerary);
+        saveLocalItineraries(list);
+
+        modalNuevo.classList.add('hidden');
+        btn.innerHTML = '<span>Generar Itinerario con Agente IA</span>';
+        btn.disabled = false;
+
+        navigateToDetail(newItinerary.id);
+      } catch (err) {
+        // En caso de excepción, usar fallback seguro
+        const fallback = generateClientItinerary(payload);
+        fallback.llegada = llegada;
+        fallback.salida = salida;
+        const list = getLocalItineraries();
+        list.unshift(fallback);
+        saveLocalItineraries(list);
+        modalNuevo.classList.add('hidden');
+        btn.innerHTML = '<span>Generar Itinerario con Agente IA</span>';
+        btn.disabled = false;
+        navigateToDetail(fallback.id);
+      }
+    };
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#detail/')) {
+        const id = hash.replace('#detail/', '');
+        navigateToDetail(id);
+      } else {
+        navigateToCatalog();
+      }
+    });
+
+    const initialHash = window.location.hash;
+    if (initialHash.startsWith('#detail/')) {
+      const id = initialHash.replace('#detail/', '');
+      navigateToDetail(id);
+    } else {
+      navigateToCatalog();
+    }
+
+    // Registro de Service Worker para PWA Offline en iOS y Chrome
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          reg.update();
+        }).catch((_err) => {
+          // SW registration is optional for offline support
+        });
+      });
+    }
+
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          if (name !== 'guia-pwa-cache-v5') {
+            caches.delete(name);
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
