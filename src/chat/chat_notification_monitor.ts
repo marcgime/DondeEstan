@@ -111,7 +111,7 @@ export function renderInAppChatToast(payload: DeviceNotificationPayload): void {
   toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite');
   toast.className =
-    'fixed top-3 inset-x-4 z-[1400] max-w-sm mx-auto p-3.5 rounded-2xl glass-dock shadow-alert border border-border-subtle flex items-center justify-between gap-3 cursor-pointer transition-all';
+    'fixed safe-toast-top inset-x-4 z-[10000] max-w-sm mx-auto p-3.5 rounded-2xl glass-dock shadow-alert border border-border-subtle flex items-center justify-between gap-3 cursor-pointer transition-all';
 
   toast.innerHTML = `
     <div class="flex items-center gap-3 min-w-0">
