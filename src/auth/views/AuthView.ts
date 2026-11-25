@@ -22,14 +22,14 @@ export function renderAuthView(
         <div class="w-full max-w-sm flex flex-col items-center my-auto">
           
           <!-- App Header & Logo -->
-          <div class="w-20 h-20 mb-5 rounded-pebble bg-surface-elevated flex items-center justify-center shadow-card overflow-hidden">
+          <div class="w-20 h-20 mb-5 rounded-[20px] bg-surface-elevated border border-border-strong flex items-center justify-center overflow-hidden">
             <img src="/icons/icon-192.png" alt="DondeEstan" class="w-full h-full object-cover" />
           </div>
 
-          <h1 class="text-2xl font-extrabold tracking-tight text-text-primary mb-1 font-sans">
+          <h1 class="text-[34px] font-bold tracking-[-0.02em] text-text-primary mb-1 leading-[1.15]">
             ¿Dónde Están?
           </h1>
-          <p class="text-xs font-semibold text-text-secondary tracking-wide uppercase mb-6">
+          <p class="text-[13px] font-medium text-text-secondary tracking-[0.01em] uppercase mb-6">
             Localizador Familiar Privado
           </p>
 
@@ -37,12 +37,12 @@ export function renderAuthView(
             !isResetMode
               ? `
             <!-- Toggle Pills -->
-            <div class="w-full flex p-1 mb-6 rounded-full bg-surface-base border border-border-subtle">
+            <div class="w-full flex p-1 mb-6 rounded-[12px] bg-surface-inset">
               <button 
                 id="tab-login"
-                class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
+                class="flex-1 py-2 rounded-[10px] text-[13px] font-semibold transition-all ${
                   !isRegisterMode
-                    ? 'bg-brand-primary text-brand-on-primary shadow-sm'
+                    ? 'bg-surface-elevated text-text-primary'
                     : 'text-text-secondary hover:text-text-primary'
                 }"
               >
@@ -50,9 +50,9 @@ export function renderAuthView(
               </button>
               <button 
                 id="tab-register"
-                class="flex-1 py-2 rounded-full text-xs font-bold transition-all ${
+                class="flex-1 py-2 rounded-[10px] text-[13px] font-semibold transition-all ${
                   isRegisterMode
-                    ? 'bg-brand-primary text-brand-on-primary shadow-sm'
+                    ? 'bg-surface-elevated text-text-primary'
                     : 'text-text-secondary hover:text-text-primary'
                 }"
               >
@@ -111,7 +111,7 @@ export function renderAuthView(
                   id="input-name"
                   placeholder="Ej. Marc Giménez" 
                   required
-                  class="w-full h-12 px-4 rounded-full bg-surface-base border border-border-subtle text-text-primary placeholder:text-text-disabled text-sm focus:outline-none focus:border-brand-primary transition-all"
+                  class="w-full h-12 px-4 rounded-[12px] bg-surface-elevated border border-border-strong text-text-primary placeholder:text-text-disabled text-[17px] focus:outline-none focus:border-brand-primary transition-all"
                 />
               </div>
             `
@@ -119,13 +119,13 @@ export function renderAuthView(
             }
 
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-bold text-text-secondary pl-1">Correo Electrónico</label>
+              <label class="text-[13px] font-medium text-text-secondary pl-1">Correo Electrónico</label>
               <input 
                 type="email" 
                 id="input-email"
                 placeholder="familiar@correo.com" 
                 required
-                class="w-full h-12 px-4 rounded-full bg-surface-base border border-border-subtle text-text-primary placeholder:text-text-disabled text-sm focus:outline-none focus:border-brand-primary transition-all"
+                class="w-full h-12 px-4 rounded-[12px] bg-surface-elevated border border-border-strong text-text-primary placeholder:text-text-disabled text-[17px] focus:outline-none focus:border-brand-primary transition-all"
               />
             </div>
 
@@ -134,14 +134,14 @@ export function renderAuthView(
                 ? `
               <div class="flex flex-col gap-1">
                 <div class="flex items-center justify-between pl-1">
-                  <label class="text-xs font-bold text-text-secondary">Contraseña</label>
+                  <label class="text-[13px] font-medium text-text-secondary">Contraseña</label>
                   ${
                     !isRegisterMode
                       ? `
                     <button 
                       type="button" 
                       id="btn-forgot-password" 
-                      class="text-[0.75rem] font-semibold text-brand-primary hover:underline"
+                      class="text-[13px] font-medium text-brand-primary hover:underline"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
@@ -155,7 +155,7 @@ export function renderAuthView(
                   placeholder="${isRegisterMode ? 'Mínimo 8 caracteres' : '••••••••'}" 
                   minlength="${isRegisterMode ? 8 : 1}"
                   required
-                  class="w-full h-12 px-4 rounded-full bg-surface-base border border-border-subtle text-text-primary placeholder:text-text-disabled text-sm focus:outline-none focus:border-brand-primary transition-all"
+                  class="w-full h-12 px-4 rounded-[12px] bg-surface-elevated border border-border-strong text-text-primary placeholder:text-text-disabled text-[17px] focus:outline-none focus:border-brand-primary transition-all"
                 />
               </div>
             `
@@ -166,7 +166,7 @@ export function renderAuthView(
               type="submit" 
               id="btn-submit"
               ${isLoading ? 'disabled' : ''}
-              class="w-full h-12 mt-2 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-sm tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all disabled:opacity-60"
+              class="w-full h-12 mt-2 flex items-center justify-center gap-2 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[17px] disabled:opacity-60"
             >
               ${
                 isLoading

@@ -77,121 +77,126 @@ export function renderProfileView(
     const activeScaleOpt =
       UI_SCALE_OPTIONS.find((o) => o.id === currentScale) || UI_SCALE_OPTIONS[1];
     container.innerHTML = `
-      <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+      <div class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden overscroll-contain-y">
         
-        <!-- iOS Nav Bar (Compact 44pt row: Page Title on Left, Primary Action on Right) -->
+        <!-- iOS Nav Bar (Opaca, sin blur; título centrado aparece al colapsar Large Title) -->
         <header class="ios-nav-bar safe-header-top">
-          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Mi Perfil</h1>
+          <div class="w-16 shrink-0"></div>
+          <h1 id="profile-compact-title" class="ios-nav-title-compact opacity-0 pointer-events-none">Mi Perfil</h1>
           <button 
             id="profile-btn-logout"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-elevated border border-border-subtle text-status-error text-xs font-bold hover:bg-status-error/10 transition-colors"
+            class="flex items-center justify-end gap-1 px-2.5 py-1 rounded-[12px] text-status-error text-[15px] font-medium"
             title="Cerrar sesión"
           >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
             <span>Salir</span>
           </button>
         </header>
 
         <!-- Profile Content -->
-        <div id="profile-scroll-container" class="flex-1 min-h-0 overflow-y-auto px-5 py-4 flex flex-col items-center gap-3.5 pb-40">
+        <div id="profile-scroll-container" class="flex-1 min-h-0 overflow-y-auto overscroll-contain-y px-4 sm:px-5 pt-2 pb-40 flex flex-col gap-6">
           
-          <!-- Avatar Big with Upload Badge -->
-          <div class="relative mt-1 shrink-0">
-            <div class="w-20 h-20 rounded-full border-4 border-brand-primary/20 bg-surface-card overflow-hidden flex items-center justify-center text-2xl font-extrabold text-brand-primary shadow-card">
-              ${
-                isUploadingPhoto
-                  ? `
-                <div class="animate-spin text-brand-primary">
-                  <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-              `
-                  : profile.photo_url
-                  ? `<img src="${profile.photo_url}" alt="${escapeHtml(profile.display_name)}" class="w-full h-full object-cover" />`
-                  : initial
-              }
-            </div>
-
-            <!-- Change photo button -->
-            <label 
-              for="input-avatar-file"
-              class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand-primary text-brand-on-primary flex items-center justify-center cursor-pointer shadow-md hover:scale-105 active:scale-95 transition-transform"
-              title="Cambiar foto de perfil"
-            >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </label>
-            <input type="file" id="input-avatar-file" accept="image/*" class="hidden" />
+          <!-- Large Title -->
+          <div class="max-w-sm w-full mx-auto">
+            <h2 class="ios-large-title">Mi Perfil</h2>
           </div>
 
-          <!-- User Name and Edit Option -->
-          <div class="text-center w-full max-w-xs shrink-0">
-            ${
-              isEditingName
-                ? `
-              <form id="form-edit-name" class="flex items-center gap-2 mt-1">
-                <input 
-                  type="text" 
-                  id="input-display-name" 
-                  value="${escapeHtml(profile.display_name)}" 
-                  class="flex-1 h-9 px-3 rounded-full bg-surface-base border border-brand-primary text-xs font-bold text-text-primary focus:outline-none"
-                  required
-                />
-                <button type="submit" class="px-3 py-1.5 rounded-full bg-brand-primary text-brand-on-primary text-xs font-bold shadow-xs">
-                  Guardar
-                </button>
-                <button type="button" id="btn-cancel-edit-name" class="px-2 py-1.5 rounded-full text-xs text-text-secondary">
-                  Cancelar
-                </button>
-              </form>
-            `
-                : `
-              <div class="flex items-center justify-center gap-2">
-                <h2 class="text-lg font-extrabold text-text-primary">${escapeHtml(profile.display_name)}</h2>
-                <button id="btn-start-edit-name" class="text-text-secondary hover:text-brand-primary transition-colors p-1" title="Editar nombre">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
+          <!-- Avatar + Nombre -->
+          <div class="w-full max-w-sm mx-auto flex flex-col items-center gap-3">
+            <div class="relative shrink-0">
+              <div class="w-20 h-20 rounded-full border border-border-strong bg-surface-elevated overflow-hidden flex items-center justify-center text-2xl font-semibold text-text-primary">
+                ${
+                  isUploadingPhoto
+                    ? `
+                  <div class="animate-spin text-brand-primary">
+                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                `
+                    : profile.photo_url
+                    ? `<img src="${profile.photo_url}" alt="${escapeHtml(profile.display_name)}" class="w-full h-full object-cover" />`
+                    : initial
+                }
               </div>
-            `
-            }
-            <p class="text-xs text-text-secondary mt-0.5">${escapeHtml(profile.email)}</p>
-            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${
-              profile.role === 'admin'
-                ? 'bg-brand-primary text-brand-on-primary'
-                : 'bg-surface-elevated text-text-secondary'
-            }">
-              ${profile.role === 'admin' ? 'Administrador' : 'Miembro'}
-            </span>
+
+              <!-- Change photo button -->
+              <label 
+                for="input-avatar-file"
+                class="ios-tap absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand-primary text-brand-on-primary flex items-center justify-center cursor-pointer"
+                title="Cambiar foto de perfil"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </label>
+              <input type="file" id="input-avatar-file" accept="image/*" class="hidden" />
+            </div>
+
+            <!-- User Name and Edit Option -->
+            <div class="text-center w-full max-w-xs shrink-0">
+              ${
+                isEditingName
+                  ? `
+                <form id="form-edit-name" class="flex items-center gap-2 mt-1">
+                  <input 
+                    type="text" 
+                    id="input-display-name" 
+                    value="${escapeHtml(profile.display_name)}" 
+                    class="flex-1 h-10 px-3 rounded-[12px] bg-surface-elevated border border-brand-primary text-[15px] font-medium text-text-primary focus:outline-none"
+                    required
+                  />
+                  <button type="submit" class="px-3.5 h-10 rounded-[12px] bg-brand-primary text-brand-on-primary text-[15px] font-semibold">
+                    Guardar
+                  </button>
+                  <button type="button" id="btn-cancel-edit-name" class="px-2 h-10 rounded-[12px] text-[15px] text-text-secondary">
+                    Cancelar
+                  </button>
+                </form>
+              `
+                  : `
+                <div class="flex items-center justify-center gap-1.5">
+                  <h3 class="ios-section-title">${escapeHtml(profile.display_name)}</h3>
+                  <button id="btn-start-edit-name" class="text-brand-primary p-1" title="Editar nombre">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </div>
+              `
+              }
+              <p class="ios-meta-text mt-0.5">${escapeHtml(profile.email)}</p>
+              <span class="inline-block mt-2 px-3 py-0.5 rounded-full text-[13px] font-medium ${
+                profile.role === 'admin'
+                  ? 'bg-brand-primary text-brand-on-primary'
+                  : 'bg-surface-inset text-text-secondary'
+              }">
+                ${profile.role === 'admin' ? 'Administrador' : 'Miembro'}
+              </span>
+            </div>
           </div>
 
           <!-- Admin Panel Button (Exclusive to Admin) -->
           ${
             profile.role === 'admin' && onOpenAdminPanel
               ? `
-            <div class="w-full max-w-sm mt-1 shrink-0">
+            <div class="w-full max-w-sm mx-auto ios-grouped-list shrink-0">
               <button 
                 id="btn-open-admin"
-                class="w-full p-4 rounded-2xl glass-panel text-brand-primary font-bold text-xs flex items-center justify-between shadow-dock hover:bg-brand-primary/5 active:scale-98 transition-all"
+                class="ios-grouped-row w-full text-left"
               >
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <div class="w-8 h-8 rounded-[8px] bg-brand-primary text-brand-on-primary flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  <div class="text-left">
-                    <p class="text-text-primary text-xs font-bold">Panel de Administración</p>
-                    <p class="text-[0.75rem] text-text-secondary font-normal">Gestionar usuarios y grupos</p>
+                  <div>
+                    <p class="text-[17px] font-normal text-text-primary">Panel de Administración</p>
+                    <p class="text-[13px] text-text-secondary">Gestionar usuarios y grupos</p>
                   </div>
                 </div>
-                <svg class="w-4 h-4 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-4 h-4 text-text-disabled shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -200,108 +205,111 @@ export function renderProfileView(
               : ''
           }
 
-          <!-- Selector de Notificaciones de Chat -->
-          <div id="chat-notifications-card" class="w-full max-w-sm p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3 shrink-0">
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-text-primary">Notificaciones de Chat</p>
-              <p class="text-[0.75rem] text-text-secondary">
-                ${
-                  !chatNotificationsEnabled
-                    ? 'Silenciadas en este dispositivo'
-                    : getNotificationPermissionState() === 'denied'
-                    ? 'Avisos en la app (permiso del navegador bloqueado)'
-                    : 'Avisos de nuevos mensajes de tus grupos'
-                }
-              </p>
-            </div>
-            <button
-              type="button"
-              id="btn-toggle-chat-notifications"
-              aria-pressed="${chatNotificationsEnabled ? 'true' : 'false'}"
-              class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer ${
-                chatNotificationsEnabled
-                  ? 'bg-status-online text-brand-on-primary hover:opacity-90'
-                  : 'bg-surface-elevated text-text-secondary border border-border-subtle hover:text-text-primary'
-              }"
-            >
-              ${chatNotificationsEnabled ? 'Activadas' : 'Desactivadas'}
-            </button>
-          </div>
-
-          <!-- Selector de Zoom / Tamaño de Interfaz (Menú Plegable) -->
-          <div id="zoom-menu-card" class="w-full max-w-sm rounded-2xl glass-panel shadow-xs shrink-0">
-            <button
-              type="button"
-              id="btn-toggle-zoom-menu"
-              aria-expanded="${isZoomMenuOpen ? 'true' : 'false'}"
-              class="w-full p-3.5 rounded-2xl flex items-center justify-between gap-3 text-left hover:bg-brand-primary/5 transition-colors cursor-pointer"
-            >
+          <!-- Preferencias Agrupadas (Inset Grouped) -->
+          <div class="w-full max-w-sm mx-auto ios-grouped-list shrink-0">
+            <!-- Notificaciones de Chat -->
+            <div id="chat-notifications-card" class="ios-grouped-row gap-3">
               <div class="min-w-0">
-                <p class="text-xs font-bold text-text-primary">Tamaño de Letra y Zoom</p>
-                <p class="text-[0.75rem] text-text-secondary">
-                  ${isZoomMenuOpen ? 'Selecciona un tamaño para toda la aplicación' : `Actual: ${activeScaleOpt.label}`}
+                <p class="text-[17px] font-normal text-text-primary">Notificaciones de Chat</p>
+                <p class="text-[13px] text-text-secondary">
+                  ${
+                    !chatNotificationsEnabled
+                      ? 'Silenciadas en este dispositivo'
+                      : getNotificationPermissionState() === 'denied'
+                      ? 'Avisos en la app (permiso bloqueado)'
+                      : 'Avisos de nuevos mensajes de tus grupos'
+                  }
                 </p>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold">
-                  ${activeScaleOpt.percentage}
-                </span>
-                <svg
-                  class="w-4 h-4 text-text-secondary transition-transform ${isZoomMenuOpen ? 'rotate-180 text-brand-primary' : ''}"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </button>
+              <button
+                type="button"
+                id="btn-toggle-chat-notifications"
+                aria-pressed="${chatNotificationsEnabled ? 'true' : 'false'}"
+                class="px-3.5 py-1.5 rounded-[12px] text-[13px] font-semibold shrink-0 cursor-pointer ${
+                  chatNotificationsEnabled
+                    ? 'bg-status-online text-brand-on-primary'
+                    : 'bg-surface-canvas text-text-secondary border border-border-strong'
+                }"
+              >
+                ${chatNotificationsEnabled ? 'Activadas' : 'Desactivadas'}
+              </button>
+            </div>
 
-            ${
-              isZoomMenuOpen
-                ? `
-              <div id="zoom-menu-options" class="px-3.5 pb-3.5 pt-2 border-t border-border-subtle">
-                <div class="grid grid-cols-2 gap-2">
-                  ${UI_SCALE_OPTIONS.map((opt) => {
-                    const isActive = opt.id === currentScale;
-                    return `
-                      <button
-                        type="button"
-                        data-ui-scale="${opt.id}"
-                        class="btn-ui-scale py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-between gap-2 border cursor-pointer ${
-                          isActive
-                            ? 'bg-brand-primary text-brand-on-primary border-brand-primary shadow-xs font-bold'
-                            : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary font-semibold'
-                        }"
-                      >
-                        <span class="text-xs">${opt.label}</span>
-                        <span class="text-[0.6875rem] opacity-85">${opt.percentage}</span>
-                      </button>
-                    `;
-                  }).join('')}
+            <!-- Selector de Zoom / Tamaño de Interfaz -->
+            <div id="zoom-menu-card" class="ios-grouped-row flex-col !items-stretch !justify-start text-left gap-2">
+              <button
+                type="button"
+                id="btn-toggle-zoom-menu"
+                aria-expanded="${isZoomMenuOpen ? 'true' : 'false'}"
+                class="w-full flex items-center justify-between gap-3 text-left cursor-pointer"
+              >
+                <div class="min-w-0">
+                  <p class="text-[17px] font-normal text-text-primary">Tamaño de Letra y Zoom</p>
+                  <p class="text-[13px] text-text-secondary">
+                    ${isZoomMenuOpen ? 'Selecciona un tamaño para toda la app' : `Actual: ${activeScaleOpt.label}`}
+                  </p>
                 </div>
-              </div>
-            `
-                : ''
-            }
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[15px] font-medium text-brand-primary tabular-nums">
+                    ${activeScaleOpt.percentage}
+                  </span>
+                  <svg
+                    class="w-4 h-4 text-text-disabled transition-transform ${isZoomMenuOpen ? 'rotate-180 text-brand-primary' : ''}"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+
+              ${
+                isZoomMenuOpen
+                  ? `
+                <div id="zoom-menu-options" class="pt-2 border-t border-border-subtle">
+                  <div class="grid grid-cols-2 gap-2">
+                    ${UI_SCALE_OPTIONS.map((opt) => {
+                      const isActive = opt.id === currentScale;
+                      return `
+                        <button
+                          type="button"
+                          data-ui-scale="${opt.id}"
+                          class="btn-ui-scale py-2.5 px-3 rounded-[12px] text-center flex items-center justify-between gap-2 border cursor-pointer ${
+                            isActive
+                              ? 'bg-brand-primary text-brand-on-primary border-brand-primary font-semibold'
+                              : 'bg-surface-canvas text-text-primary border-border-strong font-medium'
+                          }"
+                        >
+                          <span class="text-[13px]">${opt.label}</span>
+                          <span class="text-[12px] opacity-85 tabular-nums">${opt.percentage}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `
+                  : ''
+              }
+            </div>
           </div>
 
-          <!-- Info Cards -->
-          <div class="w-full max-w-sm flex flex-col gap-2.5 mt-1 shrink-0">
-            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-              <span class="font-bold text-text-secondary">Estado de cuenta</span>
-              <span class="text-status-online font-bold uppercase tracking-wider">Activa y Aprobada</span>
+          <!-- Info Cards Agrupadas (Inset Grouped) -->
+          <div class="w-full max-w-sm mx-auto ios-grouped-list shrink-0">
+            <div class="ios-grouped-row">
+              <span class="text-[17px] text-text-primary">Estado de cuenta</span>
+              <span class="text-[15px] text-status-online font-medium">Activa y Aprobada</span>
             </div>
 
-            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-              <span class="font-bold text-text-secondary">Privacidad</span>
-              <span class="text-brand-primary font-bold">Cero Telemetría</span>
+            <div class="ios-grouped-row">
+              <span class="text-[17px] text-text-primary">Privacidad</span>
+              <span class="text-[15px] text-brand-primary font-medium">Cero Telemetría</span>
             </div>
 
-            <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3 text-xs">
-              <span class="font-bold text-text-secondary shrink-0">Núcleo</span>
-              <div id="profile-user-groups" class="flex flex-wrap items-center justify-end gap-1.5 text-right">
+            <div class="ios-grouped-row gap-3">
+              <span class="text-[17px] text-text-primary shrink-0">Núcleo</span>
+              <div id="profile-user-groups" class="flex flex-wrap items-center justify-end gap-1.5 text-right text-[13px]">
                 ${renderUserGroupsContent()}
               </div>
             </div>
@@ -348,6 +356,17 @@ export function renderProfileView(
 
   function bindEvents(): void {
     renderTabBarProfile();
+
+    const scrollEl = container.querySelector('#profile-scroll-container') as HTMLElement | null;
+    const compactTitleEl = container.querySelector('#profile-compact-title') as HTMLElement | null;
+    scrollEl?.addEventListener?.('scroll', () => {
+      if (!compactTitleEl) return;
+      if (scrollEl.scrollTop > 28) {
+        compactTitleEl.classList.remove('opacity-0');
+      } else {
+        compactTitleEl.classList.add('opacity-0');
+      }
+    });
 
     container.querySelector('#profile-btn-logout')?.addEventListener('click', async () => {
       triggerHaptic('light');

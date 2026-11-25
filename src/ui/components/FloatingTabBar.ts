@@ -98,7 +98,7 @@ export function renderFloatingTabBar(
           ${activeTab === 'map' ? 'aria-current="page"' : ''}
           class="${getTabButtonClass('map')}"
         >
-          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="${activeTab === 'map' ? '2.1' : '1.6'}">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
           <span class="dock-tab-label">Mapa</span>
@@ -116,7 +116,7 @@ export function renderFloatingTabBar(
           ${activeTab === 'guia' ? 'aria-current="page"' : ''}
           class="${getTabButtonClass('guia')}"
         >
-          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="${activeTab === 'guia' ? '2.1' : '1.6'}">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5l-2.5 6-6 2.5 2.5-6 6-2.5z" />
           </svg>
@@ -135,7 +135,7 @@ export function renderFloatingTabBar(
           ${activeTab === 'chat' ? 'aria-current="page"' : ''}
           class="${getTabButtonClass('chat')}"
         >
-          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="${activeTab === 'chat' ? '2.1' : '1.6'}">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <span class="dock-tab-label">Chat</span>
@@ -151,7 +151,7 @@ export function renderFloatingTabBar(
           ${activeTab === 'profile' ? 'aria-current="page"' : ''}
           class="${getTabButtonClass('profile')}"
         >
-          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="dock-tab-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="${activeTab === 'profile' ? '2.1' : '1.6'}">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           <span class="dock-tab-label">Perfil</span>

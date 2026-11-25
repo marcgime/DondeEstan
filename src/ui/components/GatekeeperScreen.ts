@@ -59,40 +59,40 @@ export function renderGatekeeperScreen(
         <div class="w-full max-w-sm flex flex-col items-center pt-4 text-center">
           
           <!-- Icon Badge -->
-          <div class="w-24 h-24 mb-6 rounded-pebble bg-surface-elevated flex items-center justify-center shadow-card border border-border-subtle">
+          <div class="w-20 h-20 mb-6 rounded-[20px] bg-surface-elevated flex items-center justify-center border border-border-strong">
             ${
               isEmailUnverified
                 ? `
-              <svg class="w-12 h-12 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-10 h-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             `
                 : isWaitingGroup
                 ? `
-              <svg class="w-12 h-12 text-status-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-10 h-10 text-status-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             `
                 : `
-              <svg class="w-12 h-12 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-10 h-10 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             `
             }
           </div>
 
-          <h1 class="text-2xl font-extrabold tracking-tight mb-2 text-text-primary font-sans">
+          <h1 class="text-[28px] font-bold tracking-[-0.02em] mb-2 text-text-primary leading-[1.2]">
             ${screenTitle}
           </h1>
           
-          <p class="text-sm font-medium text-text-secondary mb-6 leading-relaxed">
-            Hola, <span class="font-bold text-text-primary">${escapeHtml(user.display_name || user.email)}</span>.
+          <p class="text-[17px] text-text-secondary mb-6 leading-[1.45]">
+            Hola, <span class="font-semibold text-text-primary">${escapeHtml(user.display_name || user.email)}</span>.
             <br />
             ${screenSubtitle}
           </p>
 
           <!-- Information Card -->
-          <div class="w-full bg-surface-base border border-border-subtle rounded-2xl p-5 mb-6 text-left shadow-card">
+          <div class="w-full ios-card p-4 mb-6 text-left">
             <div class="flex items-start gap-3">
               <div class="p-2 rounded-full bg-brand-primary/10 text-brand-primary shrink-0 mt-0.5">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -135,7 +135,7 @@ export function renderGatekeeperScreen(
             <button 
               id="btn-check-verified"
               ${isChecking ? 'disabled' : ''}
-              class="w-full h-12 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-sm tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all disabled:opacity-60"
+              class="w-full h-12 flex items-center justify-center gap-2 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[17px] disabled:opacity-60"
             >
               ${isChecking ? 'Comprobando...' : 'Ya he verificado mi correo'}
             </button>
@@ -143,7 +143,7 @@ export function renderGatekeeperScreen(
             <button 
               id="btn-resend-verified"
               ${isResending ? 'disabled' : ''}
-              class="w-full py-2.5 text-xs font-bold text-brand-primary hover:underline text-center"
+              class="w-full py-2.5 text-[15px] font-medium text-brand-primary hover:underline text-center"
             >
               ${isResending ? 'Reenviando...' : 'Reenviar correo de verificación'}
             </button>
@@ -153,7 +153,7 @@ export function renderGatekeeperScreen(
             <button 
               id="btn-check-verified"
               ${isChecking ? 'disabled' : ''}
-              class="w-full h-12 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-sm tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all disabled:opacity-60"
+              class="w-full h-12 flex items-center justify-center gap-2 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[17px] disabled:opacity-60"
             >
               ${isChecking ? 'Comprobando...' : 'Comprobar de nuevo'}
             </button>
@@ -161,9 +161,9 @@ export function renderGatekeeperScreen(
               : `
             <a 
               href="mailto:${encodeURIComponent(adminContactEmail)}?subject=Aprobacion%20de%20Acceso%20Familia&body=Hola,%20he%20verificado%20mi%20correo%20${encodeURIComponent(user.email)}.%20Por%20favor%20activa%20mi%20acceso%20a%20la%20familia."
-              class="w-full h-12 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-sm tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all"
+              class="w-full h-12 flex items-center justify-center gap-2 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[17px]"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
               Avisar al Administrador
@@ -173,7 +173,7 @@ export function renderGatekeeperScreen(
 
           <button 
             id="btn-gatekeeper-logout"
-            class="w-full h-12 flex items-center justify-center rounded-full bg-surface-base border border-border-subtle text-text-primary font-semibold text-sm hover:bg-surface-elevated active:scale-98 transition-all"
+            class="w-full h-12 flex items-center justify-center rounded-[12px] bg-surface-elevated border border-border-strong text-text-primary font-medium text-[17px]"
           >
             Cerrar Sesión
           </button>

@@ -28,16 +28,16 @@ export function renderChatView(
   let activeGroupId: string = '';
 
   container.innerHTML = `
-    <div id="chat-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+    <div id="chat-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden overscroll-contain-y">
       
-      <!-- iOS Nav Bar (Compact 44pt row: Page Title on Left, Group Action on Right) -->
+      <!-- iOS Nav Bar (Opaca, sin blur) -->
       <header class="ios-nav-bar safe-header-top">
         <div class="flex items-center gap-2 min-w-0">
-          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Chat</h1>
+          <h1 class="ios-nav-title-compact">Chat</h1>
           <span class="w-2 h-2 rounded-full bg-status-online shrink-0"></span>
         </div>
         <div id="chat-header-group-slot" class="flex items-center shrink-0">
-          <span class="px-3 py-1 rounded-full bg-surface-elevated border border-border-subtle text-xs font-bold text-brand-primary">
+          <span class="px-3 py-1 rounded-full bg-surface-elevated border border-border-strong text-[13px] font-medium text-brand-primary">
             Familia
           </span>
         </div>
@@ -46,23 +46,18 @@ export function renderChatView(
       <!-- Messages Stream List -->
       <div 
         id="chat-messages-container" 
-        class="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 pb-44"
+        class="flex-1 overflow-y-auto overscroll-contain-y px-4 py-4 flex flex-col gap-3.5 pb-44"
       >
-        <div class="my-auto text-center p-6 text-text-disabled text-xs">
-          <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-pulse">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          Cargando mensajes del canal...
+        <div class="my-auto text-center p-6 text-text-disabled text-[13px]">
+          Cargando mensajes...
         </div>
       </div>
 
-      <!-- Message Composer Bar (Floating above Bottom Dock) -->
+      <!-- Message Composer Bar -->
       <div class="absolute inset-x-4 safe-composer-bottom z-20">
         <form 
           id="chat-composer-form" 
-          class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-full glass-panel shadow-dock"
+          class="max-w-md mx-auto flex items-center gap-2 p-1.5 rounded-[16px] glass-dock shadow-dock"
         >
           <input 
             type="text" 
@@ -70,15 +65,15 @@ export function renderChatView(
             maxlength="500"
             autocomplete="off"
             placeholder="Mensaje..."
-            class="flex-1 h-10 px-4 rounded-full bg-transparent text-text-primary placeholder:text-text-disabled text-sm focus:outline-none"
+            class="flex-1 h-10 px-3.5 rounded-[12px] bg-transparent text-text-primary placeholder:text-text-disabled text-[17px] focus:outline-none"
           />
           <button 
             type="submit" 
             id="chat-btn-send"
-            class="w-10 h-10 shrink-0 rounded-full bg-brand-primary text-brand-on-primary flex items-center justify-center hover:opacity-95 active:scale-95 disabled:opacity-50 transition-all shadow-sm"
+            class="w-10 h-10 shrink-0 rounded-[12px] bg-brand-primary text-brand-on-primary flex items-center justify-center disabled:opacity-50"
             title="Enviar mensaje"
           >
-            <svg class="w-4 h-4 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <svg class="w-4 h-4 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
@@ -342,14 +337,11 @@ function renderMessagesList(
 ): void {
   if (messages.length === 0) {
     container.innerHTML = `
-      <div class="my-auto text-center p-6 text-text-secondary text-xs">
-        <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-        </div>
-        <p class="font-bold text-text-primary">El chat está en silencio</p>
-        <p class="text-[0.75rem] text-text-disabled mt-1">Escribe el primer mensaje para este grupo.</p>
+      <div class="my-auto text-center p-6 flex flex-col items-center gap-2">
+        <svg class="w-8 h-8 text-text-disabled" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+        </svg>
+        <p class="text-[15px] font-medium text-text-disabled">Sin mensajes en el grupo</p>
       </div>
     `;
     return;
@@ -363,10 +355,10 @@ function renderMessagesList(
       if (isMe) {
         return `
           <div class="flex flex-col items-end gap-1">
-            <div class="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-xs bg-brand-primary text-brand-on-primary text-sm shadow-sm break-words leading-relaxed font-sans">
+            <div class="max-w-[82%] px-4 py-2.5 rounded-[16px] rounded-br-[4px] bg-brand-primary text-brand-on-primary text-[17px] leading-[1.45] break-words select-text">
               ${escapeHtml(msg.text)}
             </div>
-            <span class="text-[0.6875rem] text-text-disabled pr-1 font-mono">${timeStr}</span>
+            <span class="text-[12px] text-text-secondary pr-1 tabular-nums">${timeStr}</span>
           </div>
         `;
       }
@@ -375,19 +367,19 @@ function renderMessagesList(
 
       return `
         <div class="flex items-start gap-2.5">
-          <div class="w-8 h-8 rounded-full shrink-0 bg-surface-card border border-border-subtle flex items-center justify-center text-xs font-bold text-brand-primary overflow-hidden shadow-xs mt-0.5">
+          <div class="w-8 h-8 rounded-full shrink-0 bg-surface-inset flex items-center justify-center text-[13px] font-semibold text-text-primary overflow-hidden mt-0.5">
             ${
               msg.sender_photo
                 ? `<img src="${msg.sender_photo}" alt="${escapeHtml(msg.sender_name)}" class="w-full h-full object-cover" />`
                 : initial
             }
           </div>
-          <div class="flex flex-col items-start gap-1 max-w-[80%]">
-            <span class="text-[0.75rem] font-bold text-text-secondary pl-1">${escapeHtml(msg.sender_name)}</span>
-            <div class="px-4 py-2.5 rounded-2xl rounded-bl-xs glass-panel text-text-primary text-sm shadow-xs break-words leading-relaxed font-sans">
+          <div class="flex flex-col items-start gap-1 max-w-[82%]">
+            <span class="text-[13px] font-medium text-text-secondary pl-1">${escapeHtml(msg.sender_name)}</span>
+            <div class="px-4 py-2.5 rounded-[16px] rounded-bl-[4px] bg-surface-elevated border border-border-strong text-text-primary text-[17px] leading-[1.45] break-words select-text">
               ${escapeHtml(msg.text)}
             </div>
-            <span class="text-[0.6875rem] text-text-disabled pl-1 font-mono">${timeStr}</span>
+            <span class="text-[12px] text-text-secondary pl-1 tabular-nums">${timeStr}</span>
           </div>
         </div>
       `;

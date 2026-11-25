@@ -28,65 +28,70 @@ export function renderAdminView(
   });
 
   container.innerHTML = `
-    <div id="admin-view-root" class="relative h-full w-full bg-surface-canvas flex flex-col overflow-hidden text-text-primary safe-bottom">
+    <div id="admin-view-root" class="relative h-full w-full bg-surface-canvas flex flex-col overflow-hidden overscroll-contain-y text-text-primary safe-bottom">
       
-      <!-- iOS Nav Bar (Compact 44pt row: Back Button + Page Title + Primary Action) -->
+      <!-- iOS Nav Bar (Opaca, sin blur; título centrado aparece al hacer scroll) -->
       <header class="ios-nav-bar safe-header-top">
-        <div class="flex items-center gap-2.5">
-          <button 
-            id="admin-btn-back" 
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-elevated border border-border-subtle text-brand-primary text-xs font-bold hover:opacity-90 transition-colors active:scale-95"
-            title="Volver a Perfil"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Perfil</span>
-          </button>
-          <h1 class="text-base font-extrabold tracking-tight text-text-primary">Administración</h1>
-        </div>
-        <span class="px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[0.75rem] font-bold">
-          Modo Admin
+        <button 
+          id="admin-btn-back" 
+          class="flex items-center gap-1 px-2 py-1 rounded-[12px] text-brand-primary text-[15px] font-medium"
+          title="Volver a Perfil"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Perfil</span>
+        </button>
+        <h1 id="admin-compact-title" class="ios-nav-title-compact opacity-0 pointer-events-none">Administración</h1>
+        <span class="text-[13px] font-medium text-text-secondary w-16 text-right">
+          Admin
         </span>
       </header>
 
       <!-- Scrollable Admin Content -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-lg mx-auto w-full pb-20">
+      <div id="admin-scroll-container" class="flex-1 overflow-y-auto overscroll-contain-y px-4 sm:px-5 pt-2 flex flex-col gap-6 max-w-lg mx-auto w-full pb-20">
         
-        <!-- Section 1: Switch de Registro -->
-        <div class="p-4 rounded-3xl glass-panel shadow-xs flex items-center justify-between">
-          <div>
-            <h2 class="text-xs font-bold text-text-primary">Registro</h2>
-            <p id="reg-status-text" class="text-[0.75rem] text-text-secondary mt-0.5">
-              ${isRegistrationOpen ? 'Permitiendo solicitudes de alta' : 'Registro cerrado a nuevas altas'}
-            </p>
+        <!-- Large Title -->
+        <div>
+          <h2 class="ios-large-title">Administración</h2>
+        </div>
+
+        <!-- Section 1: Switch de Registro (Inset Grouped) -->
+        <div class="ios-grouped-list">
+          <div class="ios-grouped-row">
+            <div>
+              <h3 class="text-[17px] font-normal text-text-primary">Registro</h3>
+              <p id="reg-status-text" class="text-[13px] text-text-secondary mt-0.5">
+                ${isRegistrationOpen ? 'Permitiendo solicitudes de alta' : 'Registro cerrado a nuevas altas'}
+              </p>
+            </div>
+            <button 
+              id="btn-toggle-reg" 
+              class="px-3.5 py-1.5 rounded-[12px] text-[13px] font-semibold ${
+                isRegistrationOpen
+                  ? 'bg-status-online text-brand-on-primary'
+                  : 'bg-surface-canvas text-text-secondary border border-border-strong'
+              }"
+            >
+              ${isRegistrationOpen ? 'Abierto' : 'Cerrado'}
+            </button>
           </div>
-          <button 
-            id="btn-toggle-reg" 
-            class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-xs ${
-              isRegistrationOpen
-                ? 'bg-status-online text-white hover:opacity-90'
-                : 'bg-surface-elevated text-text-disabled hover:text-text-primary'
-            }"
-          >
-            ${isRegistrationOpen ? 'Abierto' : 'Cerrado'}
-          </button>
         </div>
 
         <!-- Section 2: Solicitudes Pendientes de Aprobación -->
-        <div class="flex flex-col gap-2.5">
+        <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between px-1">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
+            <h3 class="text-[13px] font-medium uppercase tracking-[0.01em] text-text-secondary">
               Solicitudes Pendientes
-            </h2>
-            <span id="pending-count-badge" class="text-[0.75rem] font-bold text-brand-primary">
+            </h3>
+            <span id="pending-count-badge" class="text-[13px] font-medium text-brand-primary tabular-nums">
               0 pendientes
             </span>
           </div>
 
-          <div id="pending-list-container" class="flex flex-col gap-2">
-            <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
-              No hay solicitudes pendientes en este momento.
+          <div id="pending-list-container" class="ios-grouped-list">
+            <div class="p-4 text-center text-[13px] text-text-disabled">
+              Sin solicitudes pendientes
             </div>
           </div>
         </div>
@@ -94,10 +99,10 @@ export function renderAdminView(
         <!-- Section 3: Grupos (Gestión de Grupos) -->
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between px-1">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
+            <h3 class="text-[13px] font-medium uppercase tracking-[0.01em] text-text-secondary">
               Grupos
-            </h2>
-            <span id="groups-count-badge" class="text-[0.75rem] font-bold text-brand-primary">
+            </h3>
+            <span id="groups-count-badge" class="text-[13px] font-medium text-brand-primary tabular-nums">
               0 grupos
             </span>
           </div>
@@ -109,20 +114,20 @@ export function renderAdminView(
               id="input-group-name" 
               placeholder="Nuevo grupo (ej: Hijos, Vacaciones)..." 
               maxlength="50"
-              class="flex-1 h-10 px-3.5 rounded-2xl bg-surface-base border border-border-subtle text-xs text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand-primary transition-colors"
+              class="flex-1 h-11 px-3.5 rounded-[12px] bg-surface-elevated border border-border-strong text-[15px] text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand-primary transition-colors"
             />
             <button 
               type="submit" 
               id="btn-submit-group"
-              class="px-4 h-10 rounded-2xl bg-brand-primary text-brand-on-primary font-bold text-xs hover:opacity-95 active:scale-95 transition-all shadow-xs shrink-0"
+              class="px-4 h-11 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[15px] shrink-0"
             >
-              Crear Grupo
+              Crear
             </button>
           </form>
 
           <!-- Listado de Grupos -->
-          <div id="groups-list-container" class="flex flex-col gap-2 mt-1">
-            <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
+          <div id="groups-list-container" class="ios-grouped-list mt-1">
+            <div class="p-4 text-center text-[13px] text-text-disabled">
               Cargando grupos...
             </div>
           </div>
@@ -131,10 +136,10 @@ export function renderAdminView(
         <!-- Section 4: Usuarios Registrados -->
         <div class="flex flex-col gap-2.5">
           <div class="flex items-center justify-between px-1">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-text-secondary">
+            <h3 class="text-[13px] font-medium uppercase tracking-[0.01em] text-text-secondary">
               Usuarios Registrados
-            </h2>
-            <span id="members-count-badge" class="text-[0.75rem] font-bold text-text-secondary">
+            </h3>
+            <span id="members-count-badge" class="text-[13px] font-medium text-text-secondary tabular-nums">
               0 usuarios
             </span>
           </div>
@@ -143,8 +148,8 @@ export function renderAdminView(
           <div id="members-quota-alert" class="hidden"></div>
 
           <!-- Members records list -->
-          <div id="members-list-container" class="flex flex-col gap-2 mt-1">
-            <div class="p-4 rounded-2xl bg-surface-base border border-border-subtle text-center text-xs text-text-disabled">
+          <div id="members-list-container" class="ios-grouped-list mt-1">
+            <div class="p-4 text-center text-[13px] text-text-disabled">
               Cargando usuarios registrados...
             </div>
           </div>
@@ -154,6 +159,17 @@ export function renderAdminView(
 
     </div>
   `;
+
+  const adminScrollEl = container.querySelector('#admin-scroll-container') as HTMLElement | null;
+  const adminCompactTitleEl = container.querySelector('#admin-compact-title') as HTMLElement | null;
+  adminScrollEl?.addEventListener('scroll', () => {
+    if (!adminCompactTitleEl) return;
+    if (adminScrollEl.scrollTop > 28) {
+      adminCompactTitleEl.classList.remove('opacity-0');
+    } else {
+      adminCompactTitleEl.classList.add('opacity-0');
+    }
+  });
 
   // Bind Switch de Registro
   function updateRegistrationToggleUI(): void {
@@ -248,26 +264,26 @@ export function renderAdminView(
     listEl.innerHTML = pendingMembers
       .map(
         (m) => `
-        <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2.5 overflow-hidden">
-            <div class="w-9 h-9 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-xs font-bold shrink-0">
+        <div class="ios-grouped-row gap-3">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-9 h-9 rounded-full bg-surface-inset text-text-primary flex items-center justify-center text-[13px] font-semibold shrink-0">
               ${(m.display_name || 'F')[0].toUpperCase()}
             </div>
             <div class="truncate">
-              <p class="text-xs font-bold text-text-primary truncate">${escapeHtml(m.display_name)}</p>
-              <p class="text-[0.75rem] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+              <p class="text-[15px] font-medium text-text-primary truncate">${escapeHtml(m.display_name)}</p>
+              <p class="text-[13px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
             </div>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button 
               data-approve-uid="${m.uid}" 
-              class="btn-approve px-3 py-1.5 rounded-full bg-status-online text-white text-[0.75rem] font-bold hover:opacity-90 active:scale-95 transition-all shadow-xs"
+              class="btn-approve px-3 py-1.5 rounded-[10px] bg-status-online text-brand-on-primary text-[13px] font-semibold"
             >
               Aprobar
             </button>
             <button 
               data-reject-uid="${m.uid}" 
-              class="btn-reject px-3 py-1.5 rounded-full bg-surface-elevated text-status-error text-[0.75rem] font-bold hover:bg-status-error/10 active:scale-95 transition-all"
+              class="btn-reject px-3 py-1.5 rounded-[10px] bg-surface-canvas border border-border-strong text-status-error text-[13px] font-semibold"
             >
               Rechazar
             </button>
@@ -327,16 +343,16 @@ export function renderAdminView(
         ).length;
 
         return `
-          <div class="p-3 rounded-2xl glass-panel shadow-xs flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2.5 truncate">
-              <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="ios-grouped-row text-[15px]">
+            <div class="flex items-center gap-3 truncate">
+              <div class="w-8 h-8 rounded-[8px] bg-surface-inset text-text-primary flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <div class="truncate">
-                <p class="font-bold text-text-primary truncate">${escapeHtml(g.name)}</p>
-                <p class="text-[0.75rem] text-text-secondary">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
+                <p class="font-medium text-text-primary truncate">${escapeHtml(g.name)}</p>
+                <p class="text-[13px] text-text-secondary tabular-nums">${memberCount} ${memberCount === 1 ? 'miembro' : 'miembros'}</p>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -345,24 +361,23 @@ export function renderAdminView(
                 type="button"
                 data-toggle-guia-group-id="${g.id}"
                 data-toggle-guia-current="${g.guia_enabled ? 'true' : 'false'}"
-                class="btn-toggle-guia px-2.5 py-1 rounded-full text-[0.7rem] font-bold transition-all shadow-xs flex items-center gap-1 ${
+                class="btn-toggle-guia px-2.5 py-1 rounded-[10px] text-[12px] font-semibold flex items-center gap-1 ${
                   g.guia_enabled
-                    ? 'bg-status-online text-white hover:opacity-90'
-                    : 'bg-surface-elevated text-text-disabled hover:text-text-primary'
+                    ? 'bg-status-online text-brand-on-primary'
+                    : 'bg-surface-canvas text-text-secondary border border-border-strong'
                 }"
                 title="${g.guia_enabled ? 'Deshabilitar pestaña GuIA para este grupo' : 'Habilitar pestaña GuIA para este grupo'}"
               >
-                <span>🧭</span>
                 <span>${g.guia_enabled ? 'GuIA On' : 'GuIA Off'}</span>
               </button>
 
               <button 
                 data-delete-group-id="${g.id}"
                 data-delete-group-name="${escapeHtml(g.name)}"
-                class="btn-delete-group p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
+                class="btn-delete-group p-1.5 text-text-disabled hover:text-status-error rounded-[8px]"
                 title="Eliminar grupo"
               >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
@@ -498,10 +513,10 @@ export function renderAdminView(
         }
 
         return `
-          <div class="p-3.5 rounded-2xl glass-panel shadow-xs flex flex-col gap-2.5 text-xs">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2.5 truncate">
-                <div class="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+          <div class="ios-grouped-row flex-col !items-stretch !justify-start text-left gap-2.5 text-[15px]">
+            <div class="w-full flex items-center justify-between gap-2">
+              <div class="flex items-center gap-3 truncate">
+                <div class="w-9 h-9 rounded-full bg-surface-inset text-text-primary flex items-center justify-center font-semibold text-[13px] shrink-0 overflow-hidden">
                   ${
                     m.photo_url
                       ? `<img src="${escapeHtml(m.photo_url)}" alt="${escapeHtml(m.display_name)}" class="w-full h-full object-cover" />`
@@ -509,11 +524,11 @@ export function renderAdminView(
                   }
                 </div>
                 <div class="truncate">
-                  <p class="font-bold text-text-primary truncate flex items-center gap-1.5">
+                  <p class="font-medium text-text-primary truncate flex items-center gap-1.5">
                     ${escapeHtml(m.display_name)}
-                    ${isSelf ? '<span class="text-[0.6875rem] text-brand-primary font-normal">(Tú)</span>' : ''}
+                    ${isSelf ? '<span class="text-[13px] text-brand-primary font-normal">(Tú)</span>' : ''}
                   </p>
-                  <p class="text-[0.75rem] text-text-secondary truncate">${escapeHtml(m.email)}</p>
+                  <p class="text-[13px] text-text-secondary truncate">${escapeHtml(m.email)}</p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
@@ -524,10 +539,10 @@ export function renderAdminView(
                     data-purge-uid="${m.uid}" 
                     data-purge-email="${escapeHtml(m.email)}"
                     data-purge-name="${escapeHtml(m.display_name)}"
-                    class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error active:scale-90 transition-all rounded-full hover:bg-status-error/10"
+                    class="btn-purge-member p-1.5 text-text-disabled hover:text-status-error rounded-[8px]"
                     title="Eliminar usuario"
                   >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -537,9 +552,9 @@ export function renderAdminView(
               </div>
             </div>
 
-            <!-- Globos interactivos de Grupos (Verde = asignado, Gris = no asignado) -->
-            <div class="flex flex-wrap gap-1.5 items-center pt-2 border-t border-border-subtle/50">
-              <span class="text-[0.6875rem] text-text-secondary font-semibold mr-0.5">Grupos:</span>
+            <!-- Globos interactivos de Grupos -->
+            <div class="flex flex-wrap gap-1.5 items-center pt-1">
+              <span class="text-[12px] text-text-secondary font-medium mr-0.5">Grupos:</span>
               ${groupBadgesHtml}
             </div>
           </div>

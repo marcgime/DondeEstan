@@ -59,15 +59,15 @@ export function renderMapView(
   const selectedMemberUids = new Set<string>();
 
   container.innerHTML = `
-    <div id="map-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+    <div id="map-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden overscroll-contain-y">
       
-      <!-- iOS Nav Bar (Compact 44pt row: Page Title + Live Status + Group Action) -->
+      <!-- iOS Nav Bar (Opaca, sin blur) -->
       <header class="ios-nav-bar safe-header-top">
         <div class="flex items-center gap-2.5 min-w-0">
-          <h1 class="text-base font-extrabold tracking-tight text-text-primary shrink-0">Mapa</h1>
-          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-elevated border border-border-subtle truncate">
-            <span class="w-2 h-2 rounded-full bg-status-online animate-pulse shrink-0"></span>
-            <span id="live-members-badge" class="text-[0.6875rem] font-bold text-text-secondary font-sans truncate">
+          <h1 class="ios-nav-title-compact shrink-0">Mapa</h1>
+          <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-elevated border border-border-strong truncate">
+            <span class="w-2 h-2 rounded-full bg-status-online shrink-0"></span>
+            <span id="live-members-badge" class="text-[13px] font-medium text-text-secondary tabular-nums truncate">
               Localizando...
             </span>
           </div>
@@ -77,62 +77,53 @@ export function renderMapView(
         <div id="group-selector-slot" class="flex items-center shrink-0"></div>
       </header>
 
-      <!-- MAP FRAME: Cuadrado que ocupa el ancho de la pantalla -->
-      <div class="px-4 pt-2.5 shrink-0">
-        <div class="relative w-full aspect-square max-h-[44vh] rounded-3xl overflow-hidden border border-surface-glass-border shadow-dock bg-surface-base">
+      <!-- MAP FRAME -->
+      <div class="px-4 pt-3 shrink-0">
+        <div class="relative w-full aspect-square max-h-[42vh] rounded-[16px] overflow-hidden border border-border-strong bg-surface-elevated">
           <div id="google-map-container" class="h-full w-full flex items-center justify-center">
-            <div class="text-center p-6 text-text-secondary text-xs">
-              <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center animate-spin">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
+            <div class="text-center p-6 text-text-disabled text-[13px]">
               Cargando mapa...
             </div>
           </div>
 
-          <!-- Botones flotantes sobre el mapa (Zoom, Recentrar y Fit) -->
+          <!-- Botones flotantes sobre el mapa -->
           <div class="absolute right-3 bottom-3 z-[500] flex flex-col gap-2">
-            <!-- Zoom In (+) -->
             <button 
               id="btn-zoom-in"
-              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all text-base font-bold select-none"
+              class="w-9 h-9 rounded-full bg-surface-elevated border border-border-strong shadow-dock flex items-center justify-center text-text-primary select-none"
               title="Acercar mapa"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
               </svg>
             </button>
 
-            <!-- Zoom Out (-) -->
             <button 
               id="btn-zoom-out"
-              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all text-base font-bold select-none"
+              class="w-9 h-9 rounded-full bg-surface-elevated border border-border-strong shadow-dock flex items-center justify-center text-text-primary select-none"
               title="Alejar mapa"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
               </svg>
             </button>
 
-            <!-- Re-center on me -->
             <button 
               id="btn-center-me"
-              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-brand-primary hover:scale-105 active:scale-95 transition-all"
+              class="w-9 h-9 rounded-full bg-surface-elevated border border-border-strong shadow-dock flex items-center justify-center text-brand-primary"
               title="Centrar en mi posición"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
 
-            <!-- Fit all bounds -->
             <button 
               id="btn-fit-bounds"
-              class="w-9 h-9 rounded-full glass-panel shadow-dock flex items-center justify-center text-text-primary hover:scale-105 active:scale-95 transition-all"
+              class="w-9 h-9 rounded-full bg-surface-elevated border border-border-strong shadow-dock flex items-center justify-center text-text-primary"
               title="Ver a todos en mapa"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
             </button>
@@ -140,27 +131,27 @@ export function renderMapView(
         </div>
       </div>
 
-      <!-- BARRA DE CONTROL INTERMEDIA: Toggle Switch -->
-      <div class="px-5 py-2.5 shrink-0 flex items-center justify-between">
+      <!-- BARRA DE CONTROL INTERMEDIA -->
+      <div class="px-5 py-3 shrink-0 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span id="selected-counter-badge" class="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[0.6875rem] font-bold">
+          <span id="selected-counter-badge" class="text-[13px] font-medium text-brand-primary tabular-nums">
             Todos visibles
           </span>
         </div>
 
         <label class="flex items-center gap-2.5 cursor-pointer select-none">
-          <span class="text-xs font-semibold text-text-secondary">Mostrar todos</span>
+          <span class="text-[13px] font-medium text-text-secondary">Mostrar todos</span>
           <div class="relative inline-flex items-center">
             <input type="checkbox" id="toggle-select-all" class="sr-only peer" checked>
-            <div class="w-11 h-6 bg-surface-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+            <div class="w-11 h-6 bg-surface-inset peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-elevated after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
           </div>
         </label>
       </div>
 
-      <!-- BOTTOM CONTACTS LIST: Scroll vertical -->
-      <div id="contacts-scroll-wrapper" class="flex-1 overflow-y-auto px-4 pb-28">
-        <div id="contacts-scroll-container" class="flex flex-col gap-2">
-          <div class="p-6 text-center text-xs text-text-disabled">Cargando usuarios...</div>
+      <!-- BOTTOM CONTACTS LIST: Inset Grouped -->
+      <div id="contacts-scroll-wrapper" class="flex-1 overflow-y-auto overscroll-contain-y px-4 pb-28">
+        <div id="contacts-scroll-container" class="ios-grouped-list">
+          <div class="p-6 text-center text-[13px] text-text-disabled">Cargando usuarios...</div>
         </div>
       </div>
 
@@ -260,7 +251,7 @@ export function renderMapView(
 
     if (groupMembers.length === 0) {
       contactsContainer.innerHTML = `
-        <div class="p-6 text-center text-xs text-text-disabled">No hay usuarios en este grupo</div>
+        <div class="p-6 text-center text-[13px] text-text-disabled">Sin usuarios en este grupo</div>
       `;
       return;
     }
@@ -271,22 +262,16 @@ export function renderMapView(
         const isInteractive = !showAll;
         const initial = member.display_name.charAt(0).toUpperCase();
 
-        const cardBgClass = isInteractive
-          ? isSelected
-            ? 'bg-brand-primary/10 border-brand-primary/50 shadow-sm'
-            : 'bg-surface-elevated/60 border-border-subtle opacity-70'
-          : 'bg-surface-elevated/80 border-border-subtle';
-
         return `
           <div 
             data-uid="${escapeHtml(member.uid)}"
-            class="contact-card flex items-center justify-between p-3 rounded-2xl border transition-all ${cardBgClass} ${
-              isInteractive ? 'cursor-pointer active:scale-98 hover:border-brand-primary/40' : ''
-            }"
+            class="contact-card ios-grouped-row ios-grouped-row--inset-avatar ${
+              isInteractive ? 'ios-tap cursor-pointer' : ''
+            } ${isInteractive && !isSelected ? 'opacity-60' : ''}"
           >
-            <div class="flex items-center gap-3">
-              <div class="relative">
-                <div class="w-10 h-10 rounded-full bg-brand-primary/20 text-brand-primary flex items-center justify-center font-bold text-sm overflow-hidden">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="relative shrink-0">
+                <div class="w-10 h-10 rounded-full bg-surface-inset text-text-primary flex items-center justify-center font-semibold text-[15px] overflow-hidden">
                   ${
                     member.photo_url
                       ? `<img src="${escapeHtml(member.photo_url)}" alt="${escapeHtml(
@@ -295,34 +280,34 @@ export function renderMapView(
                       : initial
                   }
                 </div>
-                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-canvas ${
-                  member.isLive ? 'bg-status-online animate-pulse' : 'bg-status-offline'
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-surface-elevated ${
+                  member.isLive ? 'bg-status-online' : 'bg-status-offline'
                 }"></span>
               </div>
-              <div>
-                <h4 class="text-xs font-bold text-text-primary flex items-center gap-1.5">
+              <div class="min-w-0">
+                <h4 class="text-[17px] font-medium text-text-primary flex items-center gap-1.5 truncate">
                   ${escapeHtml(member.display_name)}
-                  ${member.uid === options.uid ? '<span class="text-[0.6875rem] text-brand-primary font-normal">(Tú)</span>' : ''}
+                  ${member.uid === options.uid ? '<span class="text-[13px] text-brand-primary font-normal">(Tú)</span>' : ''}
                 </h4>
-                <p class="text-[0.75rem] text-text-secondary">
+                <p class="text-[13px] text-text-secondary tabular-nums truncate">
                   ${member.isLive ? 'En línea ahora' : member.relativeTimeText || 'Desconectado'}
                 </p>
               </div>
             </div>
 
             <!-- Checkbox / Status Indicator -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
               ${
                 isInteractive
                   ? `
-                <div class="w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                <div class="w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
                   isSelected
                     ? 'bg-brand-primary border-brand-primary text-brand-on-primary'
-                    : 'border-border-strong bg-surface-canvas'
+                    : 'border-text-disabled bg-surface-elevated'
                 }">
                   ${
                     isSelected
-                      ? `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      ? `<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                          </svg>`
                       : ''
@@ -330,7 +315,7 @@ export function renderMapView(
                 </div>
               `
                   : `
-                <span class="text-[0.6875rem] text-text-disabled font-medium px-2 py-0.5 rounded-full bg-surface-base">
+                <span class="text-[13px] text-text-disabled font-normal">
                   Visible
                 </span>
               `
@@ -381,13 +366,13 @@ export function renderMapView(
     if (counterBadge) {
       if (showAll) {
         counterBadge.textContent = 'Todos visibles';
-        counterBadge.className = 'px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[0.6875rem] font-bold';
+        counterBadge.className = 'text-[13px] font-medium text-brand-primary tabular-nums';
       } else {
         const count = selectedMemberUids.size;
         counterBadge.textContent = `${count} de ${groupMembers.length} seleccionados`;
         counterBadge.className = count > 0 
-          ? 'px-2.5 py-0.5 rounded-full bg-status-online/15 text-status-online text-[0.6875rem] font-bold'
-          : 'px-2.5 py-0.5 rounded-full bg-surface-elevated text-text-disabled text-[0.6875rem] font-bold';
+          ? 'text-[13px] font-medium text-status-online tabular-nums'
+          : 'text-[13px] font-medium text-text-disabled tabular-nums';
       }
     }
 

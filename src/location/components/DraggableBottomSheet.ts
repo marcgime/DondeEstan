@@ -15,26 +15,26 @@ export function renderDraggableBottomSheet(
 
   container.innerHTML = `
     <!-- Overlay backdrop -->
-    <div id="sheet-backdrop" class="fixed inset-0 z-[1200] bg-black/20 backdrop-blur-xs transition-opacity duration-300"></div>
+    <div id="sheet-backdrop" class="fixed inset-0 z-[1200] bg-surface-overlay transition-opacity duration-300"></div>
 
     <!-- Draggable Sheet Container -->
     <div 
       id="draggable-sheet"
-      class="fixed inset-x-0 bottom-0 z-[1250] glass-dock rounded-t-3xl shadow-dock text-text-primary safe-sheet-bottom transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
+      class="fixed inset-x-0 bottom-0 z-[1250] floating-sheet-surface rounded-t-[24px] text-text-primary safe-sheet-bottom transition-transform duration-200 select-none touch-none max-w-lg mx-auto will-change-transform"
       style="transform: translateY(0);"
     >
       <!-- Drag Handle -->
       <div id="drag-handle-area" class="w-full py-3 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing">
-        <div class="w-12 h-1.5 rounded-full bg-border-subtle hover:bg-border-strong transition-colors"></div>
+        <div class="ios-sheet-handle"></div>
       </div>
 
-      <div class="px-5 pb-6 flex flex-col gap-4">
+      <div class="px-5 pb-6 flex flex-col gap-5">
         
         <!-- Header Member Row -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3.5">
             <div class="relative">
-              <div class="w-13 h-13 rounded-full bg-brand-primary flex items-center justify-center text-brand-on-primary font-bold text-lg shadow-sm overflow-hidden">
+              <div class="w-12 h-12 rounded-full bg-surface-inset flex items-center justify-center text-text-primary font-semibold text-lg overflow-hidden border border-border-strong">
                 ${
                   member.photo_url
                     ? `<img src="${escapeHtml(member.photo_url)}" alt="${escapeHtml(
@@ -43,22 +43,22 @@ export function renderDraggableBottomSheet(
                     : escapeHtml(member.display_name.charAt(0).toUpperCase())
                 }
               </div>
-              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-surface-canvas ${
-                member.isLive ? 'bg-status-online animate-pulse' : 'bg-status-offline'
+              <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-elevated ${
+                member.isLive ? 'bg-status-online' : 'bg-status-offline'
               }"></span>
             </div>
 
             <div>
               <div class="flex items-center gap-2">
-                <h2 class="text-base font-extrabold text-text-primary leading-tight font-sans">
+                <h2 class="text-[20px] font-semibold tracking-[-0.01em] text-text-primary leading-tight">
                   ${escapeHtml(member.display_name)}
                 </h2>
-                <span class="text-[0.6875rem] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary">
+                <span class="text-[12px] uppercase font-medium tracking-[0.01em] px-2 py-0.5 rounded-full bg-surface-canvas text-text-secondary">
                   ${escapeHtml(member.role)}
                 </span>
               </div>
-              <p class="text-xs font-semibold mt-0.5 ${
-                member.isLive ? 'text-status-online' : 'text-text-disabled'
+              <p class="text-[13px] font-medium mt-0.5 tabular-nums ${
+                member.isLive ? 'text-status-online' : 'text-text-secondary'
               }">
                 ${member.isLive ? 'En directo' : 'Desconectado'} &bull; ${escapeHtml(member.relativeTimeText)}
               </p>
@@ -67,20 +67,20 @@ export function renderDraggableBottomSheet(
 
           <button 
             id="btn-close-sheet"
-            class="p-2 rounded-full bg-surface-base border border-border-subtle text-text-secondary hover:text-text-primary transition-all active:scale-95"
+            class="w-8 h-8 rounded-full bg-surface-canvas text-text-secondary hover:text-text-primary flex items-center justify-center"
             aria-label="Cerrar detalle"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <!-- Telemetry Cards Row: Coords & Precision -->
-        <div class="grid grid-cols-2 gap-2.5 text-xs">
-          <div class="p-3 rounded-2xl bg-surface-base/80 border border-border-subtle flex flex-col gap-1">
-            <span class="text-[0.75rem] font-bold text-text-secondary">Ubicación GPS</span>
-            <span class="font-mono text-text-primary text-[0.75rem] truncate">
+        <!-- Telemetry Grouped Card -->
+        <div class="ios-grouped-list">
+          <div class="ios-grouped-row">
+            <span class="text-[15px] text-text-secondary">Ubicación GPS</span>
+            <span class="font-mono text-[13px] text-text-primary tabular-nums">
               ${
                 member.location
                   ? `${member.location.lat.toFixed(4)}, ${member.location.lng.toFixed(4)}`
@@ -88,30 +88,21 @@ export function renderDraggableBottomSheet(
               }
             </span>
           </div>
-
-          <div class="p-3 rounded-2xl bg-surface-base/80 border border-border-subtle flex flex-col gap-1">
-            <span class="text-[0.75rem] font-bold text-text-secondary">Estado Dispositivo</span>
-            <div class="flex items-center gap-1.5 text-text-primary font-medium">
-              <svg class="w-3.5 h-3.5 text-status-online" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>GPS Activo</span>
-            </div>
+          <div class="ios-grouped-row">
+            <span class="text-[15px] text-text-secondary">Estado Dispositivo</span>
+            <span class="text-[15px] font-medium text-text-primary">GPS Activo</span>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex items-center gap-2 pt-1">
+        <div class="flex items-center gap-3 pt-1">
           ${
             member.location
               ? `
             <button 
               id="btn-center-member"
-              class="flex-1 h-11 flex items-center justify-center gap-2 rounded-full bg-brand-primary text-brand-on-primary font-bold text-xs tracking-wide shadow-card hover:opacity-95 active:scale-98 transition-all"
+              class="flex-1 h-12 flex items-center justify-center gap-2 rounded-[12px] bg-brand-primary text-brand-on-primary font-semibold text-[17px]"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
               Centrar en Mapa
             </button>
 
@@ -120,12 +111,12 @@ export function renderDraggableBottomSheet(
               target="_blank" 
               rel="noopener noreferrer"
               id="btn-route-member"
-              class="h-11 px-4 flex items-center justify-center gap-1.5 rounded-full bg-surface-elevated border border-border-subtle text-text-primary font-bold text-xs hover:bg-surface-base active:scale-98 transition-all"
+              class="h-12 px-4 flex items-center justify-center gap-1.5 rounded-[12px] bg-surface-canvas border border-border-strong text-brand-primary font-semibold text-[15px]"
             >
-              <svg class="w-4 h-4 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
-              ¿Cómo llegar?
+              Ruta
             </a>
           `
               : ''
