@@ -7,7 +7,9 @@ import {
   setStoredChatNotificationsEnabled,
   requestChatNotificationPermission,
   getNotificationPermissionState,
+  syncUserWebPushSubscription,
 } from '../../chat';
+import { getFirebaseServices, isFirebaseConfigured } from '../../core/firebase';
 import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import {
@@ -380,6 +382,11 @@ export function renderProfileView(
         await profileService.updateChatNotifications(profile.uid, nextState);
       } catch (err) {
         console.warn('No se pudo sincronizar la preferencia de notificaciones en la nube:', err);
+      }
+
+      if (isFirebaseConfigured()) {
+        const { db } = getFirebaseServices();
+        void syncUserWebPushSubscription(db, profile);
       }
     });
 

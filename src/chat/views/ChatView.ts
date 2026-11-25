@@ -3,6 +3,7 @@ import type { ChatMessage, ChatSender } from '../types';
 import type { GroupService } from '../../admin/group_service';
 import type { Group } from '../../admin/types';
 import type { UserProfile } from '../../auth/types';
+import { triggerRemoteGroupChatPush } from '../chat_notification_monitor';
 import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 
@@ -271,6 +272,9 @@ export function renderChatView(
 
     try {
       await chatService.sendMessage(currentUser, text, activeGroupId || undefined);
+      if (activeGroupId) {
+        void triggerRemoteGroupChatPush(activeGroupId, currentUser.name, text);
+      }
       triggerHaptic('success');
       inputEl.value = '';
     } catch (err) {

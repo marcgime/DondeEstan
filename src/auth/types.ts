@@ -1,3 +1,5 @@
+import type { WebPushSubscriptionRecord } from '../core/web_push';
+
 export type UserRole = 'admin' | 'member';
 
 export type UserStatus = 'unverified_email' | 'pending_approval' | 'active' | 'rejected' | 'online' | 'offline';
@@ -18,6 +20,7 @@ export interface UserProfile {
   groupIds?: string[];
   ui_scale?: 'compact' | 'default' | 'comfortable' | 'large';
   chat_notifications_enabled?: boolean;
+  push_subscriptions?: WebPushSubscriptionRecord[];
   location?: UserLocation;
   created_at?: unknown;
   updated_at?: unknown;

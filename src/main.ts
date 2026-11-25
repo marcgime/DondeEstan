@@ -15,6 +15,7 @@ import {
   FamilyChatService,
   ChatNotificationMonitor,
   setStoredChatNotificationsEnabled,
+  syncUserWebPushSubscription,
   renderChatView,
 } from './chat';
 import { ProfileService, renderProfileView } from './profile';
@@ -260,6 +261,7 @@ function init(): void {
               },
             });
             chatMonitor.start();
+            void syncUserWebPushSubscription(db, profile);
           }
 
           if (!isAppInitialized) {

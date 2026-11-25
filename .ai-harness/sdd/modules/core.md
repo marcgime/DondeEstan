@@ -46,6 +46,7 @@ Inicialización del SDK Firebase (Auth, Firestore, Storage), variables de entorn
 
 - **BR-CORE-01:** Cero excepciones no tipadas escapan a módulos de negocio. Todo error transitorio o fatal se encapsula en una jerarquía de error conocida.
 - **BR-CORE-02:** Los clientes de red y persistencia no abren conexiones sin límite; deben declarar un pool finito y un timeout estricto.
+- **BR-CORE-03:** La clave privada VAPID nunca se expone al cliente ni al repositorio; permanece exclusivamente en Cloudflare Workers o en `config/web_push` protegido.
 
 ---
 
@@ -75,3 +76,5 @@ sequenceDiagram
 |---|---|---|---|
 | CT-CORE-01 | `getFirebaseServices` / `isFirebaseConfigured` | `src/core/firebase.ts` | `tests/unit/auth/whitelist.test.ts` |
 | CT-CORE-02 | `handleAdminDeleteUser` | `src/core/worker.ts` | `tests/unit/admin/admin_service.test.ts` |
+| CT-CORE-03 | `handleGetVapidKey` / `handleChatNotify` | `src/core/worker.ts` | `tests/unit/core/web_push.test.ts` |
+| CT-CORE-04 | `subscribeToWebPush` / `unsubscribeFromWebPush` | `src/core/pwa.ts` | `tests/unit/core/pwa.test.ts` |

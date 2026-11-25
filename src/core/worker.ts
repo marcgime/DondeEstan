@@ -1,5 +1,14 @@
+import {
+  generateVapidKeys,
+  sendWebPushNotification,
+  type VapidKeyPairData,
+  type WebPushSubscriptionRecord,
+} from './web_push';
+
 export interface WorkerEnv {
   readonly FIREBASE_SERVICE_ACCOUNT?: string;
+  readonly VAPID_PUBLIC_KEY?: string;
+  readonly VAPID_PRIVATE_JWK?: string;
   readonly ASSETS?: {
     fetch(request: Request): Promise<Response>;
   };
@@ -246,11 +255,267 @@ export async function handleAdminDeleteUser(
   }
 }
 
+interface ChatNotifyPayload {
+  readonly groupId?: string;
+  readonly senderName?: string;
+  readonly text?: string;
+}
+
+interface FirestoreStringValue {
+  stringValue?: string;
+}
+
+interface FirestoreDoc {
+  name?: string;
+  fields?: Record<string, unknown>;
+}
+
+async function verifyAuthenticatedUid(
+  idToken: string,
+  projectId: string,
+  accessToken: string
+): Promise<string> {
+  const lookupRes = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:lookup`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    }
+  );
+
+  if (!lookupRes.ok) {
+    throw new Error('Token de sesión no válido.');
+  }
+
+  const lookupData = (await lookupRes.json()) as {
+    users?: Array<{ localId?: string }>;
+  };
+  const callerUid = lookupData.users?.[0]?.localId;
+  if (!callerUid) {
+    throw new Error('No se pudo identificar al usuario remitente.');
+  }
+  return callerUid;
+}
+
+function parseServiceAccount(env: WorkerEnv): ServiceAccountCredentials {
+  if (!env.FIREBASE_SERVICE_ACCOUNT) {
+    throw new Error('MISSING_SA');
+  }
+  const sa = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccountCredentials;
+  if (!sa.project_id || !sa.client_email || !sa.private_key) {
+    throw new Error('INVALID_SA');
+  }
+  return sa;
+}
+
+async function getOrCreateVapidKeys(
+  env: WorkerEnv,
+  projectId: string,
+  accessToken: string
+): Promise<VapidKeyPairData> {
+  if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_JWK) {
+    return {
+      publicKey: env.VAPID_PUBLIC_KEY,
+      privateJwk: env.VAPID_PRIVATE_JWK,
+    };
+  }
+
+  const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/config/web_push`;
+  const getRes = await fetch(docUrl, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (getRes.ok) {
+    const docData = (await getRes.json()) as {
+      fields?: {
+        publicKey?: FirestoreStringValue;
+        privateJwk?: FirestoreStringValue;
+      };
+    };
+    const publicKey = docData.fields?.publicKey?.stringValue;
+    const privateJwk = docData.fields?.privateJwk?.stringValue;
+    if (publicKey && privateJwk) {
+      return { publicKey, privateJwk };
+    }
+  }
+
+  const generated = await generateVapidKeys();
+  await fetch(docUrl, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: {
+        publicKey: { stringValue: generated.publicKey },
+        privateJwk: { stringValue: generated.privateJwk },
+      },
+    }),
+  });
+
+  return generated;
+}
+
+function extractPushSubscriptions(fields: Record<string, unknown>): WebPushSubscriptionRecord[] {
+  const subsField = fields.push_subscriptions as
+    | { arrayValue?: { values?: Array<{ mapValue?: { fields?: Record<string, FirestoreStringValue> } }> } }
+    | undefined;
+  const values = subsField?.arrayValue?.values;
+  if (!Array.isArray(values)) return [];
+
+  const result: WebPushSubscriptionRecord[] = [];
+  for (const item of values) {
+    const mapFields = item.mapValue?.fields;
+    const endpoint = mapFields?.endpoint?.stringValue;
+    const p256dh = mapFields?.p256dh?.stringValue;
+    const auth = mapFields?.auth?.stringValue;
+    if (endpoint && p256dh && auth) {
+      result.push({ endpoint, keys: { p256dh, auth } });
+    }
+  }
+  return result;
+}
+
+export async function handleGetVapidKey(request: Request, env: WorkerEnv): Promise<Response> {
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'Método no permitido.' }, 405);
+  }
+
+  if (env.VAPID_PUBLIC_KEY) {
+    return jsonResponse({ publicKey: env.VAPID_PUBLIC_KEY }, 200);
+  }
+
+  try {
+    const sa = parseServiceAccount(env);
+    const accessToken = await getGoogleAccessToken(sa);
+    const vapid = await getOrCreateVapidKeys(env, sa.project_id, accessToken);
+    return jsonResponse({ publicKey: vapid.publicKey }, 200);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error obteniendo clave VAPID.';
+    return jsonResponse({ error: msg }, msg === 'MISSING_SA' ? 501 : 500);
+  }
+}
+
+export async function handleChatNotify(request: Request, env: WorkerEnv): Promise<Response> {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Método no permitido.' }, 405);
+  }
+
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!idToken) {
+    return jsonResponse({ error: 'Falta token de autorización.' }, 401);
+  }
+
+  let body: ChatNotifyPayload;
+  try {
+    body = (await request.json()) as ChatNotifyPayload;
+  } catch {
+    return jsonResponse({ error: 'Cuerpo JSON inválido.' }, 400);
+  }
+
+  const groupId = body.groupId?.trim();
+  const text = body.text?.trim();
+  if (!groupId || !text) {
+    return jsonResponse({ error: 'Faltan groupId o text.' }, 400);
+  }
+
+  try {
+    const sa = parseServiceAccount(env);
+    const accessToken = await getGoogleAccessToken(sa);
+    const senderUid = await verifyAuthenticatedUid(idToken, sa.project_id, accessToken);
+    const vapid = await getOrCreateVapidKeys(env, sa.project_id, accessToken);
+
+    // 1. Obtener nombre del grupo
+    let groupName = 'Familia';
+    const groupRes = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents/groups/${encodeURIComponent(groupId)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (groupRes.ok) {
+      const groupDoc = (await groupRes.json()) as FirestoreDoc;
+      const nameVal = (groupDoc.fields?.name as FirestoreStringValue | undefined)?.stringValue;
+      if (nameVal) groupName = nameVal;
+    }
+
+    // 2. Obtener miembros del grupo con notificaciones activadas
+    const usersRes = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents/users?pageSize=100`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!usersRes.ok) {
+      return jsonResponse({ error: 'No se pudieron consultar los usuarios.' }, 502);
+    }
+
+    const usersList = (await usersRes.json()) as { documents?: FirestoreDoc[] };
+    const senderName = body.senderName?.trim() || 'Familiar';
+    const pushPromises: Promise<unknown>[] = [];
+
+    for (const userDoc of usersList.documents || []) {
+      const uid = userDoc.name?.split('/').pop() || '';
+      if (!uid || uid === senderUid || !userDoc.fields) continue;
+
+      const status = (userDoc.fields.status as FirestoreStringValue | undefined)?.stringValue;
+      const role = (userDoc.fields.role as FirestoreStringValue | undefined)?.stringValue;
+      if (status !== 'active' && role !== 'admin') continue;
+
+      const notifField = userDoc.fields.chat_notifications_enabled as
+        | { booleanValue?: boolean }
+        | undefined;
+      if (notifField && notifField.booleanValue === false) continue;
+
+      const groupIdsField = userDoc.fields.groupIds as
+        | { arrayValue?: { values?: FirestoreStringValue[] } }
+        | undefined;
+      const memberGroups = (groupIdsField?.arrayValue?.values || [])
+        .map((v) => v.stringValue || '')
+        .filter(Boolean);
+
+      if (role !== 'admin' && !memberGroups.includes(groupId)) continue;
+
+      const subs = extractPushSubscriptions(userDoc.fields);
+      for (const sub of subs) {
+        pushPromises.push(
+          sendWebPushNotification(
+            sub,
+            {
+              title: `${senderName} · ${groupName}`,
+              body: text.slice(0, 140),
+              groupId,
+              tag: `chat-${groupId}`,
+              url: '/',
+            },
+            vapid
+          ).catch(() => null)
+        );
+      }
+    }
+
+    await Promise.all(pushPromises);
+    return jsonResponse({ ok: true, notified: pushPromises.length }, 200);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Error enviando notificaciones push.';
+    return jsonResponse({ error: message }, message === 'MISSING_SA' ? 501 : 500);
+  }
+}
+
 export default {
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === '/api/admin/delete-user') {
       return handleAdminDeleteUser(request, env);
+    }
+    if (url.pathname === '/api/push/vapid-key') {
+      return handleGetVapidKey(request, env);
+    }
+    if (url.pathname === '/api/chat/notify') {
+      return handleChatNotify(request, env);
     }
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);

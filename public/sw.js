@@ -1,5 +1,5 @@
 // Service Worker para DondeEstan PWA
-const CACHE_NAME = 'dondeestan-shell-v13';
+const CACHE_NAME = 'dondeestan-shell-v14';
 
 const STATIC_PRECACHE = [
   '/',
@@ -81,6 +81,46 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       });
     })
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let payload = {
+    title: 'DondeEstan · Nuevo mensaje',
+    body: 'Tienes un mensaje nuevo en el chat de tu grupo.',
+    tag: 'dondeestan-chat',
+    url: '/',
+  };
+
+  if (event.data) {
+    try {
+      const parsed = event.data.json();
+      payload = { ...payload, ...parsed };
+    } catch {
+      const text = event.data.text();
+      if (text) payload.body = text;
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: '/icons/icon-192.png',
+    badge: '/favicon.png',
+    tag: payload.tag || 'dondeestan-chat',
+    renotify: true,
+    data: {
+      url: payload.url || '/',
+      tab: 'chat',
+    },
+  };
+
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(payload.title, options),
+      typeof navigator !== 'undefined' && 'setAppBadge' in navigator
+        ? navigator.setAppBadge(1).catch(() => {})
+        : Promise.resolve(),
+    ])
   );
 });
 

@@ -1,5 +1,8 @@
+import type { WebPushSubscriptionRecord } from './web_push';
+import { base64UrlDecode } from './web_push';
+
 /**
- * Utilidades PWA para registro de Service Worker y detección de iOS Standalone.
+ * Utilidades PWA para registro de Service Worker, Web Push y detección de iOS Standalone.
  */
 
 export interface PwaStatus {
@@ -86,6 +89,92 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return registration;
   } catch (error) {
     console.warn('Registro de Service Worker omitido o no soportado:', error);
+    return null;
+  }
+}
+
+export async function subscribeToWebPush(): Promise<WebPushSubscriptionRecord | null> {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    if (!registration?.pushManager) return null;
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      const res = await fetch('/api/push/vapid-key');
+      if (!res.ok) return null;
+      const data = (await res.json()) as { publicKey?: string };
+      if (!data.publicKey) return null;
+
+      const keyBytes = base64UrlDecode(data.publicKey);
+      const appServerKey = new Uint8Array(keyBytes.byteLength);
+      appServerKey.set(keyBytes);
+
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: appServerKey.buffer,
+      });
+    }
+
+    const json = subscription.toJSON();
+    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
+      return null;
+    }
+
+    return {
+      endpoint: json.endpoint,
+      keys: {
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+      },
+      updated_at: Date.now(),
+    };
+  } catch (err) {
+    console.warn('No se pudo suscribir a Web Push:', err);
+    return null;
+  }
+}
+
+export async function getCurrentWebPushEndpoint(): Promise<string | null> {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    return null;
+  }
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    const sub = await registration?.pushManager?.getSubscription();
+    return sub?.endpoint ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function unsubscribeFromWebPush(): Promise<string | null> {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    return null;
+  }
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    const sub = await registration?.pushManager?.getSubscription();
+    if (!sub) return null;
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    return endpoint;
+  } catch {
     return null;
   }
 }

@@ -1,5 +1,8 @@
 import {
   collection,
+  doc,
+  getDoc,
+  updateDoc,
   query,
   orderBy,
   limit,
@@ -9,7 +12,14 @@ import {
 } from 'firebase/firestore';
 import type { Group, GroupService } from '../admin';
 import type { UserProfile } from '../auth/types';
-import { updateAppBadge, clearAppBadge } from '../core/pwa';
+import { getFirebaseServices } from '../core/firebase';
+import {
+  updateAppBadge,
+  clearAppBadge,
+  subscribeToWebPush,
+  unsubscribeFromWebPush,
+} from '../core/pwa';
+import type { WebPushSubscriptionRecord } from '../core/web_push';
 import {
   getGlobalChatUnreadCount,
   setGlobalChatUnreadCount,
@@ -198,6 +208,98 @@ export async function showDeviceChatNotification(
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Sincroniza la suscripción Web Push del dispositivo actual en /users/{uid}.push_subscriptions
+ * para recibir notificaciones en iOS/Android/Escritorio aunque la app esté cerrada o en reposo.
+ */
+export async function syncUserWebPushSubscription(
+  db: Firestore,
+  user: UserProfile
+): Promise<boolean> {
+  if (!user?.uid) return false;
+
+  const enabled = isChatNotificationsEnabled(user);
+  if (!enabled) {
+    const removedEndpoint = await unsubscribeFromWebPush();
+    if (removedEndpoint && Array.isArray(user.push_subscriptions)) {
+      const filtered = user.push_subscriptions.filter((s) => s.endpoint !== removedEndpoint);
+      if (filtered.length !== user.push_subscriptions.length) {
+        await updateDoc(doc(db, 'users', user.uid), {
+          push_subscriptions: filtered,
+          updated_at: Date.now(),
+        }).catch(() => {});
+      }
+    }
+    return false;
+  }
+
+  if (getNotificationPermissionState() !== 'granted') {
+    return false;
+  }
+
+  const sub = await subscribeToWebPush();
+  if (!sub) return false;
+
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    const existingRaw = snap.exists()
+      ? (snap.data()?.push_subscriptions as WebPushSubscriptionRecord[] | undefined)
+      : user.push_subscriptions;
+    const existing = Array.isArray(existingRaw) ? existingRaw : [];
+
+    const alreadyStored = existing.some(
+      (s) =>
+        s.endpoint === sub.endpoint &&
+        s.keys?.p256dh === sub.keys.p256dh &&
+        s.keys?.auth === sub.keys.auth
+    );
+    if (alreadyStored) return true;
+
+    const updated = [...existing.filter((s) => s.endpoint !== sub.endpoint), sub].slice(-5);
+    await updateDoc(userRef, {
+      push_subscriptions: updated,
+      updated_at: Date.now(),
+    });
+    return true;
+  } catch (err) {
+    console.warn('No se pudo guardar la suscripción Web Push:', err);
+    return false;
+  }
+}
+
+/**
+ * Solicita al Worker de Cloudflare enviar una notificación Web Push a los compañeros
+ * del grupo (funciona con móviles en reposo o pantalla bloqueada).
+ */
+export async function triggerRemoteGroupChatPush(
+  groupId: string,
+  senderName: string,
+  text: string
+): Promise<void> {
+  if (!groupId || !text.trim() || typeof fetch === 'undefined') return;
+  try {
+    const { auth } = getFirebaseServices();
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) return;
+
+    await fetch('/api/chat/notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({
+        groupId,
+        senderName,
+        text,
+      }),
+    });
+  } catch {
+    // Silencioso: no interrumpir el envío del mensaje en Firestore
   }
 }
 

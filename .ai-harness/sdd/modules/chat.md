@@ -51,6 +51,7 @@ Es la autoridad funcional responsable de **Chat grupal reactivo para los 8 miemb
 - **BR-CHAT-02:** Desconexión activa obligatoria del listener `onSnapshot` al conmutar a otra pestaña.
 - **BR-CHAT-03:** Mensajes inmutables (append-only) protegidos por reglas de seguridad.
 - **BR-CHAT-04:** Las notificaciones y el contador de mensajes nuevos solo se emiten para mensajes entrantes de compañeros pertenecientes a los grupos del usuario (`sender_id !== currentUser.uid`), limpiando el contador y el globo rojo al entrar en el menú de Chat.
+- **BR-CHAT-05:** Al enviar un mensaje, el servidor Web Push notifica en segundo plano únicamente a los compañeros activos del mismo grupo con `chat_notifications_enabled !== false`, permitiendo la entrega con el dispositivo en reposo o cerrado.
 
 ---
 
