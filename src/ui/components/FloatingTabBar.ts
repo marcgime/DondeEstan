@@ -87,7 +87,7 @@ export function renderFloatingTabBar(
     >
       <div
         id="floating-tab-dock"
-        class="floating-dock ${showGuiaTab ? 'floating-dock--4items' : ''} mx-auto rounded-full glass-dock shadow-dock flex items-center justify-center"
+        class="floating-dock ${showGuiaTab ? 'floating-dock--4items' : ''} mx-auto rounded-full glass-dock shadow-dock"
       >
         <!-- Map Tab -->
         <button

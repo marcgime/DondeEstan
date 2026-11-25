@@ -5,49 +5,49 @@
       "mod_hash": "b7868b8568f1fff191fe6a5a2708f0ce186a3561b1defe9ced6a4cdbe2978d4f",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.290637+00:00"
+      "recorded_at": "2026-11-25T16:45:43.654113+00:00"
     },
     "MOD-core": {
       "mod_hash": "d074ff5fa8e6aa42195bdf62bc9f301344b5552d13e054773f31490756a976ba",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.291383+00:00"
+      "recorded_at": "2026-11-25T16:45:43.654551+00:00"
     },
     "MOD-ui": {
       "mod_hash": "c2458dd0c546eb65d67492ad40424c84f09c91cd6bf37b710ac9504713d253f5",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.292148+00:00"
+      "recorded_at": "2026-11-25T16:45:43.655234+00:00"
     },
     "MOD-admin": {
       "mod_hash": "cf788c5e6d7c8d0141b6e3f12a7e507eaab3c453f2265a54e8978ddab14e6f17",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.290338+00:00"
+      "recorded_at": "2026-11-25T16:45:43.653784+00:00"
     },
     "MOD-chat": {
       "mod_hash": "454ccf73df44699d3f5bf56821674aec18673e3f11e3b25a1175f2e6225115f9",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.291106+00:00"
+      "recorded_at": "2026-11-25T16:45:43.654320+00:00"
     },
     "MOD-location": {
       "mod_hash": "ff922a85be29fbe8043b424ccb5bad250ac8f59d6b8e4bad509d13620f929306",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.291772+00:00"
+      "recorded_at": "2026-11-25T16:45:43.654892+00:00"
     },
     "MOD-profile": {
       "mod_hash": "63ffe525097c2769f7d25ec7877ce6c168b59edc900641b935ea5f22a6f93058",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.291960+00:00"
+      "recorded_at": "2026-11-25T16:45:43.655065+00:00"
     },
     "MOD-guia": {
       "mod_hash": "b41960a9485ca9fa6c6a9dbc175179ab959232473d0367aee7f5f8a99795263a",
       "target_hash": "",
       "version": "1.0.0",
-      "recorded_at": "2026-11-25T16:39:59.291581+00:00"
+      "recorded_at": "2026-11-25T16:45:43.654721+00:00"
     }
   }
 }
