@@ -47,7 +47,7 @@ export function renderGuiaView(
 
   function renderViewRoot(): void {
     container.innerHTML = `
-      <div id="guia-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden">
+      <div id="guia-view-root" class="relative h-full w-full flex flex-col bg-surface-canvas text-text-primary overflow-hidden safe-header-top">
         <!-- Contenedor del Iframe Embebido a pantalla completa (sin barra superior redundante) -->
         <main class="relative flex-1 w-full h-full overflow-hidden bg-surface-canvas">
           <!-- Spinner de Carga -->
