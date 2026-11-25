@@ -44,9 +44,9 @@
 ## 6. Fase de Pruebas y Validación Determinista (Entorno Local)
 - [x] Ejecutar build local de Vite (`npm run build`) y verificar 0 errores TypeScript (✓ built in 2.34s).
 - [x] Ejecutar suite de pruebas unitarias (`npm test`) (14 archivos pasados, 83 tests pasados al 100%).
-- [ ] Pruebas en el navegador por parte del usuario en su entorno local:
-  - [ ] Con grupo con GuIA desactivado: la app luce exactamente como hoy (3 pestañas: Mapa, Chat, Perfil).
-  - [ ] Activar GuIA desde admin: aparece la pestaña GuIA entre Mapa y Chat.
-  - [ ] Crear un viaje en el grupo y comprobar que se visualiza el itinerario.
-  - [ ] Desactivar GuIA desde admin: la pestaña desaparece y no hay errores.
-- [ ] Esperar visto bueno final del usuario antes de cualquier acción de despliegue o push.
+- [x] Pruebas en el navegador por parte del usuario en su entorno local:
+  - [x] Con grupo con GuIA desactivado: la app luce exactamente como hoy (3 pestañas: Mapa, Chat, Perfil).
+  - [x] Activar GuIA desde admin: aparece la pestaña GuIA entre Mapa y Chat.
+  - [x] Crear un viaje en el grupo y comprobar que se visualiza el itinerario.
+  - [x] Desactivar GuIA desde admin: la pestaña desaparece y no hay errores.
+- [x] Esperar visto bueno final del usuario antes de cualquier acción de despliegue o push.

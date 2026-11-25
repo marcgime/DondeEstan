@@ -12,3 +12,4 @@ Cada archivo representa la única fuente de verdad funcional y contractual de su
 | `MOD-chat` | Canal Único de Chat Grupal Familiar | `src/chat/` | `block_chat.md` |
 | `MOD-profile` | Perfil, Ajustes y Diagnóstico del Dispositivo | `src/profile/` | `block_profile.md` |
 | `MOD-ui` | Sistema de Diseño Kinetic Bloom y Shell PWA | `src/ui/` | `block_ui.md` |
+| `MOD-guia` | Planificador de Viajes e Itinerarios GuIA | `src/guia/` | `block_guia.md` |

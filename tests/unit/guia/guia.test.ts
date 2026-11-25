@@ -123,4 +123,33 @@ describe('Guia Module Tests', () => {
       await expect(service.deleteTrip('grp-1', 'trip-1')).resolves.not.toThrow();
     });
   });
+
+  describe('renderGuiaView (acceso único sin menú superior)', () => {
+    it('renderiza el iframe de GuIA directamente sin barra superior ni selector de grupos', async () => {
+      const { renderGuiaView } = await import('../../../src/guia/views/GuiaView');
+      const container = {
+        innerHTML: '',
+        querySelector: vi.fn(() => null),
+      } as unknown as HTMLElement;
+
+      const cleanup = renderGuiaView(container, {
+        currentUser: {
+          uid: 'u1',
+          email: 'user@test.com',
+          display_name: 'User',
+          role: 'member',
+          status: 'active',
+          groupIds: ['grp-1'],
+        },
+        onNavigateTab: vi.fn(),
+      });
+
+      expect(container.innerHTML).toContain('id="guia-app-iframe"');
+      expect(container.innerHTML).not.toContain('ios-nav-bar');
+      expect(container.innerHTML).not.toContain('select-guia-group');
+      expect(container.innerHTML).not.toContain('btn-reload-guia');
+      expect(container.innerHTML).not.toContain('btn-external-guia');
+      cleanup();
+    });
+  });
 });

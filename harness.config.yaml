@@ -36,6 +36,7 @@ scopes:
     - block_chat.md
     - block_profile.md
     - block_ui.md
+    - block_guia.md
   path_roots:
     - src/core/
     - src/auth/
@@ -44,6 +45,7 @@ scopes:
     - src/chat/
     - src/profile/
     - src/ui/
+    - src/guia/
   forbidden_paths: []
 
 sdd:
@@ -89,6 +91,7 @@ architecture:
     - chat
     - profile
     - ui
+    - guia
   forbidden_by_feature: {}
   exclusive_import_paths: {}
   framework_import_prefix: "@/"

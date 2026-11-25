@@ -292,9 +292,7 @@ export function renderChatView(
       cleanupTabBar();
       cleanupTabBar = null;
     }
-    const showGuia = activeGroupId
-      ? Boolean(accessibleGroups.find((g) => g.id === activeGroupId)?.guia_enabled)
-      : accessibleGroups.some((g) => g.guia_enabled);
+    const showGuia = accessibleGroups.some((g) => g.guia_enabled);
 
     cleanupTabBar = renderFloatingTabBar(dockSlot, {
       activeTab: 'chat',

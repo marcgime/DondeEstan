@@ -571,10 +571,7 @@ export function renderMapView(
       cleanupTabBar();
       cleanupTabBar = null;
     }
-    const showGuia =
-      activeGroupId === 'all'
-        ? accessibleGroups.some((g) => g.guia_enabled)
-        : Boolean(accessibleGroups.find((g) => g.id === activeGroupId)?.guia_enabled);
+    const showGuia = accessibleGroups.some((g) => g.guia_enabled);
 
     cleanupTabBar = renderFloatingTabBar(dockSlot, {
       activeTab: 'map',

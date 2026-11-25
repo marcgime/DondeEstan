@@ -3,11 +3,12 @@
 ```yaml
 change_id: "2026-11-group-guia-trip-integration"
 title: "Integración de GuIA por Grupo y Pestaña de Viajes Condicional"
-module: "MOD-admin"               # Módulos afectados: MOD-admin, MOD-ui, MOD-core, MOD-guia
-status: IMPLEMENTING                    # PROPOSED | APPROVED | IMPLEMENTING | CONSOLIDATED
+module: "MOD-admin"
+status: CONSOLIDATED
+consolidated_at: "2026-11-25"
 created_at: "2026-11-24"
 author: "Antigravity"
-tier: standard                      # fast_path | standard | core
+tier: standard
 ```
 
 ---
@@ -120,12 +121,9 @@ Servicio para gestionar la persistencia y suscripción en tiempo real de viajes 
 - `deleteTrip(groupId: string, tripId: string): Promise<void>`
 
 #### [+] Añadido: `CT-GUIA-03` en `src/guia/views/GuiaView.ts`
-Vista interactiva que se renderiza cuando `currentTab === 'guia'`:
-- Encabezado con selector/indicador del grupo activo.
-- Catálogo de viajes del grupo (tarjetas con imagen, fechas, duración, presupuesto y botón de detalle).
-- Modal / formulario para diseñar un nuevo viaje (destino, fechas con rango, estilo y preferencias adaptadas del generador determinista/IA de `GuIA`).
-- Pantalla de visualización detallada del itinerario diario por franjas horarias (mañana, mediodía, tarde, noche).
-- Botón de retorno al catálogo de viajes.
+Vista interactiva unificada que se renderiza cuando `currentTab === 'guia'`:
+- Sin menú ni barra superior redundante (el iframe de GuIA ocupa toda el área de contenido directamente).
+- Sin selector de grupo en la vista de GuIA: el acceso a GuIA es único y compartido para todos los usuarios que pertenezcan a al menos un grupo con `guia_enabled: true`.
 
 #### [~] Modificado: `Main Navigation` en `src/main.ts`
 - Gestión del estado del grupo activo y detección de `guia_enabled`.
