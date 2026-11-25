@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   renderFloatingTabBar,
   DEFAULT_TAB_INACTIVITY_MS,
+  getGlobalChatUnreadCount,
+  setGlobalChatUnreadCount,
   type FloatingTabId,
 } from '../../../src/ui/components/FloatingTabBar';
 
@@ -182,5 +184,28 @@ describe('FloatingTabBar (DS-NAV-DOCK)', () => {
     expect(container.dockEl.classList.contains('floating-dock--compact')).toBe(false);
 
     cleanup();
+  });
+
+  it('muestra el globo rojo con el número de mensajes nuevos en Chat y lo elimina al entrar en Chat (BR-UI-06)', () => {
+    const container = new MockContainer();
+    setGlobalChatUnreadCount(3);
+
+    const cleanupMap = renderFloatingTabBar(container as unknown as HTMLElement, {
+      activeTab: 'map',
+    });
+
+    expect(container.innerHTML).toContain('id="chat-unread-badge"');
+    expect(container.innerHTML).toContain('aria-label="3 mensajes nuevos"');
+    expect(container.innerHTML).toContain('>3<');
+    cleanupMap();
+
+    // Al entrar en la pestaña Chat, el globo rojo desaparece y el contador global pasa a 0
+    const cleanupChat = renderFloatingTabBar(container as unknown as HTMLElement, {
+      activeTab: 'chat',
+    });
+
+    expect(getGlobalChatUnreadCount()).toBe(0);
+    expect(container.innerHTML).not.toContain('id="chat-unread-badge"');
+    cleanupChat();
   });
 });

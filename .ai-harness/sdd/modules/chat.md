@@ -50,6 +50,7 @@ Es la autoridad funcional responsable de **Chat grupal reactivo para los 8 miemb
 - **BR-CHAT-01:** Consulta acotada estrictamente a un máximo de 50 mensajes en `group_chat` o `/groups/{groupId}/messages`.
 - **BR-CHAT-02:** Desconexión activa obligatoria del listener `onSnapshot` al conmutar a otra pestaña.
 - **BR-CHAT-03:** Mensajes inmutables (append-only) protegidos por reglas de seguridad.
+- **BR-CHAT-04:** Las notificaciones y el contador de mensajes nuevos solo se emiten para mensajes entrantes de compañeros pertenecientes a los grupos del usuario (`sender_id !== currentUser.uid`), limpiando el contador y el globo rojo al entrar en el menú de Chat.
 
 ---
 
@@ -74,3 +75,4 @@ sequenceDiagram
 | CT-CHAT-01 | `ChatMessage, ChatSender` | `src/chat/types.ts` | `tests/unit/chat/chat_service.test.ts` |
 | CT-CHAT-02 | `FamilyChatService` | `src/chat/chat_service.ts` | `tests/unit/chat/chat_service.test.ts` |
 | CT-CHAT-03 | `renderChatView` | `src/chat/views/ChatView.ts` | `tests/unit/chat/chat_service.test.ts` |
+| CT-CHAT-04 | `ChatNotificationMonitor` | `src/chat/chat_notification_monitor.ts` | `tests/unit/chat/chat_notification_monitor.test.ts` |

@@ -2,6 +2,12 @@ import type { ProfileService } from '../profile_service';
 import { compressAndCropAvatar } from '../image_compressor';
 import type { UserProfile } from '../../auth/types';
 import type { Group, GroupService } from '../../admin';
+import {
+  isChatNotificationsEnabled,
+  setStoredChatNotificationsEnabled,
+  requestChatNotificationPermission,
+  getNotificationPermissionState,
+} from '../../chat';
 import { renderFloatingTabBar, type FloatingTabId } from '../../ui/components/FloatingTabBar';
 import { triggerHaptic } from '../../ui/utils/haptics';
 import {
@@ -30,6 +36,7 @@ export function renderProfileView(
   let isEditingName = false;
   let isUploadingPhoto = false;
   let isZoomMenuOpen = false;
+  let chatNotificationsEnabled = isChatNotificationsEnabled(profile);
   let currentScale: UiScaleLevel = isValidUiScale(profile.ui_scale)
     ? profile.ui_scale
     : getStoredUiScale();
@@ -191,6 +198,34 @@ export function renderProfileView(
               : ''
           }
 
+          <!-- Selector de Notificaciones de Chat -->
+          <div id="chat-notifications-card" class="w-full max-w-sm p-3.5 rounded-2xl glass-panel shadow-xs flex items-center justify-between gap-3 shrink-0">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-text-primary">Notificaciones de Chat</p>
+              <p class="text-[0.75rem] text-text-secondary">
+                ${
+                  !chatNotificationsEnabled
+                    ? 'Silenciadas en este dispositivo'
+                    : getNotificationPermissionState() === 'denied'
+                    ? 'Avisos en la app (permiso del navegador bloqueado)'
+                    : 'Avisos de nuevos mensajes de tus grupos'
+                }
+              </p>
+            </div>
+            <button
+              type="button"
+              id="btn-toggle-chat-notifications"
+              aria-pressed="${chatNotificationsEnabled ? 'true' : 'false'}"
+              class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer ${
+                chatNotificationsEnabled
+                  ? 'bg-status-online text-brand-on-primary hover:opacity-90'
+                  : 'bg-surface-elevated text-text-secondary border border-border-subtle hover:text-text-primary'
+              }"
+            >
+              ${chatNotificationsEnabled ? 'Activadas' : 'Desactivadas'}
+            </button>
+          </div>
+
           <!-- Selector de Zoom / Tamaño de Interfaz (Menú Plegable) -->
           <div id="zoom-menu-card" class="w-full max-w-sm rounded-2xl glass-panel shadow-xs shrink-0">
             <button
@@ -321,6 +356,30 @@ export function renderProfileView(
       triggerHaptic('medium');
       if (onOpenAdminPanel) {
         onOpenAdminPanel();
+      }
+    });
+
+    container.querySelector('#btn-toggle-chat-notifications')?.addEventListener('click', async () => {
+      triggerHaptic('light');
+      const nextState = !chatNotificationsEnabled;
+      chatNotificationsEnabled = nextState;
+      profile.chat_notifications_enabled = nextState;
+      setStoredChatNotificationsEnabled(nextState);
+
+      if (nextState) {
+        try {
+          await requestChatNotificationPermission();
+        } catch {
+          // Ignorar si el navegador no soporta permisos de notificación
+        }
+      }
+
+      render();
+
+      try {
+        await profileService.updateChatNotifications(profile.uid, nextState);
+      } catch (err) {
+        console.warn('No se pudo sincronizar la preferencia de notificaciones en la nube:', err);
       }
     });
 

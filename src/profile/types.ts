@@ -10,5 +10,6 @@ export interface ProfileUpdatePayload {
   displayName?: string;
   photoUrl?: string;
   uiScale?: UiScaleLevel;
+  chatNotificationsEnabled?: boolean;
 }
 

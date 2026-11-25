@@ -50,6 +50,7 @@ Concentra la experiencia gráfica, los componentes reutilizables, la maquetació
 - **BR-UI-03:** Escalado proporcional en `rem` desde `html` (`108%` por defecto, configurable en Perfil) y respeto estricto de `safe-area-inset-top` sin difuminado superior en iOS PWA.
 - **BR-UI-04:** `DS-NAV-DOCK` oculta las etiquetas textuales tras 4 segundos sin interacción dejando solo los 3 logotipos.
 - **BR-UI-05:** El manifiesto PWA (`public/manifest.json`) y las etiquetas de `index.html` declaran `"DondeEstan"` como nombre por defecto al guardar en el escritorio o pantalla de inicio, y utilizan el logotipo oficial como favicon (`/favicon.png`), `apple-touch-icon` (`/icons/apple-touch-icon.png`), iconos PWA (`/icons/icon-192.png`, `/icons/icon-512.png`) y cabecera visual de la app (`AuthView`, `PwaInstallPrompt`).
+- **BR-UI-06:** `FloatingTabBar` muestra un globo rojo (`#chat-unread-badge`) con el número de mensajes no leídos sobre la pestaña `Chat` siempre que haya mensajes nuevos pendientes, ocultándolo automáticamente al entrar en la pestaña `Chat`.
 
 ---
 

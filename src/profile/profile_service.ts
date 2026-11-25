@@ -27,6 +27,10 @@ export class ProfileService {
       updates.ui_scale = payload.uiScale;
     }
 
+    if (payload.chatNotificationsEnabled !== undefined) {
+      updates.chat_notifications_enabled = Boolean(payload.chatNotificationsEnabled);
+    }
+
     await updateDoc(userRef, updates);
   }
 
@@ -40,6 +44,10 @@ export class ProfileService {
 
   async updateUiScale(uid: string, uiScale: UiScaleLevel): Promise<void> {
     await this.updateProfile(uid, { uiScale });
+  }
+
+  async updateChatNotifications(uid: string, enabled: boolean): Promise<void> {
+    await this.updateProfile(uid, { chatNotificationsEnabled: enabled });
   }
 }
 

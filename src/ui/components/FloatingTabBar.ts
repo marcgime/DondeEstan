@@ -5,6 +5,7 @@ export type FloatingTabId = 'map' | 'guia' | 'chat' | 'profile';
 export interface FloatingTabBarOptions {
   activeTab: FloatingTabId;
   showGuiaTab?: boolean;
+  chatUnreadCount?: number;
   onNavigateTab?: (tab: FloatingTabId) => void;
   onActiveTabClick?: () => void;
   inactivityMs?: number;
@@ -13,6 +14,32 @@ export interface FloatingTabBarOptions {
 
 export const DEFAULT_TAB_INACTIVITY_MS = 4000;
 
+let globalChatUnreadCount = 0;
+const unreadListeners = new Set<(count: number) => void>();
+
+export function getGlobalChatUnreadCount(): number {
+  return globalChatUnreadCount;
+}
+
+export function setGlobalChatUnreadCount(count: number): void {
+  const normalized = Math.max(0, Math.floor(count));
+  if (normalized === globalChatUnreadCount) return;
+  globalChatUnreadCount = normalized;
+  unreadListeners.forEach((listener) => listener(globalChatUnreadCount));
+}
+
+export function subscribeChatUnreadCount(listener: (count: number) => void): () => void {
+  unreadListeners.add(listener);
+  return () => {
+    unreadListeners.delete(listener);
+  };
+}
+
+export function formatUnreadBadgeCount(count: number): string {
+  if (count <= 0) return '';
+  return count > 99 ? '99+' : String(count);
+}
+
 export function renderFloatingTabBar(
   container: HTMLElement,
   options: FloatingTabBarOptions
@@ -20,17 +47,36 @@ export function renderFloatingTabBar(
   const {
     activeTab,
     showGuiaTab = false,
+    chatUnreadCount,
     onNavigateTab,
     onActiveTabClick,
     inactivityMs = DEFAULT_TAB_INACTIVITY_MS,
     zIndexClass = 'z-30',
   } = options;
 
+  // Si entramos en el menú de chat y no se forzó un contador explícito, limpiar el contador global
+  if (activeTab === 'chat' && chatUnreadCount === undefined && globalChatUnreadCount > 0) {
+    setGlobalChatUnreadCount(0);
+  }
+
+  const effectiveUnreadCount =
+    activeTab === 'chat'
+      ? 0
+      : chatUnreadCount !== undefined
+      ? Math.max(0, Math.floor(chatUnreadCount))
+      : globalChatUnreadCount;
+
   let inactivityTimerId: ReturnType<typeof setTimeout> | null = null;
 
   function getTabButtonClass(tab: FloatingTabId): string {
     const isActive = tab === activeTab;
     return isActive ? 'dock-tab-btn dock-tab-btn--active' : 'dock-tab-btn';
+  }
+
+  function renderBadgeHtml(count: number): string {
+    if (count <= 0 || activeTab === 'chat') return '';
+    const label = formatUnreadBadgeCount(count);
+    return `<span id="chat-unread-badge" class="dock-tab-badge" aria-label="${count} mensajes nuevos">${label}</span>`;
   }
 
   container.innerHTML = `
@@ -93,6 +139,7 @@ export function renderFloatingTabBar(
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <span class="dock-tab-label">Chat</span>
+          <span id="chat-unread-badge-slot">${renderBadgeHtml(effectiveUnreadCount)}</span>
         </button>
 
         <!-- Profile Tab -->
@@ -114,9 +161,20 @@ export function renderFloatingTabBar(
   `;
 
   const dockEl = container.querySelector('#floating-tab-dock') as HTMLElement | null;
+  const badgeSlotEl = container.querySelector('#chat-unread-badge-slot') as HTMLElement | null;
   const tabButtons = Array.from(
     container.querySelectorAll<HTMLButtonElement>('.dock-tab-btn')
   );
+
+  // Suscribirse a cambios reactivos del contador de mensajes no leídos
+  const unsubscribeUnread =
+    chatUnreadCount === undefined
+      ? subscribeChatUnreadCount((newCount) => {
+          if (badgeSlotEl) {
+            badgeSlotEl.innerHTML = renderBadgeHtml(newCount);
+          }
+        })
+      : null;
 
   function clearInactivityTimer(): void {
     if (inactivityTimerId !== null) {
@@ -149,6 +207,10 @@ export function renderFloatingTabBar(
       triggerHaptic('light');
       wakeUpDock();
 
+      if (targetTab === 'chat') {
+        setGlobalChatUnreadCount(0);
+      }
+
       if (targetTab === activeTab) {
         if (onActiveTabClick) {
           onActiveTabClick();
@@ -171,6 +233,9 @@ export function renderFloatingTabBar(
 
   return () => {
     clearInactivityTimer();
+    if (unsubscribeUnread) {
+      unsubscribeUnread();
+    }
     dockEl?.removeEventListener('click', onDockClick);
   };
 }

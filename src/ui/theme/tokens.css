@@ -235,7 +235,7 @@ body {
 
 .dock-tab-btn {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -318,6 +318,27 @@ body {
   max-width: 0;
   opacity: 0;
   transform: translateX(-4px) scale(0.75);
+  pointer-events: none;
+}
+
+.dock-tab-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  z-index: 10;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.28rem;
+  border-radius: 9999px;
+  background-color: var(--color-status-error);
+  color: var(--color-accent-on-primary);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
   pointer-events: none;
 }
 

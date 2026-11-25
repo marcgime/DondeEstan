@@ -46,6 +46,7 @@ Es la autoridad funcional responsable de **Edición de display_name, compresión
 - **BR-PROFILE-02:** Las operaciones externas que puedan fallar devuelven un Result tipado.
 - **BR-PROFILE-03:** La sección "Núcleo" de la vista de perfil muestra en tiempo real los grupos a los que pertenece el usuario (mediante `GroupService`), desuscribiendo el listener al desmontar la vista (FM-002).
 - **BR-PROFILE-04:** El selector de "Tamaño de Letra y Zoom" en la vista de perfil se presenta como un menú plegado por defecto (mostrando la escala activa y su porcentaje); al clicar se despliegan las opciones de zoom y, tras seleccionar una opción, se aplica la escala y el menú se minimiza automáticamente.
+- **BR-PROFILE-05:** El usuario puede activar o desactivar desde su perfil si desea recibir notificaciones de nuevos mensajes de chat de sus grupos (`chat_notifications_enabled`).
 
 ---
 

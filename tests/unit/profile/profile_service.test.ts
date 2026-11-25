@@ -49,6 +49,13 @@ describe('ProfileService', () => {
       await expect(service.updateUiScale('u1', 'comfortable')).resolves.not.toThrow();
     });
   });
+
+  describe('updateChatNotifications', () => {
+    it('debe actualizar la preferencia de notificaciones de chat en Firestore (BR-PROFILE-05)', async () => {
+      await expect(service.updateChatNotifications('u1', false)).resolves.not.toThrow();
+      await expect(service.updateChatNotifications('u1', true)).resolves.not.toThrow();
+    });
+  });
 });
 
 describe('image_compressor', () => {

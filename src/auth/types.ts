@@ -17,6 +17,7 @@ export interface UserProfile {
   status: UserStatus;
   groupIds?: string[];
   ui_scale?: 'compact' | 'default' | 'comfortable' | 'large';
+  chat_notifications_enabled?: boolean;
   location?: UserLocation;
   created_at?: unknown;
   updated_at?: unknown;

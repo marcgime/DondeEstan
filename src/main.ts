@@ -11,12 +11,17 @@ import type { Unsubscribe } from 'firebase/firestore';
 
 import { GeolocationTracker } from './location/tracker';
 import { renderMapView } from './location/views/MapView';
-import { FamilyChatService, renderChatView } from './chat';
+import {
+  FamilyChatService,
+  ChatNotificationMonitor,
+  setStoredChatNotificationsEnabled,
+  renderChatView,
+} from './chat';
 import { ProfileService, renderProfileView } from './profile';
 import { AdminService, GroupService, renderAdminView } from './admin';
 import { GuiaService, renderGuiaView } from './guia';
-import type { FloatingTabId } from './ui/components/FloatingTabBar';
-import { registerServiceWorker } from './core/pwa';
+import { setGlobalChatUnreadCount, type FloatingTabId } from './ui/components/FloatingTabBar';
+import { registerServiceWorker, clearAppBadge } from './core/pwa';
 import { checkAndRenderIosInstallPrompt } from './ui/components/PwaInstallPrompt';
 
 const appContainer = document.getElementById('app');
@@ -45,6 +50,7 @@ function init(): void {
   let profileUnsubscribe: Unsubscribe | null = null;
   let activeCleanup: (() => void) | null = null;
   let currentTracker: GeolocationTracker | null = null;
+  let chatMonitor: ChatNotificationMonitor | null = null;
   let currentTab: FloatingTabId = 'map';
   let isAppInitialized = false;
   let latestProfile: UserProfile | null = null;
@@ -62,6 +68,12 @@ function init(): void {
       currentTracker.stop();
       currentTracker = null;
     }
+    if (chatMonitor) {
+      chatMonitor.stop();
+      chatMonitor = null;
+    }
+    setGlobalChatUnreadCount(0);
+    void clearAppBadge();
     isAppInitialized = false;
     latestProfile = null;
 
@@ -121,6 +133,9 @@ function init(): void {
           if (isValidUiScale(profile.ui_scale)) {
             applyUiScale(profile.ui_scale);
           }
+          if (typeof profile.chat_notifications_enabled === 'boolean') {
+            setStoredChatNotificationsEnabled(profile.chat_notifications_enabled);
+          }
           const activeUser = user;
 
           if (!currentTracker) {
@@ -134,6 +149,12 @@ function init(): void {
             if (activeCleanup) {
               activeCleanup();
               activeCleanup = null;
+            }
+
+            if (currentTab === 'chat') {
+              chatMonitor?.markAllAsRead();
+              setGlobalChatUnreadCount(0);
+              void clearAppBadge();
             }
 
             // Aplicar animación suave de entrada
@@ -225,9 +246,34 @@ function init(): void {
             checkAndRenderIosInstallPrompt(appContainer!);
           }
 
+          if (!chatMonitor) {
+            chatMonitor = new ChatNotificationMonitor({
+              db,
+              groupService,
+              getCurrentUser: () => latestProfile || profile,
+              getCurrentTab: () => currentTab,
+              onOpenChatTab: () => {
+                if (currentTab !== 'chat') {
+                  currentTab = 'chat';
+                  renderTab();
+                }
+              },
+            });
+            chatMonitor.start();
+          }
+
           if (!isAppInitialized) {
             isAppInitialized = true;
             renderTab();
+
+            if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+              navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'OPEN_CHAT_TAB' && isAppInitialized) {
+                  currentTab = 'chat';
+                  renderTab();
+                }
+              });
+            }
           }
         }
       },
